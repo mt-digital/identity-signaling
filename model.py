@@ -7,6 +7,7 @@ Date: 2020-01-23
 import numpy as np
 
 from numpy.random import choice, uniform
+from scipy.special import expit
 
 
 RECEIVING_STRATEGIES = ["Generous", "Churlish"]
@@ -18,7 +19,8 @@ class Model:
     def __init__(self, N=100, n_rounds=10, K=3, prop_overt=0.5,
                  prop_covert=0.5, similarity_benefit=0.5,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
-                 homophily=0.25):
+                 homophily=0.25, evo_logistic_loc=1.25,
+                 evo_logistic_scale=12):
         '''
         Arguments:
             N (int): Number of agents, i.e. population
@@ -35,6 +37,14 @@ class Model:
                 two_dislike_penalty should be less than 1.0.
             homophily (float): the degree to which agents prefer to interact
                 with similar others. Should be between 0 and 0.5.
+            evo_logistic_loc (float): location where logistic function = 0.5
+                probability of switching strategies depending on relative
+                payoff. I.e.\ default is set so that 50% chance of switching
+                when the teacher has accumulated 1.25x more than the learner.
+            evo_logistic_scale (float): scale defining the sharpness of the
+                transition from 0 to 1 in the logistic function. Default chosen
+                so that probability of switching is ~1/50 when
+                relative payoff is 0.9 and ~3/50 when relative payoff is 1.0.
         '''
 
         self.N = N
@@ -46,12 +56,14 @@ class Model:
         self.one_dislike_penalty = one_dislike_penalty
         self.two_dislike_penalty = two_dislike_penalty
         self.homophily = homophily
+        self.evo_logistic_loc = evo_logistic_loc
+        self.evo_logistic_scale = evo_logistic_scale
 
-        assert (homphily >= 0.0) and (homophily <= 0.5)
+        assert (homophily >= 0.0) and (homophily <= 0.5)
         self.prob_likes_interact = 0.5 + homophily
         self.prob_dislikes_interact = 0.5 - homophily
 
-        self.agents = [Agent() for _ in range(N)]
+        self.agents = [Agent(idx) for idx in range(N)]
 
     def run(self, n_iter):
         '''
@@ -71,34 +83,60 @@ class Model:
 
     def _run_round(self):
 
-        self._signal_and_recieve()
+        self._signal_and_receive()
 
         self._dyadic_interactions()
 
     def _signal_and_receive(self):
 
-        for agent in self.agents:
+        for signaller_idx, signaller in enumerate(self.agents):
 
             # Determine which of the two receiver proportions should be used.
             receive_prob = (
                 self.prop_overt
-                if agent.signaling_strategy == "Overt" else
+                if signaller.signaling_strategy == "Overt" else
                 self.prop_covert
             )
 
             # Build a list of receivers who will observe the signal.
-            receivers = [
+            receivers = (
                 other for other in self.agents
-                if (other != agent) and (uniform() < receive_prob)
-            ]
+                if (other != signaller) and (uniform() < receive_prob)
+            )
 
             # TODO: implement signaling by focal `agent` and receiving by
             # other agents.
+            for receiver in receivers:
+
+                # Calculate similarity and set whether receiver likes
+                # signaling agent. "Liking" is determined by how many traits
+                # they have in common---if they have a majority of their traits
+                # in common they like the signaling agent. Neutral if K even
+                # and equal number of similar and dissimilar traits.
+                # XXX This can be calculated just once at init after
+                # traits have been set since traits don't change.
+                similarity = np.sum(receiver.traits - signaller.traits)
+
+                # If signaller and receiver are dissimilar the receiver
+                # does not notice a covert signal. Check the contrapositive
+                # is true.
+                if ((similarity >= 0) and
+                    (signaller.signaling_strategy == "Overt")):
+                    # If agents observed similar, receiver likes signaller.
+                    if similarity > 0:
+                        receiver.attitudes[signaller_idx] = 1
+                    # If agents observed dissimilar,
+                    # receiver dislikes signaller.
+                    elif similarity < 0:
+                        receiver.attitudes[signaller_idx] = -1
+                    # If neither, agents remain neutral.
+                    else:
+                        receiver.attitudes[signaller_idx] = 0
 
     def _dyadic_interactions(self):
 
         # Make potential interaction dyads.
-        pairs = choice(self.agents, size=(self.N/2, 2), replace=False)
+        pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
 
         # Probabilistic dyadic interaction.
         interacting_pairs = [
@@ -107,62 +145,235 @@ class Model:
         ]
 
         # Calculate payoffs for each pair who interact and add to each
-        # agent's cumulative payoff.
+        # agent's cumulative payoff. Increase count of number of interactions
+        # for both agents in pair.
         for pair in interacting_pairs:
-            payoff = _caluclate_payoff(*pair)
+            payoff = self._calculate_payoff(*pair)
             for a in pair:
-                a.payoff += payoff
+                a.gross_payoff += payoff
+                a.n_interactions += 1
 
-    def _dyadic_interaction_prob(self, agent1_idx, agent2_idx):
-        a1 = self.agents[agent1_idx]
-        a2 = self.agents[agent2_idx]
+            # Need to add partner to list of previous partners
+            p0 = pair[0]
+            p1 = pair[1]
 
-        a1_att = a1.attitudes[agent2_idx]
-        a2_att = a2.attitudes[agent1_idx]
+            p0_partners = pair[0].previous_partners
+            p1_partners = pair[1].previous_partners
 
-        if a1_att == 1:
-            if a2_att == 1:
-                return self.prob_likes_interact
-            elif a2_att == 0:
-                return (self.prob_likes_interact + 0.5) / 2.0
-            elif a2_att == -1:
-                return 0.5
-            else:
-                raise RuntimeError("Attitudes must be 1, 0, or -1")
+            if p0 not in p1_partners:
+                p1_partners.add(p0.index)
 
-        elif a1_att == 0:
-            if a2_att == 1:
-                return (self.prob_likes_interact + 0.5) / 2.0
-            elif a2_att == 0:
-                return 0.5
-            elif a2_att == -1:
-                return (self.prob_dislikes_interact + 0.5) / 2.0
-            else:
-                raise RuntimeError("Attitudes must be 1, 0, or -1")
+            if p1 not in p0_partners:
+                p0_partners.add(p1.index)
 
-        elif a1_att == -1:
-            if a2_att == 1:
-                return 0.5
-            elif a2_att == 0:
-                return (self.prob_dislikes_interact + 0.5) / 2.0
-            elif a2_att == -1:
-                return self.prob_dislikes_interact
-            else:
-                raise RuntimeError("Attitudes must be 1, 0, or -1")
+    def _dyadic_interaction_prob(self, a1, a2):
 
+        # a1_idx = a1.index
+
+
+        # a1 = self.agents[agent1_idx]
+        # a2 = self.agents[agent2_idx]
+        a1_att = a1.attitudes[a2.index]
+        a2_att = a2.attitudes[a1.index]
+
+        att_sum = a1_att + a2_att
+
+        # Like/like.
+        if att_sum == 2:
+            return 0.5 + self.homophily
+        # Like/neutral.
+        elif att_sum == 1:
+            return 0.5 + (self.homophily / 2.0)
+        # Neutral/neutral or like/dislike.
+        elif att_sum == 0:
+            return 0.5
+        # Dislike/neutral.
+        elif att_sum == -1:
+            return 0.5 - (self.homophily / 2.0)
+        # Dislike/dislike.
+        elif att_sum == -2:
+            return 0.5 - self.homophily
+        # Shouldn't happen, but...
         else:
-            raise RuntimeError("Attitudes must be 1, 0, or -1")
+            return RuntimeError(
+                f"attribute sum value {att_sum} not within expected range"
+            )
 
     def _evolve(self):
-        pass
+        # TODO: implement learning selection using _dyadic_interaction_prob
+        # and according to process outlined in model document.
+        for learner in self.agents:
+            # Select teacher at random and re-select if teacher is focal agent.
+            # XXX this is not quite what the model spec says. Partner
+            # selection should also involve homophily using
+            # _dyadic_interaction_prob somehow. Maybe each agent's choice
+            # should be weighted by the dyadic interaction prob.
+
+            # Calculate interaction probability for every possible teacher,
+            # setting self-teaching probability to zero.
+            probs = np.array(
+                [
+                    self._dyadic_interaction_prob(learner, maybe_teacher)
+                    if maybe_teacher != learner else 0.0
+
+                    for maybe_teacher in self.agents
+                ]
+            )
+            # Normalize probabilities.
+            probs = probs / probs.sum()
+            # Weight random teacher selection by calculated probabilities.
+            teacher = choice(self.agents, p=probs)
+
+            # Learner payoff sometimes is zero at the beginning of the model...
+            if learner.payoff > 0:
+                payoff_proportion = teacher.payoff / learner.payoff
+            # ... if it is, set chance to switch to be 0.5.
+            else:
+                payoff_proportion = self.evo_logistic_loc
+
+            switch_prob = _logistic(payoff_proportion,
+                                    loc=self.evo_logistic_loc,
+                                    scale=self.evo_logistic_scale)
+
+            if uniform() < switch_prob:
+                # Coin flip to switch either signaling or receiving strategy.
+                strategy_type = (
+                    "Signaling" if 0.5 < uniform() else "Receiving"
+                )
+                # Switch specified teacher strategy for learner's in-place.
+                self._switch_strategy(learner, teacher, strategy_type)
+
+    def _calculate_payoff(self, a1, a2):
+        '''
+        Based on agent attitudes and similarity in traits, calcuate the
+        payoff resulting from an interaction between them.
+        '''
+
+        att_sum = a1.attitudes[a2.index] + a2.attitudes[a1.index]
+        similar = np.sum(a1.traits + a2.traits) > 0
+
+        # Like/like.
+        if att_sum == 2:
+            return 1 + self.similarity_benefit
+
+        # Like/neutral.
+        elif att_sum == 1:
+            return 1 + self.similarity_benefit
+
+        # Neutral/neutral and like/dislike, possibly similar...
+        elif att_sum == 0 and similar:
+            if a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
+                return 1 + self.similarity_benefit
+            elif a1.attitudes[a2.index] == 1 or a2.attitudes[a1.index] == 1:
+                return 1 + self.similarity_benefit - self.one_dislike_penalty
+            else:
+                raise RuntimeError("An unexpected attitude situation occurred")
+        # ... or dissimilar.
+        elif att_sum == 0 and not similar:
+            if a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
+                return 1
+            elif a1.attitudes[a2.index] == 1 or a2.attitudes[a1.index] == 1:
+                return 1 + self.similarity_benefit - self.one_dislike_penalty
+            else:
+                raise RuntimeError("An unexpected attitude situation occurred")
+
+        # Neutral/dislike.
+        elif att_sum == -1:
+            return 1 - self.one_dislike_penalty
+
+        # Dislike/dislike.
+        elif att_sum == -2:
+            return 1 - self.one_dislike_penalty - self.two_dislike_penalty
+
+        # Shouldn't get here, but...
+        else:
+            raise RuntimeError(
+                "The attitude sum was not bounded between -2 and 2"
+            )
+
+    def _switch_strategy(self, learner, teacher, strategy_type):
+        '''
+        Switch learner's strategy for teacher's strategy. Switches even if they
+        are the same since it's no more expensive to just do that.
+
+        Arguments:
+            learner (Agent): Learner agent who will adopt teacher's strategy
+                for the given type.
+            teacher (Agent): learner learns from teacher.
+            strategy_type: Either "Signaling" or "Receiving" to indicate which
+                of the two strategy elements is being updated.
+        Returns:
+            None, operates in-place to update learner's strategy.
+        '''
+        # If signaling is being updated, only have to update
+        # that instance attribute.
+        if strategy_type == "Signaling":
+            learner.signaling_strategy = teacher.signaling_strategy
+
+        # If receiving strategy is being updated, the learner's attitutdes towards
+        # other agents must be updated, since newly Churlish agents must turn
+        # neutral attitudes to dislike for those they have not received a signal
+        # from. Similarly, newly Generous agents must turn dislike to
+        # neutral for those agents from whom they have not received a signal.
+        # Note that they may have not received signals due to covert signaling.
+        elif strategy_type == "Receiving":
+
+            # Save some cycles if they have the same strategy, nothing to be done.
+            if not learner.receiving_strategy == teacher.receiving_strategy:
+
+                # Set learner strategy attribute string.
+                learner.receiving_strategy = teacher.receiving_strategy
+
+                # Need which agents the learner has *not* received a
+                # signal from before in both cases, learner becoming
+                # churlish or generous.
+                previous_partners = learner.previous_partners
+                # Create list of unknown agent indexes to update attitudes.
+                unknowns = list(
+                    set(range(self.N)) - learner.previous_partners
+                )
+                # If the learner is becoming churlish it must dislike
+                # unknown others...
+                if learner.receiving_strategy == "Churlish":
+                    learner.attitudes[unknowns] = -1
+
+                # ...otherwise the learner is becoming generous, i.e.
+                # have a neutral attitude toward unknown others.
+                else:
+                    learner.attitudes[unknowns] = 0
+
+        else:
+            raise RuntimeError(f"strategy_type {strategy_type} not recognized")
+
+
+def _logistic(x, loc=0, scale=1):
+    '''
+    Private method to make a logistic function with loc and scale out of the
+    equivalent scipy special function `expit`, which lacks them:
+    https://docs.scipy.org/doc/scipy-0.15.1/reference/generated/scipy.special.expit.html
+
+    Arguments:
+        x (float or np.ndarray): input to logistic function
+        loc (float): x value where logistic function is 0.5
+        scale (float): multiplicative coefficient on x that sets the sharpness
+            of the transition between 0 and 1
+
+    Returns:
+        (float or np.ndarray): output of the logistic function
+    '''
+    xtrans = scale * (x - loc)
+    return expit(xtrans)
+
+
 
 
 class Agent:
 
-    def __init__(self, K=3, N=100):
+    def __init__(self, agent_idx=0, K=3, N=100):
         '''
         Agent initialization is fully random in this model.
         '''
+        self.index = agent_idx
 
         # Agents initially have K binary traits. ±1 is used for determining
         # similarity or dissimilarity with other agents via summation.
@@ -174,13 +385,23 @@ class Agent:
 
         # Generous agents are neutral towards unknown others.
         if self.receiving_strategy == "Generous":
-            attitudes = np.zeros((N,), dtype=int)
+            self.attitudes = np.zeros((N,), dtype=int)
         # Churlish agents dislike unknown others.
         else:
-            attitudes = -1 * np.ones((N,), dtype=int)
+            self.attitudes = -1 * np.ones((N,), dtype=int)
 
         # Set agent signaling strategy.
         self.signaling_strategy = choice(SENDING_STRATEGIES)
 
         # Payoffs initially 0, but will accumulate over time.
-        self.payoff = 0.0
+        self.gross_payoff = 0.0
+
+        # Total number of interactions agent has had.
+        self.n_interactions = 0
+
+        # Remember who I have interacted with by their index.
+        self.previous_partners = set()
+
+    @property
+    def payoff(self):
+        return self.gross_payoff / self.n_interactions
