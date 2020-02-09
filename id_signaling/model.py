@@ -63,6 +63,8 @@ class Model:
 
         self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
 
+        self.prop_covert_series = np.array([_proportion_covert(self)])
+
     def run(self, n_iter):
         '''
         Run n_iter rounds of interactions. One interaction is defined as
@@ -80,6 +82,10 @@ class Model:
                 self._dyadic_interactions()
 
             self._evolve()
+
+            self.prop_covert_series= np.append(
+                self.prop_covert_series, _proportion_covert(self)
+            )
 
     def _signal_and_receive(self):
 
@@ -329,6 +335,22 @@ def _logistic(x, loc=0, scale=1):
     xtrans = scale * (x - loc)
     return expit(xtrans)
 
+#: Calculate proportion of covert agents in a Model instance.
+def _proportion_covert(model):
+    return (
+        np.sum(
+            [a.signaling_strategy == "Covert" for a in model.agents]
+        ) / model.N
+    )
+
+
+#: Calculate proportion of churlish agents in a Model instance.
+def _proportion_churlish(model):
+    return (
+        np.sum(
+            [a.receiving_strategy == "Churlish" for a in model.agents]
+        ) / model.N
+    )
 
 class Agent:
 
@@ -376,4 +398,8 @@ class Agent:
 
     @property
     def payoff(self):
-        return self.gross_payoff / self.n_interactions
+        # Avoid divide by zero. If agent has not interacted, no payoffs yet.
+        if self.n_interactions > 0:
+            return self.gross_payoff / self.n_interactions
+        else:
+            return 0
