@@ -11,13 +11,13 @@ from scipy.special import expit
 
 
 RECEIVING_STRATEGIES = ["Generous", "Churlish"]
-SENDING_STRATEGIES = ["Overt", "Covert"]
+SIGNALING_STRATEGIES = ["Overt", "Covert"]
 
 
 class Model:
 
-    def __init__(self, N=100, n_rounds=10, K=3, prop_overt=0.5,
-                 prop_covert=0.5, similarity_benefit=0.5,
+    def __init__(self, N=100, n_rounds=10, K=3, prop_overt=0.75,
+                 prop_covert=0.25, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
                  homophily=0.25, evo_logistic_loc=1.25,
                  evo_logistic_scale=12):
@@ -39,7 +39,7 @@ class Model:
                 with similar others. Should be between 0 and 0.5.
             evo_logistic_loc (float): location where logistic function = 0.5
                 probability of switching strategies depending on relative
-                payoff. I.e.\ default is set so that 50% chance of switching
+                payoff. I.e. default is set so that 50% chance of switching
                 when the teacher has accumulated 1.25x more than the learner.
             evo_logistic_scale (float): scale defining the sharpness of the
                 transition from 0 to 1 in the logistic function. Default chosen
@@ -60,10 +60,8 @@ class Model:
         self.evo_logistic_scale = evo_logistic_scale
 
         assert (homophily >= 0.0) and (homophily <= 0.5)
-        self.prob_likes_interact = 0.5 + homophily
-        self.prob_dislikes_interact = 0.5 - homophily
 
-        self.agents = [Agent(idx) for idx in range(N)]
+        self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
 
     def run(self, n_iter):
         '''
@@ -83,9 +81,14 @@ class Model:
 
     def _run_round(self):
 
+        # Model has agents send and receive signals once in an iteration of
+        # the model dynamics.
         self._signal_and_receive()
 
-        self._dyadic_interactions()
+        # Dyadic interactions consist of assortment into dyads and possible
+        # interactions over a number of rounds.
+        for _ in range(self.n_rounds):
+            self._dyadic_interactions()
 
     def _signal_and_receive(self):
 
@@ -115,23 +118,21 @@ class Model:
                 # and equal number of similar and dissimilar traits.
                 # XXX This can be calculated just once at init after
                 # traits have been set since traits don't change.
-                similarity = np.sum(receiver.traits - signaller.traits)
+                similarity = np.sum(receiver.traits * signaller.traits)
 
-                # If signaller and receiver are dissimilar the receiver
-                # does not notice a covert signal. Check the contrapositive
-                # is true.
-                if ((similarity >= 0) and
-                    (signaller.signaling_strategy == "Overt")):
-                    # If agents observed similar, receiver likes signaller.
-                    if similarity > 0:
-                        receiver.attitudes[signaller_idx] = 1
-                    # If agents observed dissimilar,
-                    # receiver dislikes signaller.
-                    elif similarity < 0:
+                # If similarity is positive, attitude independent of signaling
+                # strategy...
+                if similarity > 0:
+                    receiver.attitudes[signaller_idx] = 1
+                # ...but if similarity is negative, need to check the
+                # signaling strategy.
+                elif similarity < 0:
+                    # If the signal was overt, change attitude to dislike.
+                    # In the other case, do nothing as this will keep the
+                    # default attitude towards the signaler by the receiving
+                    # agent.
+                    if signaller.signaling_strategy == "Overt":
                         receiver.attitudes[signaller_idx] = -1
-                    # If neither, agents remain neutral.
-                    else:
-                        receiver.attitudes[signaller_idx] = 0
 
     def _dyadic_interactions(self):
 
@@ -168,11 +169,6 @@ class Model:
 
     def _dyadic_interaction_prob(self, a1, a2):
 
-        # a1_idx = a1.index
-
-
-        # a1 = self.agents[agent1_idx]
-        # a2 = self.agents[agent2_idx]
         a1_att = a1.attitudes[a2.index]
         a2_att = a2.attitudes[a1.index]
 
@@ -328,10 +324,12 @@ class Model:
                 # signal from before in both cases, learner becoming
                 # churlish or generous.
                 previous_partners = learner.previous_partners
+
                 # Create list of unknown agent indexes to update attitudes.
                 unknowns = list(
                     set(range(self.N)) - learner.previous_partners
                 )
+
                 # If the learner is becoming churlish it must dislike
                 # unknown others...
                 if learner.receiving_strategy == "Churlish":
@@ -365,11 +363,10 @@ def _logistic(x, loc=0, scale=1):
     return expit(xtrans)
 
 
-
-
 class Agent:
 
-    def __init__(self, agent_idx=0, K=3, N=100):
+    def __init__(self, agent_idx=0, K=3, N=100,
+                 receiving_strategy=None, signaling_strategy=None):
         '''
         Agent initialization is fully random in this model.
         '''
@@ -381,7 +378,11 @@ class Agent:
 
         # Agents are either Generous or Churlish, and this determines their
         # initial attitudes towards other agents.
-        self.receiving_strategy = choice(RECEIVING_STRATEGIES)
+        if receiving_strategy is None:
+            self.receiving_strategy = choice(RECEIVING_STRATEGIES)
+        else:
+            assert receiving_strategy in RECEIVING_STRATEGIES
+            self.receiving_strategy = receiving_strategy
 
         # Generous agents are neutral towards unknown others.
         if self.receiving_strategy == "Generous":
@@ -391,7 +392,11 @@ class Agent:
             self.attitudes = -1 * np.ones((N,), dtype=int)
 
         # Set agent signaling strategy.
-        self.signaling_strategy = choice(SENDING_STRATEGIES)
+        if signaling_strategy is None:
+            self.signaling_strategy = choice(SIGNALING_STRATEGIES)
+        else:
+            assert signaling_strategy in SIGNALING_STRATEGIES
+            self.signaling_strategy = signaling_strategy
 
         # Payoffs initially 0, but will accumulate over time.
         self.gross_payoff = 0.0
