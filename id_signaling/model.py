@@ -72,23 +72,14 @@ class Model:
         partner, with probability of learning defined in the same way as
         probability of interacting within a pairing of agents.
         '''
-
         for iter_idx in range(n_iter):
+
+            self._signal_and_receive()
+
             for round_idx in range(self.n_rounds):
-                self._run_round()
+                self._dyadic_interactions()
 
             self._evolve()
-
-    def _run_round(self):
-
-        # Model has agents send and receive signals once in an iteration of
-        # the model dynamics.
-        self._signal_and_receive()
-
-        # Dyadic interactions consist of assortment into dyads and possible
-        # interactions over a number of rounds.
-        for _ in range(self.n_rounds):
-            self._dyadic_interactions()
 
     def _signal_and_receive(self):
 
@@ -174,26 +165,7 @@ class Model:
 
         att_sum = a1_att + a2_att
 
-        # Like/like.
-        if att_sum == 2:
-            return 0.5 + self.homophily
-        # Like/neutral.
-        elif att_sum == 1:
-            return 0.5 + (self.homophily / 2.0)
-        # Neutral/neutral or like/dislike.
-        elif att_sum == 0:
-            return 0.5
-        # Dislike/neutral.
-        elif att_sum == -1:
-            return 0.5 - (self.homophily / 2.0)
-        # Dislike/dislike.
-        elif att_sum == -2:
-            return 0.5 - self.homophily
-        # Shouldn't happen, but...
-        else:
-            return RuntimeError(
-                f"attribute sum value {att_sum} not within expected range"
-            )
+        return 0.5 + (self.homophily * att_sum / 2.0)
 
     def _evolve(self):
         # TODO: implement learning selection using _dyadic_interaction_prob
@@ -237,6 +209,8 @@ class Model:
                     "Signaling" if 0.5 < uniform() else "Receiving"
                 )
                 # Switch specified teacher strategy for learner's in-place.
+                # XXX setting strategy type explicitly for now.
+                strategy_type = "Signaling"
                 self._switch_strategy(learner, teacher, strategy_type)
 
     def _calculate_payoff(self, a1, a2):
@@ -246,7 +220,6 @@ class Model:
         '''
 
         att_sum = a1.attitudes[a2.index] + a2.attitudes[a1.index]
-        similar = np.sum(a1.traits + a2.traits) > 0
 
         # Like/like.
         if att_sum == 2:
@@ -256,18 +229,12 @@ class Model:
         elif att_sum == 1:
             return 1 + self.similarity_benefit
 
-        # Neutral/neutral and like/dislike, possibly similar...
-        elif att_sum == 0 and similar:
+        # Neutral/neutral and like/dislike.
+        elif att_sum == 0:
+            # Neutral/neutral.
             if a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
                 return 1 + self.similarity_benefit
-            elif a1.attitudes[a2.index] == 1 or a2.attitudes[a1.index] == 1:
-                return 1 + self.similarity_benefit - self.one_dislike_penalty
-            else:
-                raise RuntimeError("An unexpected attitude situation occurred")
-        # ... or dissimilar.
-        elif att_sum == 0 and not similar:
-            if a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
-                return 1
+            # Like/dislike.
             elif a1.attitudes[a2.index] == 1 or a2.attitudes[a1.index] == 1:
                 return 1 + self.similarity_benefit - self.one_dislike_penalty
             else:
