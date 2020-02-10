@@ -1,0 +1,13 @@
+#! /bin/bash
+#SBATCH -p fast.q
+#SBATCH -J id-sig-prototype
+#SBATCH -o prototype.out
+#SBATCH -n 20
+#SBATCH -t 03:00:00
+
+
+printf "\nSubmitted prototype job. Started at `uptime`\n"
+
+python run_trials_prototype.py
+
+printf "Finished at `uptime`\n"

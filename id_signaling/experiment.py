@@ -87,7 +87,10 @@ def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
 
     # seed = int(round(trial_index * time.time()))
 
-    print(f'running trial with random seed {seed}')
+    # print(f'running trial with random seed {seed}')
+    with open('log.txt', 'a+') as f:
+        f.write(f'running trial with random seed {seed}\n')
+
     # Initialize model for trial.
     model = Model(prob_overt_receiving=R,
                   prob_covert_receiving=covert_rec_prob,
