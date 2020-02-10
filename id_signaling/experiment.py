@@ -6,8 +6,12 @@ treatments.
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
+import pandas as pd
+import sys
+import time
 
 from functools import partial
+from time import sleep
 
 from .model import Model
 
@@ -24,30 +28,70 @@ def vary_covert_receiving_prob(covert_rec_probs=[0.05, 0.15, 0.25, 0.35, 0.45],
                for k in covert_rec_probs}
 
     # Initialize process pool that will run trials in parallel.
-    pool = mp.Pool(processes=4)
-    for covert_rec_prob in covert_rec_probs:
+    # pooled_trials = list()
 
-        # Partial evaluation of _one_trial, providing necessary arguments.
-        # XXX May be able to use args= and kws={} in apply_async.
-        trial_func = partial(_one_trial, n_iter=n_iter, covert_rec_prob=covert_rec_prob,
-                             R=R, **model_kwargs)
+    # Need to pick random seeds at random
+    seeds = np.random.randint(2**32 - 1,
+                              size=(len(covert_rec_probs), n_trials))
 
-        pooled_trials = [
-            pool.apply_async(trial_func)
-            for _ in range(n_trials)
-        ]
+    for prob_idx, covert_rec_prob in enumerate(covert_rec_probs):
 
-        for trial_idx, process_res in enumerate(pooled_trials):
-            results[covert_rec_prob][trial_idx] = process_res.get()
+        with mp.Pool(processes=4) as pool:
+
+            trial_func = partial(_one_trial, n_iter=n_iter,
+                                 covert_rec_prob=covert_rec_prob,
+                                 R=R, **model_kwargs)
+
+            these_seeds = seeds[prob_idx]
+
+            results[covert_rec_prob] = np.array(
+                list(pool.map(trial_func, these_seeds))
+            )
 
     return results
 
 
-def _one_trial(n_iter, covert_rec_prob, R, **model_kwargs):
+def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
+                                 n_iter=100, R=0.5):
 
+    results = np.zeros((n_trials, n_iter + 1))
+    seeds = np.random.randint(2**32 - 1, size=(n_trials,))
+
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+
+        trial_func = partial(_one_trial, n_iter=n_iter,
+                             covert_rec_prob=receptivity,
+                             R=R, homophily=homophily)
+        results = np.array(
+            list(pool.map(trial_func, seeds))
+        )
+
+    return pd.DataFrame(
+        {
+            "timestep": list(range(n_iter + 1)) * n_trials,
+
+            "trial_idx": [idx
+                          for _ in range(n_iter + 1)
+                          for idx in range(n_trials)],
+
+            "homophily": [homophily] * n_trials * (n_iter + 1),
+
+            "receptivity": [receptivity] * n_trials * (n_iter + 1),
+
+            "prop_covert": results.flatten()
+        }
+    )
+
+
+def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
+
+    # seed = int(round(trial_index * time.time()))
+
+    print(f'running trial with random seed {seed}')
     # Initialize model for trial.
     model = Model(prob_overt_receiving=R,
                   prob_covert_receiving=covert_rec_prob,
+                  random_seed=seed,
                   **model_kwargs)
 
     # Run model for desired number of iterations.
@@ -55,6 +99,7 @@ def _one_trial(n_iter, covert_rec_prob, R, **model_kwargs):
 
     # Models have an attribute representing proportion of covert signalers.
     return model.prop_covert_series
+    # output.put(model.prop_covert_series)
 
 
 def analyze_covert_receiving_prob(results):

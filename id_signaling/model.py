@@ -19,7 +19,7 @@ class Model:
     def __init__(self, N=100, n_rounds=10, K=3, prob_overt_receiving=0.75,
                  prob_covert_receiving=0.25, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
-                 homophily=0.25, evo_logistic_loc=1.25,
+                 homophily=0.25, evo_logistic_loc=1.25, random_seed=None,
                  evo_logistic_scale=12):
         '''
         Arguments:
@@ -61,10 +61,13 @@ class Model:
 
         assert (homophily >= 0.0) and (homophily <= 0.5)
 
+        np.random.seed(random_seed)
+
         self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
 
         # This is the series of proportion of covert signalers.
         self.prop_covert_series = np.array([_proportion_covert(self)])
+
 
     def run(self, n_iter):
         '''
