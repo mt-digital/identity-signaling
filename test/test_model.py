@@ -67,7 +67,8 @@ def test_signal_and_receive():
     # We just want to know that different strategies influence one another
     # as expected, so don't care about payoffs, percentages of receivers,
     # etc.
-    model, agents = _setup_model_agents(prop_overt=1.0, prop_covert=1.0)
+    model, agents = _setup_model_agents(prob_overt_receiving=1.0,
+                                        prob_covert_receiving=1.0)
 
     # Check now that generous and churlish receiving interacted as expected
     # with signaling strategies and given traits.
@@ -95,7 +96,8 @@ def test_expected_payoffs():
 
     n_rounds = 10000
     model, agents = _setup_model_agents(
-        prop_overt=1.0, prop_covert=1.0, homophily=0.0, n_rounds=n_rounds
+        prob_overt_receiving=1.0, prob_covert_receiving=1.0,
+        homophily=0.0, n_rounds=n_rounds
     )
 
     # Write out π(i,j) interact calculated by hand.
@@ -228,5 +230,3 @@ def test_dyadic_interaction_probs():
     assert model1._dyadic_interaction_prob(a1, a2) == 0.4
     assert model3._dyadic_interaction_prob(a1, a2) == 0.2
     assert model5._dyadic_interaction_prob(a1, a2) == 0.0
-
-

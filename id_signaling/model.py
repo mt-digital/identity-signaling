@@ -16,8 +16,8 @@ SIGNALING_STRATEGIES = ["Overt", "Covert"]
 
 class Model:
 
-    def __init__(self, N=100, n_rounds=10, K=3, prop_overt=0.75,
-                 prop_covert=0.25, similarity_benefit=0.25,
+    def __init__(self, N=100, n_rounds=10, K=3, prob_overt_receiving=0.75,
+                 prob_covert_receiving=0.25, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
                  homophily=0.25, evo_logistic_loc=1.25,
                  evo_logistic_scale=12):
@@ -26,8 +26,8 @@ class Model:
             N (int): Number of agents, i.e. population
             n_r (int): Number of assortment/payoff rounds per interaction round
             K (int): Number of traits per agent
-            prop_overt (float): Proportion of agents receiving overt signals
-            prop_covert (float): Proportion of agents receiving covert signals
+            prob_overt_receiving (float): Proportion of agents receiving overt signals
+            prob_covert_receiving (float): Proportion of agents receiving covert signals
             similarity_benefit (float): Benefit to dyads where there is some
                 minimal similarity between agents. Should be between 0 and 1.
             one_dislike_penalty (float): Deduction in interaction payoff when
@@ -50,8 +50,8 @@ class Model:
         self.N = N
         self.n_rounds = n_rounds
         self.K = K
-        self.prop_overt = prop_overt
-        self.prop_covert = prop_covert
+        self.prob_overt_receiving = prob_overt_receiving
+        self.prob_covert_receiving = prob_covert_receiving
         self.similarity_benefit = similarity_benefit
         self.one_dislike_penalty = one_dislike_penalty
         self.two_dislike_penalty = two_dislike_penalty
@@ -63,6 +63,7 @@ class Model:
 
         self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
 
+        # This is the series of proportion of covert signalers.
         self.prop_covert_series = np.array([_proportion_covert(self)])
 
     def run(self, n_iter):
@@ -93,9 +94,9 @@ class Model:
 
             # Determine which of the two receiver proportions should be used.
             receive_prob = (
-                self.prop_overt
+                self.prob_overt_receiving
                 if signaller.signaling_strategy == "Overt" else
-                self.prop_covert
+                self.prob_covert_receiving
             )
 
             # Build a list of receivers who will observe the signal.
