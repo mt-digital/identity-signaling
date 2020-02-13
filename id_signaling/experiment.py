@@ -83,11 +83,41 @@ def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
     )
 
 
+def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
+                                n_iter=100, R=0.5):
+
+    results = np.zeros((n_trials, n_iter + 1))
+    seeds = np.random.randint(2**32 - 1, size=(n_trials,))
+
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        trial_func = partial(_one_trial, n_iter=n_iter,
+                             covert_rec_prob=0.25,
+                             one_dislike_penalty=dislike_penalty,
+                             two_dislike_penalty=dislike_penalty,
+                             R=R, homophily=homophily)
+        results = np.array(
+            list(pool.map(trial_func, seeds))
+        )
+
+    return pd.DataFrame(
+        {
+            "timestep": list(range(n_iter + 1)) * n_trials,
+
+            "trial_idx": [idx
+                          for _ in range(n_iter + 1)
+                          for idx in range(n_trials)],
+
+            "dislike_penalty": [dislike_penalty] * n_trials * (n_iter + 1),
+
+            "homophily": [homophily] * n_trials * (n_iter + 1),
+
+            "prop_covert": results.flatten()
+        }
+    )
+
+
 def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
 
-    # seed = int(round(trial_index * time.time()))
-
-    # print(f'running trial with random seed {seed}')
     with open('log.txt', 'a+') as f:
         f.write(f'running trial with random seed {seed}\n')
 
@@ -102,7 +132,6 @@ def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
 
     # Models have an attribute representing proportion of covert signalers.
     return model.prop_covert_series
-    # output.put(model.prop_covert_series)
 
 
 def analyze_covert_receiving_prob(results):
