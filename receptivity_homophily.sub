@@ -1,13 +1,13 @@
 #! /bin/bash
 #SBATCH -p fast.q
-#SBATCH -J id-sig-prototype
-#SBATCH -o prototype.out
+#SBATCH -J receptivity-homophily
+#SBATCH -o receptivity-homophily.out
 #SBATCH -n 20
 #SBATCH -t 04:00:00
 
 
-printf "\nSubmitted prototype job. Started at `uptime`\n"
+printf "\nSubmitted receptivity-homophily job. Started at `uptime`\n"
 
-python run_disliking_homophily.py
+python run_receptivity_homophily.py
 
 printf "Finished at `uptime`\n"
