@@ -32,24 +32,22 @@
 
 \usepackage{graphicx}
 
-\title{Identity signaling model progress}
+\title{\vspace{-1in}Identity signaling model progress}
 
 \author{} %{Matthew A.~Turner}}
 
 \begin{document}
 \maketitle
 
-\section*{Preliminary results}
+\section*{Evolution in signaling strategy}
 
 For these preliminary results I focus on the evolution of signaling strategies,
 and set receiving strategies to be randomly assigned with probability 0.5 to
-each agent at model initialization. I set $R=0.5$, $s=0.25$, $d=\delta=0.25$,
-and $N=100$. After signaling, agents go through 10 rounds of assortment/interaction,
-followed by evolution after the 10 rounds of interaction. The model has been
-run out to 100 timesteps where timeseries are nearly stable, though we will
-want more timesteps for our final study, or perhaps adjust the number of 
-assortment/interaction rounds up or down per timestep, to guarantee full 
-stability (see Figure~\ref{fig:exampleSeries}).
+each agent at model initialization. The output measure in these experiments
+is density of covert signalers. There are confirmatory results for two
+computational experiments in which I: (1) varied relative covert receptivity $r/R$ and 
+homophily, $w$; and (2) varied the disliking penalties set equal, $d=\delta$,
+and homophily, $w$.
 
 \subsection*{Density of covert signalers vs. $r/R$ and homophily, $w$}
 
@@ -59,11 +57,18 @@ density of covert signalers in the population ($\rho_C$) on
 the receptiveness of the population to covert signals ($r$) and the
 importance of homophily ($w$) to assortment. 
 
+Here I set $R=0.5$, $s=0.25$, $d=\delta=0.25$,
+and $N=100$. After signaling, agents go through 10 rounds of assortment/interaction,
+followed by evolution after the 10 rounds of interaction. The model has been
+run out to 100 timesteps where timeseries are nearly stable, though we will
+want more timesteps for our final study, or perhaps adjust the number of 
+assortment/interaction rounds up or down per timestep, to guarantee full 
+stability.
+
 I systematically varied $r/R$ by setting $R=0.5$ and varied 
 $r \in \{0.0, 0.05, 0.1, \ldots, 0.45\}$ to get $r/R \in \{0.0, 0.1, \ldots, 0.9\}$.
 I varied homophily similartly to $r$, $w \in \{0.0, 0.5, \ldots, 0.45\}$. Note
 that both $r$ and $w$ are bounded above by 0.5.
-
 
 \begin{figure}[H]
   \centering
@@ -71,7 +76,6 @@ that both $r$ and $w$ are bounded above by 0.5.
   \caption{Timeseries of nine combinations of $r/R$ and $w$.}
   \label{fig:receptivityHomophilySeries}
 \end{figure}
-
 
 \begin{figure}[H]
   \centering
@@ -81,13 +85,17 @@ that both $r$ and $w$ are bounded above by 0.5.
   \label{fig:receptivityHomophilyHeatmap}
 \end{figure}
 
+
 \subsection*{Density of covert signalers vs. disliking penalty $d=\delta$ and homophily, $w$}
 
 Here we co-vary the disliking penalties, which we set equal ($d=\delta$), and
-homophily, $w$. The bonus payoff for two interacting agents where at least one
-likes the other is set to $s=0.25$. The payoff structure is as follows
+homophily, $w$. I ran the model to 200 timesteps this time, which did allow
+the series to settle more, but perhaps not to a significant degree 
+(Figure~\ref{fig:dislikingHomophilySeries}). The bonus payoff for two 
+interacting agents where at least one
+likes the other is set fixed to $s=0.25$. The payoff structure is as follows
 
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \begin{tabular}{rl}
    Attitude combo. & Payoff \\
@@ -101,21 +109,19 @@ likes the other is set to $s=0.25$. The payoff structure is as follows
   \end{tabular}
 \end{table}
 
-Specifically, we vary $d=\delta \in \{0.0, 0.05, 0.1, \ldots, 0.45\}
+Specifically, we vary $d=\delta \in \{0.0, 0.05, 0.1, \ldots, 0.45\}$
 As in the above experiment, we set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
-In this experiment we ran the simulations to 200 timesteps 
-(Figure~\ref{fig:dislikingHomophilySeries}).
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\textwidth]{Figures/exampleMidrangeSeries.pdf}
+  \includegraphics[width=0.8\textwidth]{Figures/dislikingHomophilySeries.pdf}
   \caption{Timeseries of nine combinations of $d=\delta$ and $w$.}
   \label{fig:dislikingHomophilySeries}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-\includegraphics[width=0.8\textwidth]{Figures/covertDensityVsReceptivityHomophily.pdf}
+\includegraphics[width=0.8\textwidth]{Figures/covertDensityVsDislikingHomophily.pdf}
   \caption{Density of covert signalers at $t=100$, final timestep recorded
     in this preliminary experiment.}
   \label{fig:dislikingHomophilyHeatmap}
