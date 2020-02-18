@@ -67,6 +67,7 @@ class Model:
 
         # This is the series of proportion of covert signalers.
         self.prop_covert_series = np.array([_proportion_covert(self)])
+        self.prop_churlish_series = np.array([_proportion_churlish(self)])
 
 
     def run(self, n_iter):
@@ -90,6 +91,11 @@ class Model:
             self.prop_covert_series= np.append(
                 self.prop_covert_series, _proportion_covert(self)
             )
+            self.prop_churlish_series= np.append(
+                self.prop_churlish_series, _proportion_churlish(self)
+            )
+
+            self._reset_attitudes()
 
     def _signal_and_receive(self):
 
@@ -220,8 +226,23 @@ class Model:
                 )
                 # Switch specified teacher strategy for learner's in-place.
                 # XXX setting strategy type explicitly for now.
-                strategy_type = "Signaling"
-                self._switch_strategy(learner, teacher, strategy_type)
+                # strategy_type = "Signaling"
+                # print(strategy_type)
+                if strategy_type == "Signaling":
+                    learner.signaling_strategy = teacher.signaling_strategy
+                else:
+                    learner.receiving_strategy = teacher.receiving_strategy
+
+    def _reset_attitudes(self):
+        '''
+        This resets attitudes, which occurs after evolution happens.
+        '''
+        for agent in self.agents:
+            if agent.receiving_strategy == "Generous":
+                self.attitudes = np.zeros((self.N,), dtype=int)
+            else:
+                self.attitudes = -1 * np.ones((self.N,), dtype=int)
+
 
     def _calculate_payoff(self, a1, a2):
         '''
@@ -263,62 +284,6 @@ class Model:
             raise RuntimeError(
                 "The attitude sum was not bounded between -2 and 2"
             )
-
-    def _switch_strategy(self, learner, teacher, strategy_type):
-        '''
-        Switch learner's strategy for teacher's strategy. Switches even if they
-        are the same since it's no more expensive to just do that.
-
-        Arguments:
-            learner (Agent): Learner agent who will adopt teacher's strategy
-                for the given type.
-            teacher (Agent): learner learns from teacher.
-            strategy_type: Either "Signaling" or "Receiving" to indicate which
-                of the two strategy elements is being updated.
-        Returns:
-            None, operates in-place to update learner's strategy.
-        '''
-        # If signaling is being updated, only have to update
-        # that instance attribute.
-        if strategy_type == "Signaling":
-            learner.signaling_strategy = teacher.signaling_strategy
-
-        # If receiving strategy is being updated, the learner's attitutdes towards
-        # other agents must be updated, since newly Churlish agents must turn
-        # neutral attitudes to dislike for those they have not received a signal
-        # from. Similarly, newly Generous agents must turn dislike to
-        # neutral for those agents from whom they have not received a signal.
-        # Note that they may have not received signals due to covert signaling.
-        elif strategy_type == "Receiving":
-
-            # Save some cycles if they have the same strategy, nothing to be done.
-            if not learner.receiving_strategy == teacher.receiving_strategy:
-
-                # Set learner strategy attribute string.
-                learner.receiving_strategy = teacher.receiving_strategy
-
-                # Need which agents the learner has *not* received a
-                # signal from before in both cases, learner becoming
-                # churlish or generous.
-                previous_partners = learner.previous_partners
-
-                # Create list of unknown agent indexes to update attitudes.
-                unknowns = list(
-                    set(range(self.N)) - learner.previous_partners
-                )
-
-                # If the learner is becoming churlish it must dislike
-                # unknown others...
-                if learner.receiving_strategy == "Churlish":
-                    learner.attitudes[unknowns] = -1
-
-                # ...otherwise the learner is becoming generous, i.e.
-                # have a neutral attitude toward unknown others.
-                else:
-                    learner.attitudes[unknowns] = 0
-
-        else:
-            raise RuntimeError(f"strategy_type {strategy_type} not recognized")
 
 
 def _logistic(x, loc=0, scale=1):

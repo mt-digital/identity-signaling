@@ -86,7 +86,8 @@ def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
 def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
                                 n_iter=100, R=0.5):
 
-    results = np.zeros((n_trials, n_iter + 1))
+    results_covert = np.zeros((n_trials, n_iter + 1))
+    results_churlish = np.zeros((n_trials, n_iter + 1))
     seeds = np.random.randint(2**32 - 1, size=(n_trials,))
 
     with mp.Pool(processes=mp.cpu_count()) as pool:
@@ -95,9 +96,13 @@ def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
                              one_dislike_penalty=dislike_penalty,
                              two_dislike_penalty=dislike_penalty,
                              R=R, homophily=homophily)
-        results = np.array(
-            list(pool.map(trial_func, seeds))
-        )
+        # results = np.array(
+        #     list(pool.map(trial_func, seeds))
+        # )
+        results = list(pool.map(trial_func, seeds))
+        results_covert = np.array([el[0] for el in results])
+        results_churlish = np.array([el[1] for el in results])
+
 
     return pd.DataFrame(
         {
@@ -111,7 +116,9 @@ def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
 
             "homophily": [homophily] * n_trials * (n_iter + 1),
 
-            "prop_covert": results.flatten()
+            "prop_covert": results_covert.flatten(),
+
+            "prop_churlish": results_churlish.flatten()
         }
     )
 
@@ -131,7 +138,7 @@ def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
     model.run(n_iter)
 
     # Models have an attribute representing proportion of covert signalers.
-    return model.prop_covert_series
+    return (model.prop_covert_series, model.prop_churlish_series)
 
 
 def analyze_covert_receiving_prob(results):
