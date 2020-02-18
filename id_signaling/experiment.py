@@ -54,7 +54,8 @@ def vary_covert_receiving_prob(covert_rec_probs=[0.05, 0.15, 0.25, 0.35, 0.45],
 def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
                                  n_iter=100, R=0.5):
 
-    results = np.zeros((n_trials, n_iter + 1))
+    results_covert = np.zeros((n_trials, n_iter + 1))
+    results_churlish = np.zeros((n_trials, n_iter + 1))
     seeds = np.random.randint(2**32 - 1, size=(n_trials,))
 
     with mp.Pool(processes=mp.cpu_count()) as pool:
@@ -62,9 +63,9 @@ def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
         trial_func = partial(_one_trial, n_iter=n_iter,
                              covert_rec_prob=receptivity,
                              R=R, homophily=homophily)
-        results = np.array(
-            list(pool.map(trial_func, seeds))
-        )
+        results = list(pool.map(trial_func, seeds))
+        results_covert = np.array([el[0] for el in results])
+        results_churlish = np.array([el[1] for el in results])
 
     return pd.DataFrame(
         {
@@ -78,7 +79,9 @@ def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
 
             "receptivity": [receptivity] * n_trials * (n_iter + 1),
 
-            "prop_covert": results.flatten()
+            "prop_covert": results_covert.flatten(),
+
+            "prop_churlish": results_churlish.flatten()
         }
     )
 
