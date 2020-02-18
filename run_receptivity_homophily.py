@@ -12,11 +12,11 @@ df_full = None
 for r in receptivities:
     for w in homophilies:
 
-        df = trials_receptivity_homophily(r, w, n_iter=100, n_trials=100)
+        df = trials_receptivity_homophily(r, w, n_iter=200, n_trials=100)
 
         if df_full is None:
             df_full = df
         else:
             df_full = df_full.append(df)
 
-df_full.to_csv(os.path.join(data_dir, 'test.csv'), index=False)
+df_full.to_csv(os.path.join(data_dir, 'receptivity.csv'), index=False)

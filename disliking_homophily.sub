@@ -2,7 +2,8 @@
 #SBATCH -p fast.q
 #SBATCH -J disliking-homophily
 #SBATCH -o disliking-homophily.out
-#SBATCH -n 20
+#SBATCH -e disliking-homophily.err
+#SBATCH -n 24
 #SBATCH -t 04:00:00
 
 
