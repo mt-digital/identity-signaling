@@ -3,12 +3,12 @@
 #SBATCH -J disliking-homophily
 #SBATCH -o disliking-homophily.out
 #SBATCH -e disliking-homophily.err
-#SBATCH -n 24
+#SBATCH -n 100
 #SBATCH -t 04:00:00
 
 
-printf "\nSubmitted disliking-homophily job. Started at `uptime`\n"
+# printf "\nSubmitted disliking-homophily job. Started at `uptime`\n"
 
-python run_disliking_homophily.py
+python -u run_disliking_homophily.py
 
-printf "Finished at `uptime`\n"
+# printf "Finished at `uptime`\n"

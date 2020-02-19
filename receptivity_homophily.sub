@@ -3,12 +3,12 @@
 #SBATCH -J receptivity-homophily
 #SBATCH -o receptivity-homophily.out
 #SBATCH -e receptivity-homophily.err
-#SBATCH -n 24
+#SBATCH -n 100
 #SBATCH -t 04:00:00
 
 
-printf "\nSubmitted receptivity-homophily job. Started at `uptime`\n"
+# printf "\nSubmitted receptivity-homophily job. Started at `uptime`\n"
 
-python run_receptivity_homophily.py
+python -u run_receptivity_homophily.py
 
-printf "Finished at `uptime`\n"
+# printf "Finished at `uptime`\n"

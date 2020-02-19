@@ -128,8 +128,10 @@ def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
 
 def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
 
-    with open('log.txt', 'a+') as f:
-        f.write(f'running trial with random seed {seed}\n')
+    print(f'running trial with random seed {seed}')
+
+    # with open('log.txt', 'a+') as f:
+    #     f.write(f'running trial with random seed {seed}\n')
 
     # Initialize model for trial.
     model = Model(prob_overt_receiving=R,
