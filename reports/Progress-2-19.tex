@@ -67,22 +67,46 @@ stability.
 
 I systematically varied $r/R$ by setting $R=0.5$ and varied 
 $r \in \{0.0, 0.05, 0.1, \ldots, 0.45\}$ to get $r/R \in \{0.0, 0.1, \ldots, 0.9\}$.
-I varied homophily similartly to $r$, $w \in \{0.0, 0.5, \ldots, 0.45\}$. Note
+I varied homophily identically to $r$, $w \in \{0.0, 0.5, \ldots, 0.45\}$. Note
 that both $r$ and $w$ are bounded above by 0.5.
 
 \begin{figure}[H]
+
   \centering
-  \includegraphics[width=0.8\textwidth]{Figures/exampleMidrangeSeries.pdf}
-  \caption{Timeseries of nine combinations of $r/R$ and $w$.}
-  \label{fig:receptivityHomophilySeries}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/receptivityHomophilyCovertSeries.pdf}
+    \caption{Density of covert signalers.}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/receptivityHomophilyChurlishSeries.pdf}
+    \caption{Density of churlish receivers.}
+  \end{subfigure}
+  
+  \caption{Timeseries of density of covert signalers and churlish receivers
+    for nine combinations of $r$ and $w$. Receptivity of
+    overt signals is $R=0.5$.}
+  \label{fig:dislikingHomophilySeries}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-\includegraphics[width=0.8\textwidth]{Figures/covertDensityVsReceptivityHomophily.pdf}
-  \caption{Density of covert signalers at $t=100$, final timestep recorded
-    in this preliminary experiment.}
-  \label{fig:receptivityHomophilyHeatmap}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/covertDensityVsReceptivityHomophilyCoevo.pdf}
+    \caption{Density of covert signalers.}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlishDensityVsReceptivityHomophilyCoevo.pdf}
+    \caption{Density of churlish receivers.}
+  \end{subfigure}
+  
+  \caption{Density of covert signalers and churlish receivers at $t=200$, 
+    final timestep recorded in this preliminary experiment. Receptivity of
+    overt signals is $R=0.5$.}
+  \label{fig:dislikingHomophilyHeatmap}
 \end{figure}
 
 
@@ -113,17 +137,39 @@ Specifically, we vary $d=\delta \in \{0.0, 0.05, 0.1, \ldots, 0.45\}$
 As in the above experiment, we set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
 
 \begin{figure}[H]
+
   \centering
-  \includegraphics[width=0.8\textwidth]{Figures/dislikingHomophilySeries.pdf}
-  \caption{Timeseries of nine combinations of $d=\delta$ and $w$.}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/dislikingHomophilyCovertSeries.pdf}
+    \caption{Density of covert signalers.}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/dislikingHomophilyChurlishSeries.pdf}
+    \caption{Density of churlish receivers.}
+  \end{subfigure}
+  
+  \caption{Timeseries of density of covert signalers and churlish receivers
+    for nine combinations of $d=\delta$ and $w$.}
   \label{fig:dislikingHomophilySeries}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-\includegraphics[width=0.8\textwidth]{Figures/covertDensityVsDislikingHomophily.pdf}
-  \caption{Density of covert signalers at $t=100$, final timestep recorded
-    in this preliminary experiment.}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/covertDensityVsDislikingHomophilyCoevo.pdf}
+    \caption{Density of covert signalers.}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlishDensityVsDislikingHomophilyCoevo.pdf}
+    \caption{Density of churlish receivers.}
+  \end{subfigure}
+  
+  \caption{Density of covert signalers and churlish receivers at $t=200$, 
+    final timestep recorded in this preliminary experiment.}
   \label{fig:dislikingHomophilyHeatmap}
 \end{figure}
 
