@@ -18,15 +18,19 @@ def test_calculate_payoff():
     model = Model(similarity_benefit=0.5,
                   one_dislike_penalty=0.25,
                   two_dislike_penalty=0.15)
+
     a0 = Agent(agent_idx=0)
     a1 = Agent(agent_idx=1)
 
-    # Like/like.
+    # Like/like. Only similar possible. Only one possible configuration.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([1, -1, -1])
+
     a0.attitudes = np.array([0, 1])
     a1.attitudes = np.array([1, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5
 
-    # Like/neutral.
+    # Like/neutral. Only similar possible.
     a0.attitudes = np.array([0, 1])
     a1.attitudes = np.array([0, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5
@@ -35,7 +39,10 @@ def test_calculate_payoff():
     a1.attitudes = np.array([1, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5
 
-    # Like/dislike.
+    # Like/dislike, similar.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([1, -1, -1])
+
     a0.attitudes = np.array([0, 1])
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5 - 0.25
@@ -44,7 +51,50 @@ def test_calculate_payoff():
     a1.attitudes = np.array([1, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5 - 0.25
 
-    # Neutral/dislike.
+    # Like/dislike, dissimilar. -- Impossible?
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([-1, -1, -1])
+
+    a0.attitudes = np.array([0, 1])
+    a1.attitudes = np.array([-1, -1])
+    assert model._calculate_payoff(a0, a1) == 1 - 0.25
+
+    a0.attitudes = np.array([0, -1])
+    a1.attitudes = np.array([1, -1])
+    assert model._calculate_payoff(a0, a1) == 1 - 0.25
+
+    # Neutral/neutral, similar.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([1, -1, -1])
+
+    a0.attitudes = np.array([0, 0])
+    a1.attitudes = np.array([0, -1])
+    assert model._calculate_payoff(a0, a1) == 1 + 0.5
+
+    # Neutral/neutral, dissimilar. Only one configuration.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([-1, -1, -1])
+
+    a0.attitudes = np.array([0, 0])
+    a1.attitudes = np.array([0, -1])
+    assert model._calculate_payoff(a0, a1) == 1
+
+    # Neutral/dislike, similar.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([1, -1, -1])
+
+    a0.attitudes = np.array([0, 0])
+    a1.attitudes = np.array([-1, -1])
+    assert model._calculate_payoff(a0, a1) == 1 + 0.5 - 0.25
+
+    a0.attitudes = np.array([0, -1])
+    a1.attitudes = np.array([0, -1])
+    assert model._calculate_payoff(a0, a1) == 1 + 0.5 - 0.25
+
+    # Neutral/dislike, dissimilar.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([-1, -1, -1])
+
     a0.attitudes = np.array([0, 0])
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25
@@ -53,7 +103,18 @@ def test_calculate_payoff():
     a1.attitudes = np.array([0, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25
 
-    # Dislike/dislike.
+    # Dislike/dislike, similar. Only one configuration.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([1, -1, -1])
+
+    a0.attitudes = np.array([0, -1])
+    a1.attitudes = np.array([-1, -1])
+    assert model._calculate_payoff(a0, a1) == 1 + 0.5 - 0.25 - 0.15
+
+    # Dislike/dislike, dissimilar. Only one configuration.
+    a0.traits = np.array([1, 1, -1])
+    a1.traits = np.array([-1, -1, -1])
+
     a0.attitudes = np.array([0, -1])
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25 - 0.15

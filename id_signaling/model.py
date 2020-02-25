@@ -19,8 +19,8 @@ class Model:
     def __init__(self, N=100, n_rounds=10, K=3, prob_overt_receiving=0.75,
                  prob_covert_receiving=0.25, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
-                 homophily=0.25, evo_logistic_loc=1.25, random_seed=None,
-                 evo_logistic_scale=12):
+                 homophily=0.25, random_seed=None, similarity_threshold=1,
+                 evo_logistic_loc=1.25, evo_logistic_scale=12):
         '''
         Arguments:
             N (int): Number of agents, i.e. population
@@ -37,6 +37,9 @@ class Model:
                 two_dislike_penalty should be less than 1.0.
             homophily (float): the degree to which agents prefer to interact
                 with similar others. Should be between 0 and 0.5.
+            similarity_threshold (int): the minimum difference between the
+                number of traits agents have in common and number of
+                opposing traits
             evo_logistic_loc (float): location where logistic function = 0.5
                 probability of switching strategies depending on relative
                 payoff. I.e. default is set so that 50% chance of switching
@@ -56,12 +59,14 @@ class Model:
         self.one_dislike_penalty = one_dislike_penalty
         self.two_dislike_penalty = two_dislike_penalty
         self.homophily = homophily
+        self.similarity_threshold = similarity_threshold
         self.evo_logistic_loc = evo_logistic_loc
         self.evo_logistic_scale = evo_logistic_scale
 
         assert (homophily >= 0.0) and (homophily <= 0.5)
 
-        np.random.seed(random_seed)
+        if random_seed is not None:
+            np.random.seed(random_seed)
 
         self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
 
@@ -252,6 +257,8 @@ class Model:
 
         att_sum = a1.attitudes[a2.index] + a2.attitudes[a1.index]
 
+        similar = (np.sum(a1.traits * a2.traits) >= self.similarity_threshold)
+
         # Like/like.
         if att_sum == 2:
             return 1 + self.similarity_benefit
@@ -263,21 +270,35 @@ class Model:
         # Neutral/neutral and like/dislike.
         elif att_sum == 0:
             # Neutral/neutral.
-            if a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
-                return 1 + self.similarity_benefit
-            # Like/dislike.
-            elif a1.attitudes[a2.index] == 1 or a2.attitudes[a1.index] == 1:
-                return 1 + self.similarity_benefit - self.one_dislike_penalty
+            if similar:
+                # Like/dislike
+                if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
+                    return 1 + self.similarity_benefit - self.one_dislike_penalty
+                # Neutrals
+                elif a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
+                    return 1 + self.similarity_benefit
             else:
-                raise RuntimeError("An unexpected attitude situation occurred")
+                # Like/dislike
+                if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
+                    return 1 - self.one_dislike_penalty
+                # Neutrals
+                elif a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
+                    return 1
 
         # Neutral/dislike.
         elif att_sum == -1:
-            return 1 - self.one_dislike_penalty
+            if similar:
+                return 1 + self.similarity_benefit - self.one_dislike_penalty
+            else:
+                return 1 - self.one_dislike_penalty
 
         # Dislike/dislike.
         elif att_sum == -2:
-            return 1 - self.one_dislike_penalty - self.two_dislike_penalty
+            if similar:
+                return 1 + self.similarity_benefit \
+                         - self.one_dislike_penalty - self.two_dislike_penalty
+            else:
+                return 1 - self.one_dislike_penalty - self.two_dislike_penalty
 
         # Shouldn't get here, but...
         else:
