@@ -85,6 +85,30 @@ def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
         }
     )
 
+def demo(parameter_vals, experiment='receptivity',
+         n_trials=4, n_iter=50, R=0.5):
+
+    if experiment == 'receptivity':
+        func = trials_receptivity_homophily
+    elif experiment == 'disliking':
+        func = trials_dislikepen_homophily
+    else:
+        raise RuntimeError(f'{experiment} not recognized')
+
+    # Run experiment trials for each parameter setting and append to returned
+    # dataframe with all trial data.
+    df_full = None
+
+    for val in parameter_vals:
+
+        df = func(val, val, n_iter=n_iter, n_trials=n_trials, R=R)
+
+        if df_full is None:
+            df_full = df
+        else:
+            df_full = df_full.append(df)
+
+    return df_full
 
 def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
                                 n_iter=100, R=0.5):
