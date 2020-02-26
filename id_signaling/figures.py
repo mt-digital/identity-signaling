@@ -151,7 +151,7 @@ def heatmap(df, experiment='disliking', strategy='signaling',
         relative_receptivity.sort()
         ax.set_xticklabels(relative_receptivity)
 
-    ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0, 0.46, 0.05)]);
+    ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
@@ -208,7 +208,8 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     ax.invert_yaxis()
     # ax.set_yticklabels(['0.1', '0.25', '0.4'])
     ax.set_ylabel('Homophily, $w$', size=15)
-    ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0, 0.46, 0.05)]);
+    # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0, 0.46, 0.05)]);
+    ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
