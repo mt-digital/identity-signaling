@@ -185,7 +185,7 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     plt.figure(figsize=figsize)
     ax = sns.heatmap(
         diff.stack(), square=True, vmin=vmin, vmax=vmax,
-        cmap=sns.diverging_palette(10, 220, sep=80, n=7),
+        cmap=sns.diverging_palette(10, 220, sep=80, n=10), #, center='dark'),
         cbar_kws={
             'label':
                 f'Difference in density\n'
@@ -215,7 +215,8 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
 
 def covert_churlish_regression(df, # exp_param_vals, homophily_vals,
                                experiment='receptivity',
-                               minority_subset=None, **kwargs):
+                               minority_subset=None, savefig_path=None,
+                               **kwargs):
     # Get pairs of final (prop_covert, prop_churlish) for each trial and
     # perform/plot regression of prop_covert vs. prop_churlish.
 # Set up plot annotations depending on which kind of experiment
@@ -243,12 +244,17 @@ def covert_churlish_regression(df, # exp_param_vals, homophily_vals,
 
     x = df[xcol]
     y = df[ycol]
-    from scipy import stats
-    sns.regplot(x, y, line_kws=dict(color='r'))
-    pearson_coef, p_value = stats.pearsonr(x, y) #define the columns to perform calculations on
-    plt.title(f'{experiment.title()}, all parameter combinations\nPearson correlation coefficient: {pearson_coef:.2f}\nP-value: {p_value:.2e}')
-            # sns.jointplot(x, y, kind='reg', # label=f'{(exp_param_val, homophily_val)}',
-            #   annot_kws=dict(stat='r', template='{stat} = {val:.2g}; p = {p:.1e}', frameon=False))
 
-    # plt.legend(bbox_to_anchor=(1.01, 0.9), loc='upper left', ncol=1, title=exp_inset,
-    #            borderaxespad=0, frameon=False, prop={'size': 12})
+    from scipy import stats
+
+    sns.regplot(x, y, line_kws=dict(color='r'),
+                scatter_kws=dict(lw=0, s=45, alpha=0.125))
+    plt.ylabel('Covert signaler proportion', size=16)
+    plt.xlabel('Churlish receiver proportion', size=16)
+
+    pearson_coef, p_value = stats.pearsonr(x, y) #define the columns to perform calculations on
+
+    plt.title(f'{experiment.title()}, all parameter combinations\nPearson correlation coefficient: {pearson_coef:.2f}\nP-value: {p_value:.2e}')
+
+    if savefig_path is not None:
+        plt.savefig(savefig_path)
