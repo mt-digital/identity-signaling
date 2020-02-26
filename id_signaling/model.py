@@ -268,18 +268,26 @@ class Model:
 
             # Calculate interaction probability for every possible teacher,
             # setting self-teaching probability to zero.
+            if self.minority_test:
+                if learner in self.minority_agents:
+                    maybe_teachers = self.minority_agents
+                else:
+                    maybe_teachers = self.majority_agents
+            else:
+                maybe_teachers = self.agents
+
             probs = np.array(
                 [
                     self._dyadic_interaction_prob(learner, maybe_teacher)
                     if maybe_teacher != learner else 0.0
 
-                    for maybe_teacher in self.agents
+                    for maybe_teacher in maybe_teachers
                 ]
             )
             # Normalize probabilities.
             probs = probs / probs.sum()
             # Weight random teacher selection by calculated probabilities.
-            teacher = choice(self.agents, p=probs)
+            teacher = choice(maybe_teachers, p=probs)
 
             # Learner payoff sometimes is zero at the beginning of the model...
             if learner.payoff > 0:
