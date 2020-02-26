@@ -97,10 +97,11 @@ class Model:
                 set(self.agents) - set(self.minority_agents)
             )
 
-
-            # Initialize a series of agents over time. See below.
-            # self.minority_agents_series = []
-            # self.majority_agents_series = []
+            # Set traits.
+            for agent in self.minority_agents:
+                agent.traits[0] = 1
+            for agent in self.majority_agents:
+                agent.traits[0] = -1
 
             self.prop_covert_series_minority = np.array(
                 [_proportion_covert(self, subset='minority')]
