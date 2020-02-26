@@ -29,6 +29,7 @@
 \usepackage{bigfoot}
 \usepackage[export]{adjustbox}
 \setlength\intextsep{0pt}
+\hypersetup{linktocpage}
 
 \usepackage{graphicx}
 
@@ -38,6 +39,7 @@
 
 \begin{document}
 \maketitle
+\tableofcontents
 
 \section{Evolution in signaling and receiving strategies}
 
@@ -217,14 +219,15 @@ As in the above experiment, I set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
 
 \section{Minority populations}
 
-So far in these results I tested the case where a 10\% of all agents have
+So far in these results I tested the case where a 10\% or 25\% of all agents have
 the minority trait, $+1$ in the first trait vector position. 
-The other 90\% have the majority trait, $-1$ in the first trait vector position.
+The other 90\% or 75\% have the majority trait, $-1$ in the first trait vector position.
 
 $r=0.25$, $R=0.5$.
 
 \subsection{Covert signaling}
 
+\subsubsection{Fraction of minorities = 0.10}
 \begin{figure}[H]
   \centering
   \begin{subfigure}{0.49\textwidth}
@@ -241,7 +244,7 @@ $r=0.25$, $R=0.5$.
   \end{subfigure}
   \caption{Mean timeseries of the evolution of covert signaling in the
     majority (a) and minority (b) populations.}
-  \label{fig:regressions}
+  \label{fig:}
 \end{figure}
 
 
@@ -277,10 +280,64 @@ $r=0.25$, $R=0.5$.
   \label{fig:}
 \end{figure}
 
+\subsubsection{Fraction of minorities = 0.25}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/covert_series_majority_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/covert_series_minority_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \caption{Mean timeseries of the evolution of covert signaling in the
+    majority (a) and minority (b) populations.}
+  \label{fig:regressions}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/majority_signalers_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/minority_signalers_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \caption{Proprtion of covert signalers for different parameter settings in the
+    majority (a) and minority (b) populations.}
+  \label{fig:regressions}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.6\textwidth]{Figures/covert_signalers_diff_025.pdf}
+  \caption{Difference between proportion of covert signalers in the minority 
+    and majority populations. When cost of disliking is high and homophily is 
+    low, more minority agents are covert signalers than majority agents,
+    proportionally. An increase in homophily enables minority agents to 
+    find one another more easily, so overt signaling, which reaches more of
+    the population, is advantageous.
+  }
+  \label{fig:}
+\end{figure}
 
 
 \subsection{Churlish receiving}
 
+\subsubsection{Fraction of minorities = 0.10}
 
 \begin{figure}[H]
   \centering
@@ -324,6 +381,63 @@ $r=0.25$, $R=0.5$.
 \begin{figure}[H]
   \centering
     \includegraphics[width=0.6\textwidth]{Figures/churlish_receivers_diff.pdf}
+  \caption{Difference between proportion of churlish receivers in the minority 
+    and majority populations. Here the dependence is primarily on homophily.
+    If homophily is too low, the minority population cannot interact often
+    enough with their in-group, and so must adopt a non-churlish stance towards
+    others in order to not suffer cost of disliking penalties. Once the minority
+    can reliably find its in-group members (increasing homophily) the minority
+    can afford to assume they dislike others, since by and large they dislike
+    the majority.
+  }
+  \label{fig:}
+\end{figure}
+
+
+\subsubsection{Fraction of minorities = 0.25}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_series_majority_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_series_minority_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \caption{Mean timeseries of the evolution of churlish receiving in the
+    majority (a) and minority (b) populations.}
+  \label{fig:regressions}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/majority_receivers_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/minority_receivers_025.pdf}
+    \caption{}
+    \label{fig:}
+  \end{subfigure}
+  \caption{Proprtion of churlish receivers for different parameter settings in the
+    majority (a) and minority (b) populations.}
+  \label{fig:regressions}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.6\textwidth]{Figures/churlish_receivers_diff_025.pdf}
   \caption{Difference between proportion of churlish receivers in the minority 
     and majority populations. Here the dependence is primarily on homophily.
     If homophily is too low, the minority population cannot interact often
