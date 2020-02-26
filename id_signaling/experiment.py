@@ -142,7 +142,7 @@ def trials_minority(exp_param, homophily, minority_trait_frac=0.1,
         # XXX this suggests changing column to 'disliking' for that
         # experiment.
         experiment: [exp_param] * n_trials * (n_iter + 1)
-        }
+    }
 
     ret_dict.update(ret_series_data)
 
