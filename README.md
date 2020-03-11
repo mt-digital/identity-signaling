@@ -1,10 +1,10 @@
 # The evolution of identity and covert signaling
 
 This model is the agent-based implementation of Smaldino, Flamson, \& 
-McElreath (2018), ``The Evolution of Covert Signaling''. 
+McElreath (2018), "The Evolution of Covert Signaling". 
 
 So far we have developed three experiments: _covert signaling receptivity_
-(``receptivity''), _disliking penalty_ (``disliking''), and _minority populations_. 
+("receptivity"), _disliking penalty_ ("disliking"), and _minority populations_. 
 The minority populations experiment essentially disliking 
 experiment, but sets a minority of the population to have one trait (1 in code) 
 and a majority of the population to have the opposite trait (-1 in code). In the
