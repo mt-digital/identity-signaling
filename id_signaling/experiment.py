@@ -186,15 +186,16 @@ def run_experiments(exp_param_vals, homophily_vals, experiment='receptivity',
                           experiment=experiment, n_trials=n_trials,
                           n_iter=n_iter, R=R)
             else:
-                df = func(val, val, n_iter=n_iter, n_trials=n_trials, R=R)
+                df = func(exp_param_val, homophily,
+                          n_iter=n_iter, n_trials=n_trials, R=R)
 
             if df_full is None:
                 df_full = df
             else:
                 df_full = df_full.append(df)
 
-
     return df_full
+
 
 def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
                                 n_iter=100, R=0.5):
