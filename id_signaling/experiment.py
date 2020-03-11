@@ -86,6 +86,116 @@ def trials_receptivity_homophily(receptivity, homophily, n_trials=10,
     )
 
 
+def trials_minority(exp_param, homophily, minority_trait_frac=0.1,
+                    experiment='disliking',
+                    n_trials=10, n_iter=100, R=0.5):
+
+    ###  XXX XXX XXX  ###
+    # Start here in AM. #
+    #####################
+
+    results_covert = np.zeros((n_trials, n_iter + 1))
+    results_churlish = np.zeros((n_trials, n_iter + 1))
+    seeds = np.random.randint(2**32 - 1, size=(n_trials,))
+
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+
+        if experiment == 'receptivity':
+            trial_func = partial(_one_minority_trial, n_iter=n_iter,
+                                 covert_rec_prob=exp_param,
+                                 minority_trait_frac=minority_trait_frac,
+                                 R=R, homophily=homophily)
+
+        elif experiment == 'disliking':
+            trial_func = partial(_one_minority_trial, n_iter=n_iter,
+                                 covert_rec_prob=0.25,
+                                 one_dislike_penalty=exp_param,
+                                 two_dislike_penalty=exp_param,
+                                 minority_trait_frac=minority_trait_frac,
+                                 R=R, homophily=homophily)
+        else:
+            raise RuntimeError(f'{experiment} not recognized')
+
+        results = list(pool.map(trial_func, seeds))
+
+        r0 = results[0]
+        results_dict = {k: [] for k in r0.keys()}
+        for result in results:
+            for k, v in result.items():
+                results_dict[k].append(v)
+
+        ret_series_data = {k: np.array(v).flatten()
+                           for k, v in results_dict.items()}
+            # results_dict.update({
+            #     k: results_dict[k].append(v) for k, v in result.items()
+            # })
+
+    ret_dict = {
+        'timestep': list(range(n_iter + 1)) * n_trials,
+
+        'trial_idx': [idx
+                      for _ in range(n_iter + 1)
+                      for idx in range(n_trials)],
+
+        'homophily': [homophily] * n_trials * (n_iter + 1),
+
+        # XXX this suggests changing column to 'disliking' for that
+        # experiment.
+        experiment: [exp_param] * n_trials * (n_iter + 1)
+    }
+
+    ret_dict.update(ret_series_data)
+
+    ret = pd.DataFrame(ret_dict)
+
+    return ret
+
+            # "prop_covert": results_covert.flatten(),
+
+            # "prop_churlish": results_churlish.flatten(),
+
+            # "prop_covert_minority": results_covert_minority.flatten(),
+            # "prop_churlish_minority": results_churlish_minority.flatten(),
+
+            # "prop_covert_majority": results_covert_majority.flatten(),
+            # "prop_churlish_majority": results_churlish_majority.flatten()
+        # }
+
+
+def run_experiments(exp_param_vals, homophily_vals, experiment='receptivity',
+                    n_trials=4, n_iter=50, R=0.5, minority_trait_frac=None):
+
+    if minority_trait_frac is not None:
+        func = trials_minority
+    elif experiment == 'receptivity':
+        func = trials_receptivity_homophily
+    elif experiment == 'disliking':
+        func = trials_dislikepen_homophily
+    else:
+        raise RuntimeError(f'{experiment} not recognized')
+
+    # Run experiment trials for each parameter setting and append to returned
+    # dataframe with all trial data.
+    df_full = None
+
+    for exp_param_val in exp_param_vals:
+        for homophily in homophily_vals:
+
+            if minority_trait_frac is not None:
+                df = func(exp_param_val, homophily, minority_trait_frac,
+                          experiment=experiment, n_trials=n_trials,
+                          n_iter=n_iter, R=R)
+            else:
+                df = func(val, val, n_iter=n_iter, n_trials=n_trials, R=R)
+
+            if df_full is None:
+                df_full = df
+            else:
+                df_full = df_full.append(df)
+
+
+    return df_full
+
 def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
                                 n_iter=100, R=0.5):
 
@@ -115,7 +225,7 @@ def trials_dislikepen_homophily(dislike_penalty, homophily, n_trials=10,
                           for _ in range(n_iter + 1)
                           for idx in range(n_trials)],
 
-            "dislike_penalty": [dislike_penalty] * n_trials * (n_iter + 1),
+            "dislike": [dislike_penalty] * n_trials * (n_iter + 1),
 
             "homophily": [homophily] * n_trials * (n_iter + 1),
 
@@ -130,9 +240,6 @@ def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
 
     print(f'running trial with random seed {seed}')
 
-    # with open('log.txt', 'a+') as f:
-    #     f.write(f'running trial with random seed {seed}\n')
-
     # Initialize model for trial.
     model = Model(prob_overt_receiving=R,
                   prob_covert_receiving=covert_rec_prob,
@@ -145,6 +252,31 @@ def _one_trial(seed, n_iter, covert_rec_prob, R, **model_kwargs):
     # Models have an attribute representing proportion of covert signalers.
     return (model.prop_covert_series, model.prop_churlish_series)
 
+
+def _one_minority_trial(seed, n_iter, minority_trait_frac,
+                        covert_rec_prob, R, **model_kwargs):
+
+    print(f'running trial with random seed {seed}')
+
+    # Initialize model for trial.
+    model = Model(prob_overt_receiving=R,
+                  prob_covert_receiving=covert_rec_prob,
+                  minority_trait_frac=minority_trait_frac,
+                  random_seed=seed,
+                  **model_kwargs)
+
+    # Run model for desired number of iterations.
+    model.run(n_iter)
+
+    # Models have an attribute representing proportion of covert signalers.
+    return {
+        'prop_covert': model.prop_covert_series,
+        'prop_churlish': model.prop_churlish_series,
+        'prop_covert_minority': model.prop_covert_series_minority,
+        'prop_churlish_minority': model.prop_churlish_series_minority,
+        'prop_covert_majority': model.prop_covert_series_majority,
+        'prop_churlish_majority': model.prop_churlish_series_majority,
+    }
 
 def analyze_covert_receiving_prob(results):
 

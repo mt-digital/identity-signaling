@@ -2,10 +2,11 @@
 Model of the evolution of identity covert signaling
 
 Author: Matthew A. Turner
-Date: 2020-01-23
+Date: 2020-02-25
 '''
 import numpy as np
 
+from copy import deepcopy
 from numpy.random import choice, uniform
 from scipy.special import expit
 
@@ -19,8 +20,9 @@ class Model:
     def __init__(self, N=100, n_rounds=10, K=3, prob_overt_receiving=0.75,
                  prob_covert_receiving=0.25, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
-                 homophily=0.25, evo_logistic_loc=1.25, random_seed=None,
-                 evo_logistic_scale=12):
+                 homophily=0.25, random_seed=None, similarity_threshold=1,
+                 minority_trait_frac=None,
+                 evo_logistic_loc=1.25, evo_logistic_scale=12):
         '''
         Arguments:
             N (int): Number of agents, i.e. population
@@ -37,6 +39,13 @@ class Model:
                 two_dislike_penalty should be less than 1.0.
             homophily (float): the degree to which agents prefer to interact
                 with similar others. Should be between 0 and 0.5.
+            similarity_threshold (int): the minimum difference between the
+                number of traits agents have in common and number of
+                opposing traits
+            minority_trait_frac (float): number between 0 and 1 indicating
+                what fraction of agents should be ``minority'' agents with
+                first trait +1, and set first trait of majority to -1. If
+                None, do not set minority agents.
             evo_logistic_loc (float): location where logistic function = 0.5
                 probability of switching strategies depending on relative
                 payoff. I.e. default is set so that 50% chance of switching
@@ -56,14 +65,57 @@ class Model:
         self.one_dislike_penalty = one_dislike_penalty
         self.two_dislike_penalty = two_dislike_penalty
         self.homophily = homophily
+        self.similarity_threshold = similarity_threshold
         self.evo_logistic_loc = evo_logistic_loc
         self.evo_logistic_scale = evo_logistic_scale
 
         assert (homophily >= 0.0) and (homophily <= 0.5)
 
-        np.random.seed(random_seed)
+        if random_seed is not None:
+            np.random.seed(random_seed)
 
         self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
+
+        # Have a marker for the run() method if it should track majority/
+        # minority agents over time so we can later recover their
+        # proportional strategies.
+        self.minority_test = False
+        if minority_trait_frac is not None:
+
+            # Set minority_trait_frac of agents to have first trait +1
+            # and set the rest to have -1. The +1 will be the minorities
+            # along the first trait dimension.
+            self.minority_test = True
+
+            # Select minority agents.
+            self.minority_agents = list(choice(self.agents,
+                                         size=int(N*minority_trait_frac),
+                                         replace=False))
+
+            # Majority agents are the ones unselected for minority.
+            self.majority_agents = list(
+                set(self.agents) - set(self.minority_agents)
+            )
+
+            # Set traits.
+            for agent in self.minority_agents:
+                agent.traits[0] = 1
+            for agent in self.majority_agents:
+                agent.traits[0] = -1
+
+            self.prop_covert_series_minority = np.array(
+                [_proportion_covert(self, subset='minority')]
+            )
+            self.prop_churlish_series_minority = np.array(
+                [_proportion_churlish(self, subset='minority')]
+            )
+
+            self.prop_covert_series_majority = np.array(
+                [_proportion_covert(self, subset='majority')]
+            )
+            self.prop_churlish_series_majority = np.array(
+                [_proportion_churlish(self, subset='majority')]
+            )
 
         # This is the series of proportion of covert signalers.
         self.prop_covert_series = np.array([_proportion_covert(self)])
@@ -94,6 +146,27 @@ class Model:
             self.prop_churlish_series= np.append(
                 self.prop_churlish_series, _proportion_churlish(self)
             )
+
+            # Record minority/majority agents if running the minority test.
+            if self.minority_test:
+
+                self.prop_covert_series_minority = np.append(
+                    self.prop_covert_series_minority,
+                    _proportion_covert(self, subset='minority')
+                )
+                self.prop_churlish_series_minority = np.append(
+                    self.prop_churlish_series_minority,
+                    _proportion_churlish(self, subset='minority')
+                )
+
+                self.prop_covert_series_majority = np.append(
+                    self.prop_covert_series_majority,
+                    _proportion_covert(self, subset='majority')
+                )
+                self.prop_churlish_series_majority = np.append(
+                    self.prop_churlish_series_majority,
+                    _proportion_churlish(self, subset='majority')
+                )
 
             self._reset_attitudes()
 
@@ -195,18 +268,26 @@ class Model:
 
             # Calculate interaction probability for every possible teacher,
             # setting self-teaching probability to zero.
+            if self.minority_test:
+                if learner in self.minority_agents:
+                    maybe_teachers = self.minority_agents
+                else:
+                    maybe_teachers = self.majority_agents
+            else:
+                maybe_teachers = self.agents
+
             probs = np.array(
                 [
                     self._dyadic_interaction_prob(learner, maybe_teacher)
                     if maybe_teacher != learner else 0.0
 
-                    for maybe_teacher in self.agents
+                    for maybe_teacher in maybe_teachers
                 ]
             )
             # Normalize probabilities.
             probs = probs / probs.sum()
             # Weight random teacher selection by calculated probabilities.
-            teacher = choice(self.agents, p=probs)
+            teacher = choice(maybe_teachers, p=probs)
 
             # Learner payoff sometimes is zero at the beginning of the model...
             if learner.payoff > 0:
@@ -252,6 +333,8 @@ class Model:
 
         att_sum = a1.attitudes[a2.index] + a2.attitudes[a1.index]
 
+        similar = (np.sum(a1.traits * a2.traits) >= self.similarity_threshold)
+
         # Like/like.
         if att_sum == 2:
             return 1 + self.similarity_benefit
@@ -263,21 +346,35 @@ class Model:
         # Neutral/neutral and like/dislike.
         elif att_sum == 0:
             # Neutral/neutral.
-            if a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
-                return 1 + self.similarity_benefit
-            # Like/dislike.
-            elif a1.attitudes[a2.index] == 1 or a2.attitudes[a1.index] == 1:
-                return 1 + self.similarity_benefit - self.one_dislike_penalty
+            if similar:
+                # Like/dislike
+                if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
+                    return 1 + self.similarity_benefit - self.one_dislike_penalty
+                # Neutrals
+                elif a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
+                    return 1 + self.similarity_benefit
             else:
-                raise RuntimeError("An unexpected attitude situation occurred")
+                # Like/dislike
+                if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
+                    return 1 - self.one_dislike_penalty
+                # Neutrals
+                elif a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
+                    return 1
 
         # Neutral/dislike.
         elif att_sum == -1:
-            return 1 - self.one_dislike_penalty
+            if similar:
+                return 1 + self.similarity_benefit - self.one_dislike_penalty
+            else:
+                return 1 - self.one_dislike_penalty
 
         # Dislike/dislike.
         elif att_sum == -2:
-            return 1 - self.one_dislike_penalty - self.two_dislike_penalty
+            if similar:
+                return 1 + self.similarity_benefit \
+                         - self.one_dislike_penalty - self.two_dislike_penalty
+            else:
+                return 1 - self.one_dislike_penalty - self.two_dislike_penalty
 
         # Shouldn't get here, but...
         else:
@@ -305,21 +402,57 @@ def _logistic(x, loc=0, scale=1):
     return expit(xtrans)
 
 #: Calculate proportion of covert agents in a Model instance.
-def _proportion_covert(model):
-    return (
-        np.sum(
-            [a.signaling_strategy == "Covert" for a in model.agents]
-        ) / model.N
-    )
+def _proportion_covert(model, subset=None):
+
+    if subset is None:
+        return (
+            np.sum(
+                [a.signaling_strategy == "Covert" for a in model.agents]
+            ) / model.N
+        )
+    elif subset == 'minority':
+        return (
+            np.sum(
+                [a.signaling_strategy == "Covert"
+                 for a in model.minority_agents]
+            ) / len(model.minority_agents)
+        )
+    elif subset == 'majority':
+        return (
+            np.sum(
+                [a.signaling_strategy == "Covert"
+                 for a in model.majority_agents]
+            ) / len(model.majority_agents)
+        )
+    else:
+        print(f'{subset} not recognized')
 
 
 #: Calculate proportion of churlish agents in a Model instance.
-def _proportion_churlish(model):
-    return (
-        np.sum(
-            [a.receiving_strategy == "Churlish" for a in model.agents]
-        ) / model.N
-    )
+def _proportion_churlish(model, subset=None):
+
+    if subset is None:
+        return (
+            np.sum(
+                [a.receiving_strategy == "Churlish" for a in model.agents]
+            ) / model.N
+        )
+    elif subset == 'minority':
+        return (
+            np.sum(
+                [a.receiving_strategy == "Churlish"
+                 for a in model.minority_agents]
+            ) / len(model.minority_agents)
+        )
+    elif subset == 'majority':
+        return (
+            np.sum(
+                [a.receiving_strategy == "Churlish"
+                 for a in model.majority_agents]
+            ) / len(model.majority_agents)
+        )
+    else:
+        print(f'{subset} not recognized')
 
 class Agent:
 
