@@ -10,6 +10,55 @@ experiment, but sets a minority of the population to have one trait (1 in code)
 and a majority of the population to have the opposite trait (-1 in code). In the
 minority experiment, the fraction of the population in the minority is varied.
 
+## Quickstart
+
+Clone this repository and change into its directory. Start a virtualenv
+and install the command-line scripts `subexp` and `runexp`. `subexp` will
+submit jobs to the slurm queue, where job scripts call the `runexp` command,
+both contained in `id_signaling/scripts/runner.py`.
+
+All together,
+```
+git clone https://github.com/mt-digital/identity-signaling.git
+cd identity-signaling
+virtualenv venv
+pip install --editable .
+```
+
+Then submit a disliking/homophily experiment where disliking and homophily are
+both varied over three values: 0.0, 0.25, and 0.5, using matlab-ish notation
+with 40 iterations and 4 trials per parameter combination; save the file to
+`disliking.csv`, and set some other parameters (run `subexp --help` for
+details). To see the job submission script run `subexp` as a dry run using the `-d` flag
+at the end of the command. We submit the script with all these options like so
+```
+subexp disliking 0.0:0.51:0.25 0.0:0.51:0.25 40 4 minority_0.1.csv -R0.5 -n400 -qstd.q -t01:00:00 -d
+```
+
+This prints out the job submission script
+
+```
+#! /bin/bash
+#SBATCH -p std.q
+#SBATCH -J disliking
+#SBATCH -o disliking.out
+#SBATCH -e disliking.err
+#SBATCH -n 400
+#SBATCH -t 01:00:00
+
+printf "******************\nStarting disliking at `uptime`\n"
+
+runexp disliking 0.0:0.51:0.25 0.0:0.51:0.25 4 40 \
+    minority_0.1.csv -R0.5 -mNone
+
+printf "******************\nFinished at `uptime`"
+```
+
+This will be submitted to teh cluster using the `squeue` command when the
+`-d` flag is not passed to `subexp`.
+
+## Experiments
+
 Below is more on each experiment and code examples showing how to run them.
 
 The output dataframes can be used in the `plot_evolution`, `heatmap`, and,

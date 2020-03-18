@@ -150,17 +150,6 @@ def trials_minority(exp_param, homophily, minority_trait_frac=0.1,
 
     return ret
 
-            # "prop_covert": results_covert.flatten(),
-
-            # "prop_churlish": results_churlish.flatten(),
-
-            # "prop_covert_minority": results_covert_minority.flatten(),
-            # "prop_churlish_minority": results_churlish_minority.flatten(),
-
-            # "prop_covert_majority": results_covert_majority.flatten(),
-            # "prop_churlish_majority": results_churlish_majority.flatten()
-        # }
-
 
 def run_experiments(exp_param_vals, homophily_vals, experiment='receptivity',
                     n_trials=4, n_iter=50, R=0.5, minority_trait_frac=None):
@@ -178,6 +167,10 @@ def run_experiments(exp_param_vals, homophily_vals, experiment='receptivity',
     # dataframe with all trial data.
     df_full = None
 
+    # XXX Current problem is that experiments not parallelized over all
+    # exp_param, homophily, and trial_idx---we'll get speedup if 100 don't have to
+    # finish all at once before another 100 start running, as currently
+    # happens.
     for exp_param_val in exp_param_vals:
         for homophily in homophily_vals:
 
