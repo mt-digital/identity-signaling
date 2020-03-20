@@ -32,7 +32,7 @@ with 40 iterations and 4 trials per parameter combination; save the file to
 details). To see the job submission script run `subexp` as a dry run using the `-d` flag
 at the end of the command. We submit the script with all these options like so
 ```
-subexp disliking 0.0:0.51:0.25 0.0:0.51:0.25 40 4 minority_0.1.csv -R0.5 -n400 -qstd.q -t01:00:00 -d
+subexp disliking 0.0:0.51:0.25 0.0:0.51:0.25 40 4 disliking.csv -R0.5 -n400 -qstd.q -t01:00:00 -d
 ```
 
 This prints out the job submission script
@@ -49,7 +49,7 @@ This prints out the job submission script
 printf "******************\nStarting disliking at `uptime`\n"
 
 runexp disliking 0.0:0.51:0.25 0.0:0.51:0.25 4 40 \
-    minority_0.1.csv -R0.5 -mNone
+    disliking.csv -R0.5 -mNone
 
 printf "******************\nFinished at `uptime`"
 ```
