@@ -80,6 +80,8 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
     ret = dict(
         timestep=np.arange(0, n_tstep, dtype=int),
         trial_idx=[seed]*n_tstep,
+        initial_prop_covert=[model.initial_prop_covert]*n_tstep,
+        initial_prop_churlish=[model.initial_prop_churlish]*n_tstep,
         prop_covert=model.prop_covert_series,
         prop_churlish=model.prop_churlish_series,
         homophily=[homophily] * n_tstep
@@ -130,14 +132,3 @@ def _one_minority_trial(seed, n_iter, minority_trait_frac,
         'prop_churlish_majority': model.prop_churlish_series_majority,
     }
 
-# def analyze_covert_receiving_prob(results):
-
-#     # Calculate mean series for each covert receiving probability.
-#     mean_series = {
-#         covert_rec_prob: results_array.mean(axis=0)
-#         for covert_rec_prob, results_array in results.items()
-#     }
-
-#     # Plot them.
-#     for covert_rec_prob, series in mean_series.items():
-#         plt.plot(series, label=f"r/R = {covert_rec_prob / 0.5}")

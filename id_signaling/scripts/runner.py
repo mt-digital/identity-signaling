@@ -33,19 +33,24 @@ def basic_decorator():
                      type=float, default=0.5),
         click.option('--minority_trait_frac', '-m',
                      type=float, default=None),
+        click.option('--initial_prop_covert', type=float, default=0.5),
+        click.option('--initial_prop_churlish', type=float, default=0.5),
    )
 
 ## RUNEXP ##
 @basic_decorator()
 def run(experiment, param_vals, homophily_vals, n_trials, n_iter,
-        output_file, prob_overt_receiving, minority_trait_frac):
+        output_file, prob_overt_receiving, minority_trait_frac,
+        initial_prop_covert, initial_prop_churlish):
 
     param_vals = np.arange(*[float(val) for val in param_vals.split(':')])
     homophily_vals = np.arange(*[float(val) for val in homophily_vals.split(':')])
     # XXX This is where to go to edit parallelization. See note in run_experiments XXX
     out_df = run_experiments(param_vals, homophily_vals, experiment, n_trials,
                              n_iter, prob_overt_receiving=prob_overt_receiving,
-                             minority_trait_frac=minority_trait_frac)
+                             minority_trait_frac=minority_trait_frac,
+                             initial_prop_covert=initial_prop_covert,
+                             initial_prop_churlish=initial_prop_churlish)
 
     out_df.to_csv(output_file, index=False)
 
@@ -55,19 +60,22 @@ def run(experiment, param_vals, homophily_vals, n_trials, n_iter,
 @click.option('--ncpu', '-n', type=int, default=100)
 @click.option('--wall_time', '-t', type=str, default='04:00:00')
 @click.option('--dry_run', '-d', is_flag=True)
+@click.option('--job_name', '-j', default=None)
 def sub(
-        experiment, param_vals, homophily_vals, n_trials, n_iter,
-        output_file, overt_receptivity, minority_trait_frac,
-        queue, ncpu, wall_time, dry_run
+        experiment, param_vals, homophily_vals, n_iter, n_trials,
+        output_file, prob_overt_receiving, minority_trait_frac,
+        initial_prop_covert, initial_prop_churlish,
+        queue, ncpu, wall_time, dry_run, job_name
     ):
     """
     Submit experiment trials to the cluster using slurm .sub template.
     """
 
-    if minority_trait_frac is not None:
-        job_name = f'minority_{minority_trait_frac}'
-    else:
-        job_name = experiment
+    if job_name is None:
+        if minority_trait_frac is not None:
+            job_name = f'minority_{minority_trait_frac}'
+        else:
+            job_name = experiment
 
     subscript = \
 f'''#! /bin/bash
@@ -81,7 +89,7 @@ f'''#! /bin/bash
 printf "******************\\nStarting {job_name} at `uptime`\\n"
 
 runexp {experiment} {param_vals} {homophily_vals} {n_trials} {n_iter} \\
-    {output_file} -R{overt_receptivity} -m{minority_trait_frac}
+    {output_file} -R{prob_overt_receiving} -m{minority_trait_frac}
 
 printf "******************\\nFinished at `uptime`"
 '''

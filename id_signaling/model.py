@@ -22,6 +22,7 @@ class Model:
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
                  homophily=0.25, random_seed=None, similarity_threshold=1,
                  minority_trait_frac=None,
+                 initial_prop_covert=0.5, initial_prop_churlish=0.5,
                  evo_logistic_loc=1.25, evo_logistic_scale=12):
         '''
         Arguments:
@@ -69,12 +70,29 @@ class Model:
         self.evo_logistic_loc = evo_logistic_loc
         self.evo_logistic_scale = evo_logistic_scale
 
+        self.initial_prop_covert = initial_prop_covert
+        self.initial_prop_churlish = initial_prop_churlish
+
         assert (homophily >= 0.0) and (homophily <= 0.5)
 
         if random_seed is not None:
             np.random.seed(random_seed)
 
-        self.agents = [Agent(idx, K=K, N=N) for idx in range(N)]
+        choose_rec = lambda : \
+            choice(['Churlish', 'Generous'],
+                   p=[initial_prop_churlish, 1 - initial_prop_churlish])
+
+        choose_sig = lambda : \
+            choice(['Covert', 'Overt'],
+                   p=[initial_prop_covert, 1 - initial_prop_covert])
+
+        self.agents = [
+            Agent(idx, K=K, N=N,
+                  receiving_strategy=choose_rec(),
+                  signaling_strategy=choose_sig()
+                 )
+            for idx in range(N)
+        ]
 
         # Have a marker for the run() method if it should track majority/
         # minority agents over time so we can later recover their
