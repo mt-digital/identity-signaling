@@ -1,5 +1,6 @@
 import click
 import numpy as np
+import subprocess
 
 from id_signaling.experiment import run_experiments
 
@@ -98,4 +99,4 @@ printf "******************\\nFinished at `uptime`"
         print(subscript)
 
     else:
-        pass  # TODO submit the subscript using squeue
+        subprocess.run(['sbatch'], stdin=subscript)
