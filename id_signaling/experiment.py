@@ -3,6 +3,7 @@ Computational experiments investigating behavior of the identity
 signalling model over different parameter settings and other experimental
 treatments.
 '''
+import click
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
@@ -56,7 +57,8 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
     exp_param = trial_tup[1]
     homophily = trial_tup[2]
 
-    print(f'running trial with random seed {seed}')
+    # print(f'running trial with random seed {seed}')
+    click.echo(f'running trial with random seed {seed}')
 
     # Initialize model for trial.
     if experiment == 'disliking':
