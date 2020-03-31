@@ -89,7 +89,8 @@ def plot_evolution(df, experiment='receptivity',
 
 
 def heatmap(df, experiment='disliking', strategy='signaling',
-            figsize=(6, 4.75), minority_subset=None, savefig_path=None):
+            figsize=(6, 4.75), minority_subset=None, savefig_path=None,
+            title=None, vmin=None, vmax=None):
 
     if experiment == 'disliking':
         exp_inset = '$(d=\delta,~w)$'
@@ -127,7 +128,8 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
     plt.figure(figsize=figsize)
     ax = sns.heatmap(final_means.stack(), cmap='YlGnBu_r', square=True,
-                    cbar_kws={'label': f'Density of {strategy_inset.lower()}'},
+                     cbar_kws={'label': f'Density of {strategy_inset.lower()}'},
+                     vmin=vmin, vmax=vmax
                     )
 
     # Set size of colorbar title.
@@ -153,6 +155,8 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
     ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
 
+    if title is not None:
+        ax.set_title(title, size=14)
     if savefig_path is not None:
         plt.savefig(savefig_path)
 
