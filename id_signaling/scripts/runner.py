@@ -94,7 +94,8 @@ f'''#! /bin/bash
 #SBATCH -J {job_name}
 #SBATCH -o {job_name}.out
 #SBATCH -e {job_name}.err
-#SBATCH -n {ncpu}
+#SBATCH -n 1
+#SBATCH -c {ncpu}
 #SBATCH -t {wall_time}
 
 printf "******************\\nStarting {job_name} at `uptime`\\n"

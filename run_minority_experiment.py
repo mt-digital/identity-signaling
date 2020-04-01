@@ -4,7 +4,7 @@ import sys
 import os
 
 # XXX Change this to change the minority fraction.
-minority_trait_frac = 0.1
+minority_trait_frac = 0.05
 
 data_dir = 'output_data'
 
