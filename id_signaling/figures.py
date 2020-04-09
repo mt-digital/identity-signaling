@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pandas as pd
 import seaborn as sns
 
 
@@ -9,6 +11,7 @@ def plot_evolution(df, experiment='receptivity',
                    homophily_vals=[0.1, 0.25, 0.4],
                    minority_subset=None,
                    savefig_path=None,
+                   ax=None,
                    **plot_kwargs):
     '''
     Arguments:
@@ -72,7 +75,7 @@ def plot_evolution(df, experiment='receptivity',
     gb_mean = df.groupby([exp_col, 'homophily', 'timestep'])[data_col].mean()
     means = gb_mean.unstack(level=(0, 1))
 
-    means.plot(lw=4, alpha=0.75, **plot_kwargs)
+    ax = means.plot(lw=4, alpha=0.75, ax=ax, **plot_kwargs)
 
     # Put legend outside of plot with label determined by experiment type.
     plt.legend(bbox_to_anchor=(1.01, 0.9), loc='upper left', ncol=1, title=exp_inset,
@@ -87,10 +90,57 @@ def plot_evolution(df, experiment='receptivity',
     if savefig_path is not None:
         plt.savefig(savefig_path)
 
+    return ax
+
+
+def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
+                     colors=['black', 'mediumorchid', 'dodgerblue'],
+                     savefig_path=None, ax=None,
+                     figsize=(7.5, 4), **plot_kwargs):
+
+    # Plot N lines for given exp_param_vals and homophily_vals
+    # representing evolution of signaling strategy in terms of
+    # density of covert signalers.
+    ax = plot_evolution(df, experiment=experiment,
+                        exp_param_vals=exp_param_vals,
+                        homophily_vals=homophily_vals,
+                        figsize=figsize, color=colors, ax=ax)
+
+    # Plot N lines for given exp_param_vals and homophily_vals
+    # representing evolution of receiving strategy in terms of
+    # density of covert signalers.
+    plot_evolution(df, experiment=experiment,
+                   exp_param_vals=exp_param_vals,
+                   strategy='receiving',
+                   homophily_vals=homophily_vals, ls='--',
+                   figsize=figsize, color=colors, ax=ax)
+
+    plt.title('Coevolution of sending\nand receiving strategies')
+
+    plt.ylabel(r'$\rho_{cov}$ (solid)' '\n' r'$\rho_{ch}$ (dashed)',
+               rotation=0, ha='right', size=14)
+
+    plt.yticks(np.arange(0, 1.01, 0.25));
+
+    # Hacky, written currently for up to 3 exp_param_vals and homophily vals.
+    handles, labels = ax.get_legend_handles_labels()
+
+    if experiment == 'disliking':
+        exp_inset = r'$(d=\delta,~w)$'
+    elif experiment == 'receptivity':
+        exp_inset = r'$(r,~w)$'
+
+    ax.legend(handles[:3], labels[:3], bbox_to_anchor=(1.01, 0.9), loc='upper left',
+          ncol=1, title=exp_inset, borderaxespad=0, frameon=False, prop={'size': 12},
+          title_fontsize=14)
+
+    if savefig_path is not None:
+        plt.savefig(savefig_path)
+
 
 def heatmap(df, experiment='disliking', strategy='signaling',
             figsize=(6, 4.75), minority_subset=None, savefig_path=None,
-            title=None, vmin=None, vmax=None):
+            title=None, cmap='YlGnBu_r', **heatmap_kwargs):
 
     if experiment == 'disliking':
         exp_inset = '$(d=\delta,~w)$'
@@ -125,11 +175,17 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     means = gb_mean.unstack(level=(0, 1))
 
     final_means = means[means.index == means.index[-1]]
+    # final_means = means[means.timestep == means.timestep.max()]
+    # print(final_means.stack().max())
+    print(final_means.stack())
+    print(final_means.head())
+
 
     plt.figure(figsize=figsize)
-    ax = sns.heatmap(final_means.stack(), cmap='YlGnBu_r', square=True,
-                     cbar_kws={'label': f'Density of {strategy_inset.lower()}'},
-                     vmin=vmin, vmax=vmax
+
+    ax = sns.heatmap(final_means.stack(), cmap=cmap, square=True,
+                     # cbar_kws={'label': f'Density of {strategy_inset.lower()}'},
+                     **heatmap_kwargs
                     )
 
     # Set size of colorbar title.
@@ -149,11 +205,15 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
 
     if experiment == 'receptivity':
-        relative_receptivity = df.receptivity.unique() / 0.5
-        relative_receptivity.sort()
-        ax.set_xticklabels(relative_receptivity)
+        relative_receptivity = np.sort(df.receptivity.unique() / 0.5)
+        ax.set_xticklabels([f'{x:.1f}' for x in relative_receptivity], rotation=0)
+    else:
+        ax.set_xticklabels([f'{x:.1f}'
+                            for x in np.sort(df.disliking.unique())], rotation=30)
 
-    ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
+    # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
+
+    ax.set_yticklabels([f'{y:.1f}' for y in np.sort(df['homophily'].unique())])
 
     if title is not None:
         ax.set_title(title, size=14)
@@ -263,3 +323,238 @@ def covert_churlish_regression(df, # exp_param_vals, homophily_vals,
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
+
+
+def load_minority_dfs(directory='data/minority',
+                      minority_vals=[0.05, 0.10, 0.15, 0.2,
+                                     0.25, 0.3, 0.35, 0.4, 0.45]):
+
+    minority_vals_labels = [f'{val:.2f}' for val in minority_vals]
+
+    return [
+        (label, pd.read_csv(os.path.join(directory, label, 'full.csv')))
+        for label in minority_vals_labels
+    ]
+
+
+def covert_vs_minority_frac(minority_dfs, dislikings, homophily, ax=None):
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5, 4))
+
+    minority_frac_strs = [el[0] for el in minority_dfs]
+
+    print(minority_frac_strs)
+
+    styles = ['-', '--', ':']
+
+    for d_idx, disliking in enumerate(dislikings):
+
+        means_over_minority_frac = []
+        std_over_minority_frac = []
+
+        for minority_frac_str, df in minority_dfs:
+            # First extract all N_trials final covert signaling proportions.
+            pre = mean_final_cov_prop = df[
+                (df.timestep == 500) &
+                (df.disliking == disliking) &
+                (df.homophily == homophily)
+            ]
+
+            # print(len(pre))
+
+            mean_final_cov_prop = pre.prop_covert_minority.mean()
+            std_final_cov_prop = pre.prop_covert_minority.std()
+
+            means_over_minority_frac.append(mean_final_cov_prop)
+            std_over_minority_frac.append(std_final_cov_prop)
+
+        # ax.plot(means_over_minority_frac, color='black', ls=styles[d_idx],
+        #         label=f'$d=\\delta={disliking:.2f}$')
+        print(std_over_minority_frac)
+        ax.errorbar(range(len(means_over_minority_frac)),
+                    means_over_minority_frac, yerr=std_over_minority_frac,
+                    # color='black',
+                    ls=styles[d_idx],
+                    label=f'$d=\\delta={disliking:.2f}$')
+
+        ax.set_xticklabels([''] + minority_frac_strs, size=14, rotation=35)
+
+        ax.set_ylim(0, 1.05)
+
+        yticks = np.arange(0, 1.01, 0.25)
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(labels=[f'{y:.2f}' for y in yticks], size=14)
+        ax.set_ylabel(r'$\rho_{cov,T}$', size=15)
+        ax.set_xlabel(r'$\rho_{minor}$', size=15)
+
+        ax.legend()
+
+        ax.set_title(f'$w={homophily:.2f}$', size=14)
+
+
+def invasion_heatmaps(disliking_df, recept_df,
+                      cmap=sns.cubehelix_palette(
+                          50, hue=0.05, rot=0, light=0.0,
+                          dark=0.9, as_cmap=True
+                      ),
+                      invading='covert',
+                      vmin=-0.05, vmax=0.05,
+                      base_filename='reports/Figures/invasion',
+                      figsize=(8, 5),
+                      save_path=None):
+        #, center='dark'),
+    '''
+    Plot 3x2 heatmaps in subplots. 3-element rows are each for one of the
+    two experiments, with disliking penalty or covert receptivity on the
+    y-axis and homophily on the x-axis.
+
+    I suspect there is a smart way to do this, but I'm repeating a lot of
+    code from overt/covert to generous/churlish plotting. It's just the
+    fastest way right now that shouldn't be too onerous.
+    '''
+    timesteps = 500
+
+    fig, axes = plt.subplots(2, 3, sharex=True, figsize=figsize)
+
+    # Step 1: do this for covert invading and generalize from there.
+    if invading in ('overt', 'covert'):
+
+        if invading == 'covert':
+            init_cov = 0.05
+        else:
+            init_cov = 0.95
+
+        init_churs = [0.05, 0.5, 0.95]
+
+        # final_dis = disliking_df[disliking_df.timestep == timesteps]
+        # final_rec = recept_df[recept_df.timestep == timesteps]
+        for exp_idx, name_df in enumerate([("Disliking penalty", disliking_df),
+                                            ("Relative\ncovert receptivity", recept_df)]):
+            for chur_idx, init_chur in enumerate(init_churs):
+
+                name = name_df[0]
+                df = name_df[1]
+
+                # ax.plot((exp_idx + chur_idx) * np.arange(10))
+                df_lim = df[(df.initial_prop_covert == init_cov) &
+                            (df.initial_prop_churlish == init_chur)]
+
+                _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
+                                      init_chur, exp_idx, chur_idx, timesteps,
+                                      cmap)
+
+    elif invading in ('churlish', 'generous'):
+
+        if invading == 'churlish':
+            init_chur = 0.05
+        else:
+            init_chur = 0.95
+
+        init_covs = [0.05, 0.5, 0.95]
+
+        for exp_idx, name_df in enumerate([("Disliking penalty", disliking_df),
+                                            ("Relative\ncovert receptivity", recept_df)]):
+            for cov_idx, init_cov in enumerate(init_covs):
+
+                name = name_df[0]
+                df = name_df[1]
+
+                df_lim = df[(df.initial_prop_covert == init_cov) &
+                            (df.initial_prop_churlish == init_chur)]
+
+                _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
+                                      init_chur, exp_idx, cov_idx, timesteps,
+                                      cmap)
+
+    plt.tight_layout()
+
+    if save_path is not None:
+        plt.savefig(save_path)
+
+def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
+                          init_chur, exp_idx, chur_cov_idx, timesteps,
+                          cmap):
+
+    final = df_lim[df_lim.timestep == timesteps]
+
+    # Create a new boolean column marking if invasion was
+    # successful.
+    if invading == 'covert':
+        final['success'] = final.prop_covert > 0.0
+    elif invading == 'overt':
+        final['success'] = final.prop_covert < 1.0
+    elif invading == 'churlish':
+        final['success'] = final.prop_churlish > 0.0
+    elif invading == 'generous':
+        final['success'] = final.prop_churlish < 1.0
+    else:
+        raise RuntimeError(f'{invading} strategy not recognized')
+
+    # Set correct column name to aggregate over.
+    colname = ('disliking', 'receptivity')[exp_idx]
+
+    rate = final.groupby(
+        [colname, 'homophily']
+    ).agg({'success': np.mean})
+
+    ax = axes[exp_idx, chur_cov_idx]
+
+    shrink = 0.6
+    if chur_cov_idx != 2:
+        # cbar=False
+        cbar=True
+        cbar_kws={'shrink': shrink}
+    else:
+        cbar=True
+        cbar_kws={'label': 'Invasion success ratio',
+                  'shrink': shrink}
+
+    sns.heatmap(
+        rate['success'].unstack(),
+        cmap=cmap, square=True, vmin=0, vmax=1,
+        ax=ax, cbar=cbar, cbar_kws=cbar_kws
+    )
+
+    ax.set_xticklabels(
+        [f'{x:.1f}' for x in np.sort(df_lim.homophily.unique())],
+        rotation=0
+    )
+    if colname == 'disliking':
+        if chur_cov_idx == 0:
+            labs = [f'{y:.1f}' for y in np.sort(df_lim[colname].unique())]
+            ax.set_yticklabels(
+                labs,
+                rotation=0
+            )
+        else:
+            ax.set_yticklabels(['']*6)
+    else:
+        if chur_cov_idx == 0:
+            ax.set_yticklabels(
+                [f'{y:.1f}' for y in np.sort(df_lim[colname].unique()) / 0.5],
+                rotation=0
+            )
+        else:
+            ax.set_yticklabels(['']*6)
+
+    if exp_idx == 0:
+        if invading in ['overt', 'covert']:
+            ax.set_title(f'$\\rho_{{ch,0}} = {init_chur}$', size=12)
+        else:
+            ax.set_title(f'$\\rho_{{cov,0}} = {init_cov}$', size=12)
+
+    if chur_cov_idx == 0:
+        ax.set_ylabel(name, size=12)
+    else:
+        ax.set_ylabel('')
+
+    if exp_idx == 1:
+        ax.set_xlabel('Homophily', size=12)
+    else:
+        ax.set_xlabel('')
+
+    ax.invert_yaxis()
+
+    for _, spine in ax.spines.items():
+        spine.set_visible(True)

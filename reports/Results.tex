@@ -41,6 +41,116 @@
 \maketitle
 \tableofcontents
 
+\section{Introduction}
+
+(JUST SOME SKETCHY/INCOMPLETE/INCORRECT NOTES MOSTLY FOR MYSELF)
+
+Relationship between sending and receiving strategies in signaling: 
+sending strategies in this model are \emph{overt} and \emph{covert}; 
+receiving strategies are \emph{generous} and \emph{churlish}. We assume
+that agents first signal their traits according to their sending strategy,
+and receive signals from other individuals according to their receiving
+strategy. These signals, in combination with the strength of homophily in
+partner selection, determine the payoff received by two agents when they
+interact. After one round of signaling and 10 rounds of interaction, agents
+homophilically select another agent as their teacher, and adopt either their 
+teacher's sending or receiving strategy with probability proportional to how
+much greater the teacher's accumulated payoffs are than the learner's. 
+
+While strategies evolve in this model, traits do not. All agents have 
+$K$ binary traits of value $\pm1$ assigned at random at model initialization.
+While $K$ could be set to any value, so far we have only studied $K=3$.
+In the basic results and invasion experiment results below, all agent traits
+are assigned by a coin flip. In the minority experiment, one of $K=3$ traits
+are set to $+1$ for some minority fraction of agents, and the majority 
+get a trait value of $-1$ for that trait. Trait values determine whether or
+not agents are \emph{similar} or \emph{dissimilar}, which results in 
+different payoffs (see Appendix Table ??). 
+
+If agents signal overtly, they show other agents their traits openly, whether or
+not they are similar or dissimilar. Covert signalers, on the other hand, 
+are able to conceal their dissimilarity from their interaction partners, 
+giving no information away if they are dissimilar, and showing similar traits
+if their interaction partner is indeed similar. 
+
+The degree of similarity of two agents determines the probability that two 
+agents will interact, modulated by homophily, $w$.
+
+The above process accounts for one model timestep/iteration. We found by
+inspection that equilibrium occurs by 500 timesteps, so all heatmaps aggregate
+over the 500th timestep (see Figure ?? in the Appendix). 
+
+\section{Results}
+
+\subsection{Basic results starting from equilibrium}
+
+\subsection{Invasion}
+
+In this experiment we begin with initial proportions, $\rho$ of one of the strategies
+at 0.05 and consider this the ``invading'' strategy. $\rho_{cov,0}$ represents
+the initial covert proportion, $\rho_{ov,0}$ the initial overt proportion,
+$\rho_{ch,0}$ the initial churlish proportion, and $\rho_{gen,0}$ the 
+initial generous proportion. We measure how often
+a non-zero proportion of agents with the invading strategy manage to 
+establish a permanent population, which we call invasion success. We calculated
+invasion success for a number of experimental parameter settings, covarying
+over disliking penalty ($d=\delta$) and homophily ($w$) in the first case,
+and over relative covert receptivity ($r/R$) and homophily ($w$) 
+in the second case (Figures~\ref{fig:cov-ov-invade} and~\ref{fig:ch-gen-invade}).
+
+\begin{figure}[H]
+  \centering
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/covert_invades.pdf}
+      \caption{Covert invades, $\rho_{cov,0}=0.05$}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/overt_invades.pdf}
+      \caption{Overt invades, $\rho_{cov,0}=0.95$}
+    \end{subfigure}
+  \caption{Covert and overt sending strategy invasion success rates. 
+    Lower homophily is more favorable for successful covert signaling invasion.
+    This is due to lower homophily meaning agents cannot assort well into
+    similar pairs prior to interaction.
+    Similarly, greater homophily is more favorable for successful overt
+    signaling invasion, where agents can better assort if they know each other's
+    true traits. Unexpectedly, as covert receptivity increases, overt signaling
+    is is more successful at invading and covert signaling is less successful
+    at invading when the initial churlishness is high. When initial
+    churlishness is small to moderate, the pattern is reversed.
+  }
+  \label{fig:cov-ov-invade}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/churlish_invades.pdf}
+      \caption{Churlish invades, $\rho_{ch,0}=0.05$}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/generous_invades.pdf}
+      \caption{Generous invades, $\rho_{ch,0}=0.95$}
+    \end{subfigure}
+  \caption{Churlish and generous receiving strategy invasion success rates.
+    For low to moderate rates of initial covert signaling there is not much
+    of a pattern to invasion success. High values of homophily do seem to lead
+    to more successful churlish invasion for moderate values of initial
+    covert signalers. For large initial proportions of covert
+    signalers, lower homophily favors generous invasion, which is more pronounced
+    for larger disliking penalties.
+  }
+  \label{fig:ch-gen-invade}
+\end{figure}
+
+
+
+
+\subsection{Minority populations}
+
+
+\appendix
+
 \section{Evolution in signaling and receiving strategies}
 
 For these preliminary results I focus on the evolution of signaling strategies,
@@ -113,12 +223,12 @@ that both $r$ and $w$ are bounded above by 0.5.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/receptivityHomophilyCovertSeries.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/receptivityHomophilyCovertSeries.pdf}
     \caption{Density of covert signalers.}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/receptivityHomophilyChurlishSeries.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/receptivityHomophilyChurlishSeries.pdf}
     \caption{Density of churlish receivers.}
   \end{subfigure}
   
@@ -132,12 +242,12 @@ that both $r$ and $w$ are bounded above by 0.5.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covertDensityVsReceptivityHomophilyCoevo.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covertDensityVsReceptivityHomophilyCoevo.pdf}
     \caption{Density of covert signalers.}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlishDensityVsReceptivityHomophilyCoevo.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlishDensityVsReceptivityHomophilyCoevo.pdf}
     \caption{Density of churlish receivers.}
   \end{subfigure}
   
@@ -161,12 +271,12 @@ As in the above experiment, I set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/dislikingHomophilyCovertSeries.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/dislikingHomophilyCovertSeries.pdf}
     \caption{Density of covert signalers.}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/dislikingHomophilyChurlishSeries.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/dislikingHomophilyChurlishSeries.pdf}
     \caption{Density of churlish receivers.}
   \end{subfigure}
   
@@ -179,12 +289,12 @@ As in the above experiment, I set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covertDensityVsDislikingHomophilyCoevo.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covertDensityVsDislikingHomophilyCoevo.pdf}
     \caption{Density of covert signalers.}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlishDensityVsDislikingHomophilyCoevo.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlishDensityVsDislikingHomophilyCoevo.pdf}
     \caption{Density of churlish receivers.}
   \end{subfigure}
   
@@ -200,13 +310,13 @@ As in the above experiment, I set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/receptivity_allcombos_reg.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/receptivity_allcombos_reg.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/disliking_allcombos_reg.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/disliking_allcombos_reg.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -227,7 +337,7 @@ The first is nine parameter settings where the density of covert signalers
 is plotted in a heatmap (Figure~\ref{fig:invasion-signaling}). The second has 
 heatmaps of the density of churlish receivers (Figure~\ref{fig:invasion-receiving}).
 
-\input{invasion-figures.tex}
+\input{prelim/invasion-figures.tex}
 
 
 
@@ -246,13 +356,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_series_majority.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covert_series_majority.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_series_minority.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covert_series_minority.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -266,13 +376,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/majority_signalers.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/majority_signalers.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/minority_signalers.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/minority_signalers.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -283,7 +393,7 @@ $r=0.25$, $R=0.5$.
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.6\textwidth]{Figures/covert_signalers_diff.pdf}
+    \includegraphics[width=0.6\textwidth]{prelim/Figures/covert_signalers_diff.pdf}
   \caption{Difference between proportion of covert signalers in the minority 
     and majority populations. When cost of disliking is high and homophily is 
     low, more minority agents are covert signalers than majority agents,
@@ -300,13 +410,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_series_majority_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covert_series_majority_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_series_minority_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covert_series_minority_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -320,13 +430,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/majority_signalers_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/majority_signalers_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/minority_signalers_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/minority_signalers_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -337,7 +447,7 @@ $r=0.25$, $R=0.5$.
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.6\textwidth]{Figures/covert_signalers_diff_025.pdf}
+    \includegraphics[width=0.6\textwidth]{prelim/Figures/covert_signalers_diff_025.pdf}
   \caption{Difference between proportion of covert signalers in the minority 
     and majority populations. When cost of disliking is high and homophily is 
     low, more minority agents are covert signalers than majority agents,
@@ -354,13 +464,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_series_majority_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covert_series_majority_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_series_minority_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/covert_series_minority_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -374,13 +484,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/majority_signalers_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/majority_signalers_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/minority_signalers_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/minority_signalers_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -391,7 +501,7 @@ $r=0.25$, $R=0.5$.
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.6\textwidth]{Figures/covert_signalers_diff_005.pdf}
+    \includegraphics[width=0.6\textwidth]{prelim/Figures/covert_signalers_diff_005.pdf}
   \caption{Difference between proportion of covert signalers in the minority 
     and majority populations. When cost of disliking is high and homophily is 
     low, more minority agents are covert signalers than majority agents,
@@ -411,13 +521,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_series_majority.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlish_series_majority.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_series_minority.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlish_series_minority.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -431,13 +541,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/majority_receivers.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/majority_receivers.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/minority_receivers.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/minority_receivers.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -448,7 +558,7 @@ $r=0.25$, $R=0.5$.
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.6\textwidth]{Figures/churlish_receivers_diff.pdf}
+    \includegraphics[width=0.6\textwidth]{prelim/Figures/churlish_receivers_diff.pdf}
   \caption{Difference between proportion of churlish receivers in the minority 
     and majority populations. Here the dependence is primarily on homophily.
     If homophily is too low, the minority population cannot interact often
@@ -468,13 +578,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_series_majority_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlish_series_majority_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_series_minority_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlish_series_minority_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -488,13 +598,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/majority_receivers_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/majority_receivers_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/minority_receivers_025.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/minority_receivers_025.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -505,7 +615,7 @@ $r=0.25$, $R=0.5$.
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.6\textwidth]{Figures/churlish_receivers_diff_025.pdf}
+    \includegraphics[width=0.6\textwidth]{prelim/Figures/churlish_receivers_diff_025.pdf}
   \caption{Difference between proportion of churlish receivers in the minority 
     and majority populations. Here the dependence is primarily on homophily.
     If homophily is too low, the minority population cannot interact often
@@ -525,13 +635,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_series_majority_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlish_series_majority_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_series_minority_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/churlish_series_minority_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -545,13 +655,13 @@ $r=0.25$, $R=0.5$.
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/majority_receivers_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/majority_receivers_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
   \begin{subfigure}{0.49\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/minority_receivers_005.pdf}
+    \includegraphics[width=\textwidth]{prelim/Figures/minority_receivers_005.pdf}
     \caption{}
     \label{fig:}
   \end{subfigure}
@@ -562,7 +672,7 @@ $r=0.25$, $R=0.5$.
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.6\textwidth]{Figures/churlish_receivers_diff_005.pdf}
+    \includegraphics[width=0.6\textwidth]{prelim/Figures/churlish_receivers_diff_005.pdf}
   \caption{Difference between proportion of churlish receivers in the minority 
     and majority populations. Here the dependence is primarily on homophily.
     If homophily is too low, the minority population cannot interact often
