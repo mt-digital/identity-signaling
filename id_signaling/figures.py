@@ -337,20 +337,24 @@ def load_minority_dfs(directory='data/minority',
     ]
 
 
-def covert_vs_minority_frac(minority_dfs, dislikings, homophily, ax=None):
+def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
+                            ax=None, savefig_path=None):
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 4))
-
+    minority_dfs = minority_dfs[1:]  # Excluding 0.05 case.
     minority_frac_strs = [el[0] for el in minority_dfs]
 
-    print(minority_frac_strs)
-
-    styles = ['-', '--', ':']
+    line_styles = ['-', '--', ':']
+    marker_styles = ['^', 'o', 's']
 
     for d_idx, disliking in enumerate(dislikings):
 
         means_over_minority_frac = []
+        means_over_majority_frac = []
+        minmaj_covert_mean_diff = []
+        minmaj_covert_std_diff = []
+
         std_over_minority_frac = []
 
         for minority_frac_str, df in minority_dfs:
@@ -361,36 +365,71 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily, ax=None):
                 (df.homophily == homophily)
             ]
 
-            # print(len(pre))
+            pre['min_maj_cov_diff'] = \
+               pre.prop_covert_minority - pre.prop_covert_majority
+            # print(pre['min_maj_cov_ratio'])
+            # print(pre.min_maj_cov_ratio.mean())
+            minmaj_covert_mean_diff.append(pre.min_maj_cov_diff.mean())
 
-            mean_final_cov_prop = pre.prop_covert_minority.mean()
-            std_final_cov_prop = pre.prop_covert_minority.std()
+            std_final_cov_prop = pre.min_maj_cov_diff.std()
+            minmaj_covert_std_diff.append(std_final_cov_prop)
 
-            means_over_minority_frac.append(mean_final_cov_prop)
-            std_over_minority_frac.append(std_final_cov_prop)
+            # minmaj_covert_std_diff = pre.prop_covert_minority.std()
 
+            # means_over_minority_frac.append(mean_min_cov_prop)
+            # means_over_majority_frac.append(mean_maj_cov_prop)
+            # std_over_minority_frac.append(std_final_cov_prop)
+
+        # majmin_covert_ratio = [min_ / maj_ for min_, maj_ in
+        #                        zip(means_over_minority_frac, means_over_majority_frac)]
+        # majmin_covert_ratio = [min_ / maj_ for min_, maj_ in
+        #                        zip(means_over_minority_frac, means_over_majority_frac)]
+        # majmin_covert_diff = [maj_ - min_ for min_, maj_ in
+        #                        zip(means_over_minority_frac, means_over_majority_frac)]
         # ax.plot(means_over_minority_frac, color='black', ls=styles[d_idx],
         #         label=f'$d=\\delta={disliking:.2f}$')
-        print(std_over_minority_frac)
-        ax.errorbar(range(len(means_over_minority_frac)),
-                    means_over_minority_frac, yerr=std_over_minority_frac,
-                    # color='black',
-                    ls=styles[d_idx],
-                    label=f'$d=\\delta={disliking:.2f}$')
 
-        ax.set_xticklabels([''] + minority_frac_strs, size=14, rotation=35)
+        # ax.plot(majmin_covert_ratio, color='black', ls=styles[d_idx],
+        #         label=f'$d=\\delta={disliking:.2f}$')
+        # ax.plot(minmaj_covert_mean_ratio, color='black', ls=line_styles[d_idx],
+        #         label=f'$d=\\delta={disliking:.2f}$')
 
-        ax.set_ylim(0, 1.05)
 
-        yticks = np.arange(0, 1.01, 0.25)
+        ax.plot(minmaj_covert_mean_diff, color='black', ls=line_styles[d_idx],
+                marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
+                label=f'$d=\\delta={disliking:.2f}$')
+        # print(std_over_minority_frac)
+        # ax.errorbar(range(len(minmaj_covert_mean_diff)),
+        #             # means_over_minority_frac, yerr=std_over_minority_frac,
+        #             minmaj_covert_mean_diff, yerr=minmaj_covert_std_diff,
+        #             color='black',
+        #             ls=line_styles[d_idx],
+        #             label=f'$d=\\delta={disliking:.2f}$')
+
+        ax.set_xticks(range(len(minority_frac_strs)))
+
+        ax.set_xticklabels(minority_frac_strs, size=14, rotation=35)
+
+        ylow = -0.3
+        yhigh = 0.4
+        ax.set_ylim(ylow, yhigh)
+
+        yticks = np.arange(ylow, yhigh+0.01, 0.1)
         ax.set_yticks(yticks)
-        ax.set_yticklabels(labels=[f'{y:.2f}' for y in yticks], size=14)
-        ax.set_ylabel(r'$\rho_{cov,T}$', size=15)
-        ax.set_xlabel(r'$\rho_{minor}$', size=15)
+        # ax.set_yticklabels(labels=[f'{y:.2f}' for y in yticks], size=14)
+        ax.tick_params('y', labelsize=14)
+        ax.set_ylabel(r'$\rho^{minor}_{cov,T} - \rho^{major}_{cov,T}$',
+                      size=15)
+        ax.set_xlabel(r'$\rho^{minor}$', size=15)
+
+        ax.grid(axis='y')
 
         ax.legend()
 
         ax.set_title(f'$w={homophily:.2f}$', size=14)
+
+        if savefig_path is not None:
+            plt.savefig(savefig_path)
 
 
 def invasion_heatmaps(disliking_df, recept_df,
@@ -474,20 +513,30 @@ def invasion_heatmaps(disliking_df, recept_df,
 
 def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
                           init_chur, exp_idx, chur_cov_idx, timesteps,
-                          cmap):
+                          cmap, low_success_prevalence=0.05):
+    '''
+
+    Arguments:
+        low_success_prevalence (float): non-inclusive lower limit on how
+            prevalent a strategy must be for invasion to be considered
+            successful. 0, for example, would be mean any non-zero population
+            can be consdered to have successfully invaded. The default, 0.05,
+            means invasion is successful if the prevalence is greater than
+            1/20.
+    '''
 
     final = df_lim[df_lim.timestep == timesteps]
 
     # Create a new boolean column marking if invasion was
     # successful.
     if invading == 'covert':
-        final['success'] = final.prop_covert > 0.0
+        final['success'] = final.prop_covert > low_success_prevalence
     elif invading == 'overt':
-        final['success'] = final.prop_covert < 1.0
+        final['success'] = final.prop_covert < 1.0 - low_success_prevalence
     elif invading == 'churlish':
-        final['success'] = final.prop_churlish > 0.0
+        final['success'] = final.prop_churlish > low_success_prevalence
     elif invading == 'generous':
-        final['success'] = final.prop_churlish < 1.0
+        final['success'] = final.prop_churlish < 1.0 - low_success_prevalence
     else:
         raise RuntimeError(f'{invading} strategy not recognized')
 
