@@ -101,7 +101,9 @@ f'''#! /bin/bash
 printf "******************\\nStarting {job_name} at `uptime`\\n"
 
 runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
-    {output_file} -R{prob_overt_receiving} -m{minority_trait_frac}
+    {output_file} -R{prob_overt_receiving} -m{minority_trait_frac} \\
+    --initial_prop_covert={initial_prop_covert} \\
+    --initial_prop_churlish={initial_prop_churlish}
 
 printf "******************\\nFinished at `uptime`"
 '''
