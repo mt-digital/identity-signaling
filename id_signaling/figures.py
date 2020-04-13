@@ -177,13 +177,14 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     final_means = means[means.index == means.index[-1]]
     # final_means = means[means.timestep == means.timestep.max()]
     # print(final_means.stack().max())
-    print(final_means.stack())
-    print(final_means.head())
+    # print(final_means.stack())
+    # print(final_means.head())
 
 
     plt.figure(figsize=figsize)
 
     ax = sns.heatmap(final_means.stack(), cmap=cmap, square=True,
+                     vmin=0.0, vmax=1.0,
                      # cbar_kws={'label': f'Density of {strategy_inset.lower()}'},
                      **heatmap_kwargs
                     )
@@ -206,14 +207,14 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
     if experiment == 'receptivity':
         relative_receptivity = np.sort(df.receptivity.unique() / 0.5)
-        ax.set_xticklabels([f'{x:.1f}' for x in relative_receptivity], rotation=0)
+        ax.set_xticklabels([f'{x:.1f}' for x in relative_receptivity], rotation=30)
     else:
-        ax.set_xticklabels([f'{x:.1f}'
+        ax.set_xticklabels([f'{x:.2f}'
                             for x in np.sort(df.disliking.unique())], rotation=30)
 
     # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
 
-    ax.set_yticklabels([f'{y:.1f}' for y in np.sort(df['homophily'].unique())])
+    ax.set_yticklabels([f'{y:.2f}' for y in np.sort(df['homophily'].unique())])
 
     if title is not None:
         ax.set_title(title, size=14)
@@ -338,11 +339,15 @@ def load_minority_dfs(directory='data/minority',
 
 
 def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
+                            exclude_p05=True,  # Exclude data point by default.
                             ax=None, savefig_path=None):
+
+    if exclude_p05:
+        minority_dfs = minority_dfs[1:]  # For excluding 0.05 case.
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 4))
-    minority_dfs = minority_dfs[1:]  # Excluding 0.05 case.
+
     minority_frac_strs = [el[0] for el in minority_dfs]
 
     line_styles = ['-', '--', ':']
