@@ -56,7 +56,6 @@ class Model:
                 so that probability of switching is ~1/50 when
                 relative payoff is 0.9 and ~3/50 when relative payoff is 1.0.
         '''
-
         self.N = N
         self.n_rounds = n_rounds
         self.K = K
@@ -78,19 +77,29 @@ class Model:
         if random_seed is not None:
             np.random.seed(random_seed)
 
-        choose_rec = lambda : \
-            choice(['Churlish', 'Generous'],
-                   p=[initial_prop_churlish, 1 - initial_prop_churlish])
+        n_initial_churlish = int(N * initial_prop_churlish)
+        n_initial_generous = N - n_initial_churlish
+        n_initial_covert = int(N * initial_prop_covert)
+        n_initial_overt = N - n_initial_covert
 
-        choose_sig = lambda : \
-            choice(['Covert', 'Overt'],
-                   p=[initial_prop_covert, 1 - initial_prop_covert])
+        rec_strategies = (
+            ['Churlish'] * n_initial_churlish +
+            ['Generous'] * n_initial_generous
+        )
+        np.random.shuffle(rec_strategies)
+
+        sig_strategies = (
+            ['Covert'] * n_initial_covert +
+            ['Overt'] * n_initial_overt
+        )
+        np.random.shuffle(sig_strategies)
 
         self.agents = [
+
             Agent(idx, K=K, N=N,
-                  receiving_strategy=choose_rec(),
-                  signaling_strategy=choose_sig()
-                 )
+                  receiving_strategy=rec_strategies[idx],
+                  signaling_strategy=sig_strategies[idx])
+
             for idx in range(N)
         ]
 
@@ -107,8 +116,8 @@ class Model:
 
             # Select minority agents.
             self.minority_agents = list(choice(self.agents,
-                                         size=int(N*minority_trait_frac),
-                                         replace=False))
+                                        size=int(N*minority_trait_frac),
+                                        replace=False))
 
             # Majority agents are the ones unselected for minority.
             self.majority_agents = list(
