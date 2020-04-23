@@ -6,9 +6,9 @@ Date: 2020-02-25
 '''
 import numpy as np
 
-from copy import deepcopy
 from numpy.random import choice, uniform
 from scipy.special import expit
+from scipy.spatial.distance import hamming
 
 
 RECEIVING_STRATEGIES = ["Generous", "Churlish"]
@@ -20,9 +20,10 @@ class Model:
     def __init__(self, N=100, n_rounds=10, K=3, prob_overt_receiving=0.75,
                  prob_covert_receiving=0.25, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
-                 homophily=0.25, random_seed=None, similarity_threshold=1,
+                 homophily=0.25, random_seed=None, similarity_threshold=0.5,
                  minority_trait_frac=None,
                  initial_prop_covert=0.5, initial_prop_churlish=0.5,
+                 n_minmaj_traits=1,  # only used if minority_trait_frac ! None
                  evo_logistic_loc=1.25, evo_logistic_scale=12):
         '''
         Arguments:
@@ -126,9 +127,9 @@ class Model:
 
             # Set traits.
             for agent in self.minority_agents:
-                agent.traits[0] = 1
+                agent.traits[0:n_minmaj_traits] = 1
             for agent in self.majority_agents:
-                agent.traits[0] = -1
+                agent.traits[0:n_minmaj_traits] = -1
 
             self.prop_covert_series_minority = np.array(
                 [_proportion_covert(self, subset='minority')]
@@ -360,7 +361,11 @@ class Model:
 
         att_sum = a1.attitudes[a2.index] + a2.attitudes[a1.index]
 
-        similar = (np.sum(a1.traits * a2.traits) >= self.similarity_threshold)
+        # XXX OLD
+        # similar = (np.sum(a1.traits * a2.traits) >= self.similarity_threshold)
+
+        similarity = 1 - hamming(a1.traits, a2.traits)
+        similar = similarity >= self.similarity_threshold
 
         # Like/like.
         if att_sum == 2:
@@ -480,6 +485,7 @@ def _proportion_churlish(model, subset=None):
         )
     else:
         print(f'{subset} not recognized')
+
 
 class Agent:
 

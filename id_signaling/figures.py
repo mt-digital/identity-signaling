@@ -355,23 +355,23 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
     for d_idx, disliking in enumerate(dislikings):
 
-        means_over_minority_frac = []
-        means_over_majority_frac = []
+        # means_over_minority_frac = []
+        # means_over_majority_frac = []
         minmaj_covert_mean_diff = []
         minmaj_covert_std_diff = []
 
-        std_over_minority_frac = []
+        # std_over_minority_frac = []
 
         for minority_frac_str, df in minority_dfs:
             # First extract all N_trials final covert signaling proportions.
-            pre = mean_final_cov_prop = df[
+            pre = df[
                 (df.timestep == 500) &
                 (df.disliking == disliking) &
                 (df.homophily == homophily)
             ]
 
             pre['min_maj_cov_diff'] = \
-               pre.prop_covert_minority - pre.prop_covert_majority
+                pre.prop_covert_minority - pre.prop_covert_majority
             # print(pre['min_maj_cov_ratio'])
             # print(pre.min_maj_cov_ratio.mean())
             minmaj_covert_mean_diff.append(pre.min_maj_cov_diff.mean())
@@ -398,7 +398,6 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
         #         label=f'$d=\\delta={disliking:.2f}$')
         # ax.plot(minmaj_covert_mean_ratio, color='black', ls=line_styles[d_idx],
         #         label=f'$d=\\delta={disliking:.2f}$')
-
 
         ax.plot(minmaj_covert_mean_diff, color='black', ls=line_styles[d_idx],
                 marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
