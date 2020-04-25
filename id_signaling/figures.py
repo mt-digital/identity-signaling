@@ -436,6 +436,38 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
             plt.savefig(savefig_path)
 
 
+def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
+                         dislikings=[0.05, 0.25, 0.45], homophily=0.2,
+                         ax=None, savefig_path=None):
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(5, 4))
+
+    line_styles = ['-', '--', ':']
+    marker_styles = ['^', 'o', 's']
+
+    for d_idx, disliking in enumerate(dislikings):
+
+        mean_covert_prevalence = []
+
+        for df_idx, df in enumerate(dfs):
+
+            mean_covert_prevalence.append(
+                df[
+                    (df.timestep == 500) &
+                    (df.disliking == disliking) &
+                    (df.homophily == homophily)
+                ].prop_covert.mean()
+            )
+
+        ax.plot(mean_covert_prevalence, color='black', ls=line_styles[d_idx],
+                marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
+                label=f'$d=\\delta={disliking:.2f}$')
+
+    ax.legend()
+    ax.set_title(f'$w={homophily:.1f}$')
+
+
 def invasion_heatmaps(disliking_df, recept_df,
                       cmap=sns.cubehelix_palette(
                           50, hue=0.05, rot=0, light=0.0,
