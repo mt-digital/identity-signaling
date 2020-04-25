@@ -438,7 +438,8 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
 def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
                          dislikings=[0.05, 0.25, 0.45], homophily=0.2,
-                         ax=None, savefig_path=None):
+                         ax=None, savefig_path=None, ylow=0.2, yhigh=1.0,
+                         legend=False, xlabel=True, ylabel=True):
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 4))
@@ -456,7 +457,7 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
                 df[
                     (df.timestep == 500) &
                     (df.disliking == disliking) &
-                    (df.homophily == homophily)
+                    (np.isclose(df.homophily, homophily))
                 ].prop_covert.mean()
             )
 
@@ -464,8 +465,22 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
                 marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
                 label=f'$d=\\delta={disliking:.2f}$')
 
-    ax.legend()
+    if legend:
+        ax.legend()
+
     ax.set_title(f'$w={homophily:.1f}$')
+
+    ax.set_ylim(ylow, yhigh)
+    ax.grid(axis='y')
+
+    if xlabel:
+        ax.set_xlabel('Similarity threshold, $S$', size=14)
+    if ylabel:
+        ax.set_ylabel('Covert prev., $\\rho_{cov,t=T}$', size=14)
+
+    ax.set_xticks(range(1, 10, 2))
+    ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds[1::2]])
+    # ax.set_yticks(np.arange(0.2, 1.1, 0.1))
 
 
 def invasion_heatmaps(disliking_df, recept_df,
