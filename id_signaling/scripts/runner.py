@@ -31,10 +31,10 @@ def basic_decorator():
             click.option('--minority_trait_frac', '-m'),
             click.option('--initial_prop_covert', type=float, default=0.5),
             click.option('--initial_prop_churlish', type=float, default=0.5),
-            click.option('--num_traits', '-K', type=float, default=3),
+            click.option('--num_traits', '-K', type=int, default=3),
             click.option('--similarity_threshold', '-S', type=float,
                          default=0.5),
-            click.option('--n_minmaj_traits', type=float, default=1)
+            click.option('--n_minmaj_traits', type=int, default=1)
        )
 
 
@@ -62,7 +62,7 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
                              minority_trait_frac=minority_trait_frac,
                              initial_prop_covert=initial_prop_covert,
                              initial_prop_churlish=initial_prop_churlish,
-                             K=K, similarity_threshold=similarity_threshold,
+                             K=num_traits, similarity_threshold=similarity_threshold,
                              n_minmaj_traits=n_minmaj_traits
                              )
 
