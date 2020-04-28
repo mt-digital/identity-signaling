@@ -222,7 +222,8 @@ def heatmap(df, experiment='disliking', strategy='signaling',
         plt.savefig(savefig_path)
 
 def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
-                          figsize=(6.35, 4.75), vmin=None, vmax=None):
+                          figsize=(6.35, 4.75), vmin=None, vmax=None,
+                          title=None):
 
     if strategy == 'signaling':
         strategy_inset = 'Covert signalers'
@@ -236,10 +237,12 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     data_col_min = data_col + '_minority'
     data_col_maj = data_col + '_majority'
 
-    gb_minority_mean = df.groupby(['disliking', 'homophily', 'timestep'])[data_col_min].mean()
+    pre = df[df.timestep == df.timestep.max()]
+
+    gb_minority_mean = pre.groupby(['disliking', 'homophily', 'timestep'])[data_col_min].mean()
     minority_means = gb_minority_mean.unstack(level=(0, 1))
 
-    gb_majority_mean = df.groupby(['disliking', 'homophily', 'timestep'])[data_col_maj].mean()
+    gb_majority_mean = pre.groupby(['disliking', 'homophily', 'timestep'])[data_col_maj].mean()
     majority_means = gb_majority_mean.unstack(level=(0, 1))
 
     final_min_means = minority_means[minority_means.index == minority_means.index[-1]]
@@ -253,13 +256,15 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
         cmap=sns.diverging_palette(10, 220, sep=80, n=10), #, center='dark'),
         cbar_kws={
             'label':
-                f'Difference in density\n'
-                f'of {strategy_inset.lower()}\n'
-                f'Minority - Majority',
-            'ticks':
-                np.arange(-0.2, 0.31, 0.1),
+                f'Difference in {strategy_inset.lower()}\n'
+                f'prevalence (minority - majority)\n'
+                # f'Minority - Majority',
+            # 'ticks':
+            #     np.arange(-0.2, 0.31, 0.1),
         }
     )
+
+    ax.set_title(title)
 
     # Set size of colorbar title.
     ax.figure.axes[-1].yaxis.label.set_size(14)
@@ -274,7 +279,13 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     # ax.set_yticklabels(['0.1', '0.25', '0.4'])
     ax.set_ylabel('Homophily, $w$', size=15)
     # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0, 0.46, 0.05)]);
-    ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
+    # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
+
+    xvals = np.sort(pre.disliking.unique())
+    yvals = np.sort(pre.homophily.unique())
+
+    ax.set_xticklabels([f'{x:.2f}' for x in xvals], rotation=25)
+    ax.set_yticklabels([f'{y:.2f}' for y in yvals])
 
     if savefig_path is not None:
         plt.savefig(savefig_path)

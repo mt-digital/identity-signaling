@@ -255,6 +255,20 @@ in the second case (Figures~\ref{fig:cov-ov-invade} and~\ref{fig:ch-gen-invade})
 
 \subsection{Minority populations}
 
+Here we analyze the evolution of covert signaling in populations where there
+are minority and majority sub-populations, as specified by agents' trait
+vectors, $\tau_i$. In these experiments, the first $M$ of each agent's $K$ traits
+are set to 1 or -1: fraction $\rho^{minor}$ of the
+population is in the minority, and have the first $M$ of their traits set to
+1, and the rest of the population is the majority, with the first $M$ of their
+traits set to -1. 
+
+We primarily vary the minority prevalence, $\rho^{minor}$, and set $M=1$ and
+$K=3$, except for one heatmap in 
+Figure~\ref{fig:covert-signaling-minority-heatmap}. 
+
+\subsubsection{Covert minority signaling over minority prevalence}
+
 \begin{figure}[H]
   \centering
   \begin{subfigure}{0.31\textwidth}
@@ -272,44 +286,95 @@ in the second case (Figures~\ref{fig:cov-ov-invade} and~\ref{fig:ch-gen-invade})
   \caption{}
 \end{figure}
 
+
+\subsubsection{Minority covert signaling over homophily and disliking}
+
+
 \begin{figure}[H]
   \centering
-  \begin{subfigure}{0.4\textwidth}
+  \begin{subfigure}{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_010.pdf}
-    \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.10$.}
+    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p05.pdf}
+    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.10$.}
   \end{subfigure}
   \hfill
-  \begin{subfigure}{0.4\textwidth}
+  \begin{subfigure}{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_025.pdf}
-    \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.25$.}
+    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p10.pdf}
+    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.25$.}
   \end{subfigure} \\[.25in]
-  \begin{subfigure}{0.4\textwidth}
+  \begin{subfigure}{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_010.pdf}
-    \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.10$.}
+    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p25.pdf}
+    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.10$.}
   \end{subfigure}
   \hfill
-  \begin{subfigure}{0.4\textwidth}
+  \begin{subfigure}{0.48\textwidth}
     \centering
-    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_025.pdf}
-    \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.25$.}
+    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p10_K=10_M=4.pdf}
+    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.25$.}
   \end{subfigure}
-  \caption{}
+  \caption{Difference in covert signaling prevalence between minority and
+  majority populations for different parameters settings.}
+  \label{fig:covert-signaling-minority-heatmap}
 \end{figure}
+
+
+\subsection{Minority churlish receiving over homophily and disliking}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p05.pdf}
+    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.10$.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p10.pdf}
+    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.25$.}
+  \end{subfigure} \\[.25in]
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p25.pdf}
+    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.10$.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p10_K=10_M=4.pdf}
+    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.25$.}
+  \end{subfigure}
+  \caption{Difference in churlish receiving prevalence between minority and majority
+  populations for different parameter settings.}
+\end{figure}
+
+
 
 
 \section{Prevalence of covert signalers versus similarity threshold}
 
-\begin{figure}
+Similarity is defined as $s_{ij} = 1-h(\tau_i, \tau_j)$ where $h(\tau_i, \tau_j)$
+is the Hamming distance between two agents' binary trait vectors $\tau_i$ and $\tau_j$.
+The baseline rate of similarity, $S$, is the threshold required for two agents to
+be considered similar. Based on results from ECS, we expect increased
+prevalence of covert signaling as $S$ decreases (see Figure 3 in that paper).
+
+We find that there is a dependence of covert signaling prevalence on similarity
+threshold for sufficiently high values of homophily, $w$. As $S$
+increases, covert signaling prevalence decreases, as more interactions are
+with similar others than otherwise due to increased ability to assort. 
+However there is little to no effect for lower levels of homophily.
+
+\begin{figure}[H]
   \centering
-    \includegraphics[width=\textwidth]{Figures/similarity_threshold_matrix.pdf}
+    \includegraphics[width=0.85\textwidth]{Figures/similarity_threshold_matrix.pdf}
   \caption{There is a relationship between covert signaling prevalence and
   the similarity threshold, $S$, but it is rather weak. Like other results
   presented here there is a high degree of path dependence and high variance
   in results.}
-  \label{fig:}
+  \label{fig:similarity}
 \end{figure}
 
 
@@ -369,6 +434,39 @@ Due to finite-size simulation extinction in small populations, from 0.05 to
 minority individuals. 
 
 \input{minority-supplement-figures.tex}
+
+\subsection{Minority receiving over homophily and disliking}
+
+
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p05.pdf}
+    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.10$.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p10.pdf}
+    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.25$.}
+  \end{subfigure} \\[.25in]
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p25.pdf}
+    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.10$.}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/churlish_receivers_diff_0p10_K=10_M=4.pdf}
+    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.25$.}
+  \end{subfigure}
+  \caption{Difference in churlish receiving prevalence between minority and majority
+  populations for different parameter settings.}
+\end{figure}
+
 
 \end{appendices}
 
