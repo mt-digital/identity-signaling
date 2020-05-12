@@ -41,7 +41,7 @@ class Model:
                 two_dislike_penalty should be less than 1.0.
             homophily (float): the degree to which agents prefer to interact
                 with similar others. Should be between 0 and 0.5.
-            similarity_threshold (int): the minimum difference between the
+            similarity_threshold (float): the minimum difference between the
                 number of traits agents have in common and number of
                 opposing traits
             minority_trait_frac (float): number between 0 and 1 indicating
