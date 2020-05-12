@@ -11,23 +11,13 @@
 # * You can run all these with just one value of r/R and maybe 3 values of d.
 
 
-# Experiment 1: 
-
-# for similarity_threshold in 0.{1..9} 1.0; do
-
-#     fname=output_data/minority-similarity/$similarity_threshold/part-`uuidgen`
-#     subexp disliking 0.05:0.46:0.2 0.0:0.51:0.1 500 100 $fname.csv -R0.5  \
-#         -qfast.q -j$fname -n24 -t"04:00:00" -S$similarity_threshold -K10
-#         # -qstd.q -j$fname -n20 -t"04:00:00" -S$similarity_threshold -K10
-
-# done
 
 
 
 for i in {1..10}; do
-    fname=output_data/minority-similarity/minority/part-`uuidgen`
+    fname=output_data/minority_K9M4/part-`uuidgen`
     subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 10 $fname.csv -R0.5  \
-        --n_minmaj_traits=4 -K10 -m0.10 \
+        --n_minmaj_traits=4 -K9 -m0.10 \
         -qfast.q -j$fname -n24 -t"04:00:00" 
         # -qstd.q -j$fname -n20 -t"04:00:00" --n_minmaj_traits=4 -K10
 done
