@@ -129,6 +129,12 @@ These are summarized in Table~\ref{tab:params} below.
 
 \subsection{Agents}
 
+\begin{table}[H]
+  \begin{tabular}{ccp{5in}}
+    Agent property & 
+  \end{tabular}
+\end{table}
+
 Model individuals are agents who 
 \begin{enumerate}
   \item have static ``in-born'' traits that determine pairwise similarity or dissimilarity
@@ -146,30 +152,145 @@ Each trait is represented arbitrarily by $\tau_{ij} \in \{-1, 1\}$
 Attitudes are $a_{ij} \in \{-1, 0, 1\}$ with meanings of 
 disliking, neutral, or liking. 
 
-\subsection{Signaling and receiving}
+\subsection{Dynamics}
 
-\subsection{Interaction and payoff}
+Each model iteration consist of three stages. First, agents signal their identities
+to some fraction of all other agents. It is at this step that agent attitudes
+$a_{ij}$ are set. Whether or not an agent receives a signal depends on the
+efficiency of overt and covert signaling, $E_{ov}$ and $E_{cov}$, respectively.
+\emph{Efficiency} is the proportion of agents in the population that receive
+a given agent's signal depending on whether the agent is an overt or covert
+signaler.  Signals are sent and received once every model iteration. 
+If and agent does receive a signal
 
-\subsection{Social learning}
+Then agents then
+interact at most $N_I$ times with other agents. In each of the possible 
+$N_I$ interactions, agents first match with one agent selected randomly from
+the population. The probability these agents interact after matching depends
+on the homophily, $w$, and the attitudes each agent has for the other. 
+If a pair interacts, their payoff is determined by whether the agents are
+similar, whether one dislikes the other, and the penalty for disliking,
+$d$\footnote{(WILL INTRODUCE $\delta$ WITH A REFERENCE TO THE SI IN SUBSUBSEC
+BELOW)}. The distinction between similarity and disliking is subtle, 
+but necessary to include, as we explain in more detail below. After all
+$N_I$ interaction rounds, each agent chooses a teacher to potentially learn
+from. ``Learning'' is simply the adoption of either the signaling or
+receiving strategy of the teacher by the learner---which strategy type is 
+learned is chosen at random. 
+
+After several hundred iterations the prevalence of each signaling and
+receiving strategy reaches an equilibrium (see SI dynamics plots). 
+
+
+\subsubsection{Signaling and receiving}
+
+At the signaling and receiving step, agents form attitudes about one another if
+they receive a signal from 
+
+\subsubsection{Interaction}
+
+The two agents interact with different probabilities
+depending on their attitudes about one another, and depending on the 
+assumed homophily level. If  Note that as $w \rightarrow 0.5$,
+agents never interact with agents they dislike and always interact with 
+agents they like.
+
+\begin{equation}
+  \Pr(\text{$i$ interacts with $j$}) = \frac{1 + a_{ij} + a_{ji}}{2}
+\end{equation}
+\noindent
+
+\subsubsection{Payoff}
+
+Payoffs are determined based on the similarity bonus, $s$, and the disliking
+penalty $d$\footnote{In the SI we consider the case where the disliking penalty 
+when both agents dislike each other is different from $d$. We call this $\delta$
+and let it vary from 0 to $2d$}. 
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{cccc}
+    $a_{ij}$ & $a_{ji}$ & Similar? & Payoff $\pi_i = \pi_j$ \\
+    \toprule
+    1 & 1 & Yes & $1 + s$ \\
+    1 & 0 & Yes & $1 + s$ \\
+    1 & -1 & Yes & $1 + s - d$ \\
+    1 & -1 & No & $1 + s - d$ \\
+    0 & 0 & Yes & $1 + s$ \\
+    0 & 0 & No & $1$ \\
+    -1 & 0 & Yes & $1 + s - d$ \\
+    -1 & 0 & No  & $1 - d$ \\
+    -1 & -1 & Yes & $1 + s - 2d$ \\
+    -1 & -1 & No  & $1 - 2d$ \\
+  \end{tabular}
+  \caption{Interaction payoff matrix. Certain conditions are impossible, and so are not
+  shown. For instance, it is necessary for two agents to be similar for 
+  one agent to like another agent (i.e.\ have $a_{ij} = 1$). Note that
+  due to churlish receiving, two agents may be similar, but one dislikes the
+  other while the other likes the one. There could be agents who dislike one
+  another due to churlish receiving if they have never signaled each other.}
+\end{table}
+
+\subsubsection{Social learning}
+
+All agents select another agent in the population to be a teacher. The 
+learner agent probabilistically adopts its teacher's signaling or receiving 
+strategy---which type of strategy might be learned is determined by a coin flip. 
+The probability that the learner adopts the teacher's strategy is set 
+calculated by the logistic sigmoid function applied to the quotient of 
+teacher and learner payoffs accumulated in one signaling/receiving-interaction/payoff round.
+Let $\pi_{i}$ be the accumulated payoff of agent $i$, and assume $i$ learns
+from $j$. Set $p_{ij} = \pi_{j} / \pi_i$. 
+The probability the learner will adopt the teacher's strategy is
+
+\begin{equation}
+  \Pr(\text{$i$ learns from $j$}) = \frac{1}{1 + e^{-\beta(p_{ij} - \alpha)}}.
+\end{equation}
+\noindent
+$\alpha$ and $\beta$ are parameters shift and scale the sigmoid curve, respectively. 
+$\alpha$ is the size of $p_{ij}$ such that $\Pr(\text{$i$ learns from $j$}) = 0.5$. % $P(\text{$i$ learns from $j$}) = 0.5$.
+For example, if we set $\alpha = 2$, then the teacher's accumulated payoff
+must be twice that of the learner's for a 50\% chance that the learner 
+adopts the teacher's strategy. 
+For the main results we set $\alpha=1.25$. $\beta$ sets how quickly 
+$\Pr(\text{$i$ learns from $j$})$ increases overall. Larger $\beta$ means that
+if $p_{ij} < 0.5$ then $\Pr(\text{$i$ learns from $j$})$ is closer to 0 than smaller $\beta$. 
+$\Pr(\text{$i$ learns from $j$})$ is closer to 1 for larger than for smaller $\beta$. For the main
+results we set $\beta = 12$. These settings are rather arbitrary, (SO WE NEED
+TO PROVIDE SENSITIVITY CHECKS IN THE SUPPLEMENT).
+
 
 \subsection{Computational experiment design}
 
+\subsection{Outcome measures}
+
+We are primarily interested in the prevalence of covert signaling at time
+$t$. Usually, $t=T$, where $T$ is the number of iterations chosen for our 
+computational experiments. The prevalence of overt signalers is the complement 
+of the prevalence of covert signalers. One important result shows that the
+prevalence of covert signalers at $t=T$ is positively correlated with the
+prevalence of generous receivers at $t=T$.  
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{rp{3in}} %p{5in}}
+    Symbol & Measure \\ %& Description \\
+    \toprule
+      $\rho_{cov}$ & Prevalence of covert signalers\\
+    $1 - \rho_{cov} = \rho_{ov}$ & Prevalence of overt signalers  \\
+     $\rho_{gen}$ & Prevalence of generous receivers \\
+    $1 - \rho_{gen} = \rho_{ch}$ & Prevalence of churlish receivers \\
+    $\rho_i^{minor}$, $\rho_i^{maj}$ & Prevalence of strategy $i \in \{cov, ov, gen, ch\}$ amongst minority/majority \\
+    $\Pr(\text{$i$ invades})$ & Probability strategy $i$ invades 
+  \end{tabular}
+  \caption{Summary of outcome measures. To indicate any of these values at
+  a particular time, we add an additional subscript. For example, $\rho_{cov,t}^{maj}$
+  is the prevalence of covert signalers among the majority at time $t$.}
+  \label{tab:outcomeMeasures}
+\end{table}
 
 
-Homophily not only determines 
 
-
-% The model is 
-
-% \begin{figure}[htpb]
-% \begin{center}
-% \caption{Model flow chart with relevant equations.}
-% \label{fig:yo}
-% \begin{tikzpicture}[]
-%   \node[draw] at (0, 0) {}; 
-% \end{tikzpicture}
-% \end{center}
-% \end{figure}
 
 
 \section{Results}
@@ -181,6 +302,16 @@ Homophily not only determines
 \subsubsection{...as a function of covert signaling efficiency}
 
 \subsubsection{Co-evolution of covert signaling and generous receiving}
+
+Theoretically, conditions favorable for covert
+signalers should also be favorable for generous receivers (TRUE??). Furthermore, 
+an increase in covert signalers increases the pressure towards generous receiving.
+With many covert signalers it is likely an agent will get no signal on a 
+turn because they were receiving a signal from a covert signaler. Disliking
+incurs a penalty, so it is better to remain neutral.
+
+Our computational results support this theoretical claim. As the heatmaps
+below reveal... In the SI we show regressions of $\rho_{cov,T} \sim \rho_{gen,T}$.
 
 \subsection{Minority-majority dynamics}
 
@@ -216,5 +347,10 @@ Vary $\delta$ from 0 to $2d$.
 \subsection{Invasion of other strategies}
 
 
+\section{Model implementation}
+
+In order to aid evaluation of our model code, we provide notes below on 
+our model implementation. The code is freely available on GitHub at
+\url{https://github.com/mt-digital/identity-signaling}.
 
 \end{document}

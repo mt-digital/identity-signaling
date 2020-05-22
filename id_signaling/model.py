@@ -380,7 +380,6 @@ class Model:
 
         # Neutral/neutral and like/dislike.
         elif att_sum == 0:
-            # Neutral/neutral.
             if similar:
                 # Like/dislike
                 if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
@@ -389,7 +388,7 @@ class Model:
                 elif a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
                     return 1 + self.similarity_benefit
             else:
-                # Like/dislike
+                # Like/dislike XXX IS THIS EVEN POSSIBLE? smelly....
                 if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
                     return 1 - self.one_dislike_penalty
                 # Neutrals
