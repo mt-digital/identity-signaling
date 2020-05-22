@@ -48,6 +48,9 @@ class Model:
                 what fraction of agents should be ``minority'' agents with
                 first trait +1, and set first trait of majority to -1. If
                 None, do not set minority agents.
+            n_minmaj_traits (int): number of traits to use in assigning
+                minority and majority agents; short name is M in paper and
+                CLI.
             evo_logistic_loc (float): location where logistic function = 0.5
                 probability of switching strategies depending on relative
                 payoff. I.e. default is set so that 50% chance of switching

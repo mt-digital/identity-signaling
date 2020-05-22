@@ -1,9 +1,48 @@
 import numpy as np
-import pytest
 
 from numpy.testing import assert_array_equal, assert_approx_equal
 
 from id_signaling.model import Agent, Model
+
+
+def test_minorities():
+    'Check that minorities experiment is properly initialized and payoffs are as expected.'
+
+    _test_minorities(3, 1, 0.1)
+    _test_minorities(3, 1, 0.25)
+    _test_minorities(3, 1, 0.75)
+
+    _test_minorities(9, 4, 0.1)
+    _test_minorities(9, 4, 0.25)
+    _test_minorities(9, 4, 0.75)
+
+    assert False
+
+
+def _test_minorities(K, M, minority_trait_frac):
+
+    # Set up new model with given settings.
+    model = Model(N=100, K=K, n_minmaj_traits=M, minority_trait_frac=minority_trait_frac)
+
+    # assert False
+
+    # Test #0: do we really have the distribution of minority/majority we
+    # expect?
+
+    # Test #1: are payoffs as expected for minorities and majorities?
+    # Think I can follow my test_expected_payoff method below.
+
+    # Test #2 ???
+
+
+def test_similarity_threshold():
+    'Check that payoffs and matching probabilities are as expected for different similarity thresholds.'
+    assert False
+
+
+def test_invasion_setup():
+    'Check that there are correct number of invading and established populations.'
+    assert False
 
 
 ##
@@ -119,6 +158,7 @@ def test_calculate_payoff():
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25 - 0.15
 
+
 ##
 # Signaling and receiving. Need to ensure generous/churlish receivers act as
 # we expect them to depending on covert/overt signaling from either similar
@@ -180,6 +220,7 @@ def test_expected_payoffs():
     assert_approx_equal(model.agents[2].gross_payoff, pi2, 2)
     assert_approx_equal(model.agents[3].gross_payoff, pi3, 2)
 
+
 def _setup_model_agents(**model_kwargs):
 
     model = Model(N=4, **model_kwargs)
@@ -220,7 +261,6 @@ def _setup_model_agents(**model_kwargs):
 # Calculating dyadic interaction probabilities.
 #
 def test_dyadic_interaction_probs():
-# def test_dyadic_interaction_probs():
     '''
     Dyadic interaction probabilities should match expected values calculated
 
