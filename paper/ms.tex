@@ -110,11 +110,8 @@ These are summarized in Table~\ref{tab:params} below.
 \begin{table}[H]
   \centering
   \begin{tabular}{cl}
-    Variable/parameter & Definition \\
+    Global parameter & Description \\
     \toprule 
-    $a_{ij}$   & Attitude of agent $i$ towards agent $j$; $a_i$ is the $N$-dimensional 
-      attitude vector of agent $i$ \\
-    $\tau_{ij}$ & Trait $j$ of agent $i$; $\tau_i$ is the $K$-dimensional trait vector of agent $i$ \\
     $K$      & Number of relevant traits determining similarity, liking, disliking, etc. \\
     $w$      & Homophily \\
     $d$      & Interaction penalty when one agent dislikes the other \\
@@ -123,19 +120,13 @@ These are summarized in Table~\ref{tab:params} below.
     $S$      & Number of traits two agents must have in common to be considered similar \\
     $M$      & Number of traits used (if any) to define majority/minority populations \\
   \end{tabular}
-  \caption{Model parameters.}
+  \caption{Global model parameters.}
   \label{tab:params}
 \end{table}
 
 \subsection{Agents}
 
-\begin{table}[H]
-  \begin{tabular}{ccp{5in}}
-    Agent property & 
-  \end{tabular}
-\end{table}
-
-Model individuals are agents who 
+Model individuals are \emph{agents} who 
 \begin{enumerate}
   \item have static ``in-born'' traits that determine pairwise similarity or dissimilarity
   \item hold attitudes about all other agents in the system
@@ -147,10 +138,60 @@ randomly initialized to be covert or overt with equal probability. The
 proportion of agents with specific signaling or receiving strategies will be
 set to different values in the invasion experiments, explained in more detail below.
 
-Each trait is represented arbitrarily by $\tau_{ij} \in \{-1, 1\}$ 
-(MAYBE USE 'A' and 'B' INSTEAD SINCE THEY REALLY ARE CATEGORICAL?). 
+Agents have $K$ traits, where $K$ is a parameter representing the cultural 
+complexity of the system. In the real world, different systems may have 
+different cultural complexities. For instance, in United States politics, there
+is increasingly little subtlety and increasing partisanship, so $K \approx1 $.
+However, if we were trying to understand scholarly positions on some research
+question, we may have $K$ be very large, or $K$ could be large if we consider
+agents to be, e.g., nations instead of people (as in Axelrod 1997).  
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{cp{4.5in}}
+    Agent property & Description \\
+    \toprule
+    $a_{ij}$   & Attitude of agent $i$ towards agent $j$; $a_i$ is the $N$-dimensional 
+      attitude vector of agent $i$. \\
+    $\tau_{ik}$ & Trait $k$ of agent $i$; $\tau_i$ is the $K$-dimensional trait vector of agent $i$. \\
+    Signaling strategy & Either \emph{overt} or \emph{covert}. Overt signaling always
+                         results in the communication of the signaler's traits,
+                         while covert signalers only reveal their traits to 
+                         ``similar'' others; dissimilar others do not receive a covert signal. \\
+    Receiving strategy & Either \emph{churlish} or \emph{generous}. Churlish
+                         receivers default to dislike other agents from whom they have
+                         not received a signal. Generous receivers default to
+                         a neutral attitude towards others from whom they have
+                         not received a signal.
+  \end{tabular}
+  \caption{Agent attributes.}
+  \label{tab:agentAttributes}
+\end{table}
+
+
+\subsubsection{Determining inter-agent similarity}
+
+Each trait $j$ of agent $i$ takes a value $\tau_{ik} \in \{-1, 1\}$. $-1$ and 1
+are used only to emphasize that there are two opposing traits.
 Attitudes are $a_{ij} \in \{-1, 0, 1\}$ with meanings of 
-disliking, neutral, or liking. 
+disliking, neutral, or liking. Attitudes are set at the signaling and receiving
+rounds, explained in more detail below. Briefly, if agent $i$ recieves a
+trait signal from agent $j$, $a_{ij}$ will be 1 if the two agents have
+similar traits, and $-1$ if $i$ and $j$ are sufficiently different. Similarity
+is $s_{ij} = 1 - d(\tau_i, \tau_j)$ where $d(\tau_i, \tau_j)$ is the
+Hamming distance between trait vectors. The Hamming distance is the fraction
+of vector elements that are different. So, if $\tau_i = (1,~-1,~1)$ and
+$\tau_j = (1,~-1,~-1)$, then $d(\tau_i, \tau_j) = 1/3$ and $s_{ij}=2/3$.
+Two agents are ``similar'' if their similarity $s_{ij} \geq S$, where
+$S$ is the similarity threshold parameter. Otherwise they are considered
+dissimilar. 
+
+If two agents are similar, this enables agents to like one another. On the
+other hand, dissimilar agents may come to dislike one another if they signal
+their traits to one another. As explained further in the following section on
+model dynamics, inter-agent attitudes determine the probability agents will
+interact; the payoff received when a particular dyad interacts; and the
+probability that one agent chooses another as a teacher.
 
 \subsection{Dynamics}
 
@@ -161,7 +202,9 @@ efficiency of overt and covert signaling, $E_{ov}$ and $E_{cov}$, respectively.
 \emph{Efficiency} is the proportion of agents in the population that receive
 a given agent's signal depending on whether the agent is an overt or covert
 signaler.  Signals are sent and received once every model iteration. 
-If and agent does receive a signal
+If agent $i$ does receive a signal that agent updates its attitudes about
+signaler $j$, then $i$ updates its attitudes about $j$ ($a_{ij}$), according to
+the process outlined above.
 
 Then agents then
 interact at most $N_I$ times with other agents. In each of the possible 
@@ -196,7 +239,7 @@ agents never interact with agents they dislike and always interact with
 agents they like.
 
 \begin{equation}
-  \Pr(\text{$i$ interacts with $j$}) = \frac{1 + a_{ij} + a_{ji}}{2}
+  \Pr(\text{$i$ interacts with $j$}) = \frac{1 + w(a_{ij} + a_{ji})}{2}
 \end{equation}
 \noindent
 
@@ -210,18 +253,19 @@ and let it vary from 0 to $2d$}.
 \begin{table}[h]
   \centering
   \begin{tabular}{cccc}
-    $a_{ij}$ & $a_{ji}$ & Similar? & Payoff $\pi_i = \pi_j$ \\
+    Similar? & $a_{ij}$ & $a_{ji}$ & Payoff $\pi_i = \pi_j$ \\
     \toprule
-    1 & 1 & Yes & $1 + s$ \\
-    1 & 0 & Yes & $1 + s$ \\
-    1 & -1 & Yes & $1 + s - d$ \\
-    1 & -1 & No & $1 + s - d$ \\
-    0 & 0 & Yes & $1 + s$ \\
-    0 & 0 & No & $1$ \\
-    -1 & 0 & Yes & $1 + s - d$ \\
-    -1 & 0 & No  & $1 - d$ \\
-    -1 & -1 & Yes & $1 + s - 2d$ \\
-    -1 & -1 & No  & $1 - 2d$ \\
+    Yes   & 1 & 1   & $1 + s$ \\
+    Yes   & 1 & 0   & $1 + s$ \\
+    Yes   & 1 & -1  & $1 + s - d$ \\
+    Yes   & 0 & 0   & $1 + s$ \\
+    Yes   & -1 & 0  & $1 + s - d$ \\
+    Yes   & -1 & -1 & $1 + s - 2d$ \\
+    \midrule
+    No    & 1 & -1  & $1 + s - d$ \\
+    No    & 0 & 0   & $1$ \\
+    No    & -1 & 0  & $1 - d$ \\
+    No    & -1 & -1 & $1 - 2d$ \\
   \end{tabular}
   \caption{Interaction payoff matrix. Certain conditions are impossible, and so are not
   shown. For instance, it is necessary for two agents to be similar for 
@@ -233,12 +277,25 @@ and let it vary from 0 to $2d$}.
 
 \subsubsection{Social learning}
 
-All agents select another agent in the population to be a teacher. The 
+All agents select another agent in the population to be a teacher.
+Teacher selection is random, where the probability an agent selects another
+agent is proportional to the probability of interaction given in 
+Equation~\ref{eq:interactionProb}, normalized by the sum of all interaction
+probabilities,
+
+\begin{equation}
+  \Pr(\text{$i$ chooses teacher $j$}) = 
+    \frac{1 + w(a_{ij} + a_{ji})}{\sum_{j \neq i}(1 + w(a_{ij} + a_{ji}))}
+\end{equation}
+% \noindent
+
+The 
 learner agent probabilistically adopts its teacher's signaling or receiving 
 strategy---which type of strategy might be learned is determined by a coin flip. 
 The probability that the learner adopts the teacher's strategy is set 
 calculated by the logistic sigmoid function applied to the quotient of 
-teacher and learner payoffs accumulated in one signaling/receiving-interaction/payoff round.
+teacher and learner payoffs accumulated in one
+signaling/receiving-interaction/payoff round.
 Let $\pi_{i}$ be the accumulated payoff of agent $i$, and assume $i$ learns
 from $j$. Set $p_{ij} = \pi_{j} / \pi_i$. 
 The probability the learner will adopt the teacher's strategy is
