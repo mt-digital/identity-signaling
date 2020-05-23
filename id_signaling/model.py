@@ -11,8 +11,8 @@ from scipy.special import expit
 from scipy.spatial.distance import hamming
 
 
-RECEIVING_STRATEGIES = ["Generous", "Churlish"]
-SIGNALING_STRATEGIES = ["Overt", "Covert"]
+RECEIVING_STRATEGIES = ['Generous', 'Churlish']
+SIGNALING_STRATEGIES = ['Overt', 'Covert']
 
 
 class Model:

@@ -16,23 +16,23 @@ def test_minorities():
     _test_minorities(9, 4, 0.25)
     _test_minorities(9, 4, 0.75)
 
-    assert False
 
-
-def _test_minorities(K, M, minority_trait_frac):
+def _test_minorities(K, M, minority_trait_frac, N=100):
 
     # Set up new model with given settings.
-    model = Model(N=100, K=K, n_minmaj_traits=M, minority_trait_frac=minority_trait_frac)
+    model = Model(N=N, K=K, n_minmaj_traits=M,
+                  minority_trait_frac=minority_trait_frac)
 
-    # assert False
+    # Simplest thing to test is the setup. Do we really have a minority and
+    # majority where the number of agents with the minority/majority trait
+    # are as expected?
 
-    # Test #0: do we really have the distribution of minority/majority we
-    # expect?
+    agents = model.agents
 
-    # Test #1: are payoffs as expected for minorities and majorities?
-    # Think I can follow my test_expected_payoff method below.
-
-    # Test #2 ???
+    minority = [a for a in agents if (a.traits[0:M] == [1]*M).all()]
+    majority = [a for a in agents if (a.traits[0:M] == [-1]*M).all()]
+    assert len(minority) == np.floor(minority_trait_frac * N)
+    assert len(majority) == np.floor((1 - minority_trait_frac) * N)
 
 
 def test_similarity_threshold():
@@ -83,8 +83,23 @@ def test_similarity_threshold():
 
 def test_invasion_setup():
     'Check that there are correct number of invading and established populations.'
-    assert False
 
+    _test_invasion_setup()
+    _test_invasion_setup(0.1, 0.9)
+    _test_invasion_setup(0.9, 0.1)
+    _test_invasion_setup(0.1, 0.5)
+    _test_invasion_setup(0.5, 0.1)
+
+
+def _test_invasion_setup(init_cov=0.5, init_ch=0.5, N=100):
+
+    m = Model(N=N, initial_prop_covert=init_cov, initial_prop_churlish=init_ch)
+
+    cov = [a for a in m.agents if a.signaling_strategy == 'Covert']
+    chur = [a for a in m.agents if a.receiving_strategy == 'Churlish']
+
+    assert len(cov) == np.floor(init_cov * N)
+    assert len(chur) == np.floor(init_ch * N)
 
 ##
 # Expected payoffs on interaction. Using results from test above we know the
