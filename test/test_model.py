@@ -37,7 +37,48 @@ def _test_minorities(K, M, minority_trait_frac):
 
 def test_similarity_threshold():
     'Check that payoffs and matching probabilities are as expected for different similarity thresholds.'
-    assert False
+
+    # Initialize model.
+    m = Model(similarity_threshold=0.5)
+
+    # Set up some agents to be similar or dissimlar.
+    a1 = Agent(K=3)
+    a2 = Agent(K=3)
+    a3 = Agent(K=3)
+
+    a1.traits = np.array([1, 1, -1])
+    a2.traits = np.array([1, 1, 1])
+    a3.traits = np.array([1, -1, 1])
+
+    assert m._are_similar(a1, a2)
+    assert not m._are_similar(a1, a3)
+    assert m._are_similar(a2, a3)
+
+    m = Model(similarity_threshold=0.1)
+    assert m._are_similar(a1, a2)
+    assert m._are_similar(a1, a3)
+    assert m._are_similar(a2, a3)
+
+    m = Model(similarity_threshold=0.9)
+    assert not m._are_similar(a1, a2)
+    assert not m._are_similar(a1, a3)
+    assert not m._are_similar(a2, a3)
+    assert m._are_similar(a1, a1)
+    assert m._are_similar(a2, a2)
+    assert m._are_similar(a3, a3)
+
+    m = Model(similarity_threshold=0.5)
+    # Set up some agents to be similar or dissimlar.
+    a1 = Agent(K=10)
+    a2 = Agent(K=10)
+    a3 = Agent(K=10)
+    a1.traits = np.array([1]*5 + [-1]*5)
+    a2.traits = np.array([1]*10)
+    a3.traits = np.array([-1]*4 + [1]*6)
+
+    assert m._are_similar(a1, a2)
+    assert m._are_similar(a2, a3)
+    assert not m._are_similar(a1, a3)
 
 
 def test_invasion_setup():

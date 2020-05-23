@@ -355,6 +355,9 @@ class Model:
             else:
                 self.attitudes = -1 * np.ones((self.N,), dtype=int)
 
+    def _are_similar(self, a1, a2):
+        similarity = 1 - hamming(a1.traits, a2.traits)
+        return similarity >= self.similarity_threshold
 
     def _calculate_payoff(self, a1, a2):
         '''
@@ -366,9 +369,7 @@ class Model:
 
         # XXX OLD
         # similar = (np.sum(a1.traits * a2.traits) >= self.similarity_threshold)
-
-        similarity = 1 - hamming(a1.traits, a2.traits)
-        similar = similarity >= self.similarity_threshold
+        similar = self._are_similar(a1, a2)
 
         # Like/like.
         if att_sum == 2:
@@ -391,6 +392,7 @@ class Model:
                 # Like/dislike XXX IS THIS EVEN POSSIBLE? smelly....
                 if a1.attitudes[a2.index] > 0 or a2.attitudes[a1.index] > 0:
                     return 1 - self.one_dislike_penalty
+
                 # Neutrals
                 elif a1.attitudes[a2.index] == 0 and a2.attitudes[a1.index] == 0:
                     return 1
