@@ -301,10 +301,10 @@ from $j$. Set $p_{ij} = \pi_{j} / \pi_i$.
 The probability the learner will adopt the teacher's strategy is
 
 \begin{equation}
-  \Pr(\text{$i$ learns from $j$}) = \frac{1}{1 + e^{-\beta(p_{ij} - \alpha)}}.
+  \Pr(\text{$i$ adopts $j$'s strategy}) = \frac{1}{1 + e^{-\beta(p_{ij} - \alpha)}}.
 \end{equation}
 \noindent
-$\alpha$ and $\beta$ are parameters shift and scale the sigmoid curve, respectively. 
+$\alpha$ and $\beta$ are parameters that shift and scale the sigmoid curve, respectively. 
 $\alpha$ is the size of $p_{ij}$ such that $\Pr(\text{$i$ learns from $j$}) = 0.5$. % $P(\text{$i$ learns from $j$}) = 0.5$.
 For example, if we set $\alpha = 2$, then the teacher's accumulated payoff
 must be twice that of the learner's for a 50\% chance that the learner 
@@ -315,9 +315,6 @@ if $p_{ij} < 0.5$ then $\Pr(\text{$i$ learns from $j$})$ is closer to 0 than sma
 $\Pr(\text{$i$ learns from $j$})$ is closer to 1 for larger than for smaller $\beta$. For the main
 results we set $\beta = 12$. These settings are rather arbitrary, (SO WE NEED
 TO PROVIDE SENSITIVITY CHECKS IN THE SUPPLEMENT).
-
-
-\subsection{Computational experiment design}
 
 \subsection{Outcome measures}
 
@@ -337,8 +334,8 @@ prevalence of generous receivers at $t=T$.
     $1 - \rho_{cov} = \rho_{ov}$ & Prevalence of overt signalers  \\
      $\rho_{gen}$ & Prevalence of generous receivers \\
     $1 - \rho_{gen} = \rho_{ch}$ & Prevalence of churlish receivers \\
-    $\rho_i^{minor}$, $\rho_i^{maj}$ & Prevalence of strategy $i \in \{cov, ov, gen, ch\}$ amongst minority/majority \\
-    $\Pr(\text{$i$ invades})$ & Probability strategy $i$ invades 
+    $\rho_s^{minor}$, $\rho_s^{maj}$ & Prevalence of strategy $s \in \{cov, ov, gen, ch\}$ amongst minority/majority \\
+    $\Pr(\text{$s$ invades})$ & Probability strategy $s \in \{cov, ov, gen, ch\}$ invades 
   \end{tabular}
   \caption{Summary of outcome measures. To indicate any of these values at
   a particular time, we add an additional subscript. For example, $\rho_{cov,t}^{maj}$
@@ -346,6 +343,51 @@ prevalence of generous receivers at $t=T$.
   \label{tab:outcomeMeasures}
 \end{table}
 
+
+\subsection{Computational experiments}
+
+\subsubsection{Design}
+
+All computational experiments we implemented share a core design. The only 
+difference between experiments is how we initialize agents and which
+outcome measures we analyze. This basic design initializes $N$ agents with
+a trait vector, an attitude vector, and a signaling and receiving strategy.
+Agent attributes can be set fully randomly, as we do for the basic experiments focusing
+on the role of key parameters of homophily ($w$), disliking penalty ($d$), and 
+covert signaling efficiency ($r$). Randomly setting agent attributes means
+choosing $\pm 1$ for each element of agent trait vectors with equal 
+probabilities, and choosing a signaling and receiving strategy at random
+with equal probabilities for each strategy type. Attributes are initialized
+according to the agent's receiving strategy. Generous agents have all 
+attitudes about other agents set to 0, indicating neutrality. Churlish agents
+have all attitudes set to -1, since these agents dislike others by default.
+This and all experiments iterate the model $T$ times, which
+means $T$ signaling rounds, with $I$ interactions between signaling rounds,
+and social learning after the signaling rounds. In this basic experiment,
+we analyze the global prevalence of covert signalers at time $T$ ($\rho_{cov,T}$)
+and the global prevalence of generous receivers at time $T$ ($\rho_{gen,T}$),
+including calculating correlation between the two.
+
+The first variation on this basic model is intended to test our 
+hypothesis that covert signaling prevalence in 
+minority populations ($\rho_{cov}^{minor}$) is inversely correlated with
+homophily. For this, we initialize the first $M$ traits out of $K$ to mark the 
+minority and majority populations. The minority population has its first
+$M$ trait vector elements set to $+1$ and the majority population has its
+first $M$ trait vector elements set to $-1$. For example, if $K=5$, $M=2$,
+and agent $i$ is in the minority, then its trait vector would be
+$\tau_i = (-1, -1, -1, \pm 1, \pm 1)$; if $i$ is in the majority, its 
+trait vector would be $\tau_i = (1, 1, 1, \pm 1, \pm 1)$, where in the last
+two positions the value is chosen randomly with equal probabilities.
+In this experiment we analyze the prevalence of covert signalers and 
+generous receivers in the minority and majority populations at time T: 
+$\rho_{cov,T}^{minor}$, $\rho_{cov,T}^{major}$,
+$\rho_{gen,T}^{minor}$, and $\rho_{gen,T}^{major}$.
+
+(NEXT WRITE INVASION PAR)
+
+
+\subsubsection{Implementation}
 
 
 
