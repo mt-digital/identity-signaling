@@ -54,8 +54,37 @@ runexp disliking 0.0:0.51:0.25 0.0:0.51:0.25 4 40 \
 printf "******************\nFinished at `uptime`"
 ```
 
-This will be submitted to teh cluster using the `squeue` command when the
-`-d` flag is not passed to `subexp`.
+This will be submitted to the cluster using the `squeue` command when the
+`-d` flag is not passed to `subexp`. -d indicates "development".
+
+### Scripts to submit multiple versions
+
+To spread a simulation across multiple runs, I wrote a number of scripts to 
+submit a number of jobs to the cluster that will run all parameter values and
+the right number of trials per parameter value. For example, here are the
+main contents of `sub_minority_K=9;M=4.sh`:
+
+```sh
+for i in {1..10}; do
+    fname=output_data/minority_K9M4/part-`uuidgen`
+    subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 10 $fname.csv -R0.5  \
+        --n_minmaj_traits=4 -K9 -m0.10 \
+        -qfast.q -j$fname -n24 -t"04:00:00"
+        # -qstd.q -j$fname -n20 -t"04:00:00" --n_minmaj_traits=4 -K10
+done
+```
+
+This writes all data to randomly-named files to the directory
+`output_data/minority_K9M4`. To create a single CSV, I have been running the
+following commands, using an example randomly-generated file name. The first
+line grabs the header and the second line takes all lines but the header from
+each file and puts the data in full.csv.
+
+```
+$ head -n1 part-a917cc22-14e9-4716-8b66-8a610028ed3f.csv > full.csv
+$ tail -q -n+2 part-*.csv >> full.csv
+```
+
 
 ## Experiments
 
