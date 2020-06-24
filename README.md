@@ -201,3 +201,22 @@ given by a command like `--homophily=0.0:1.01:0.025`, which would set
 five homophily parameters, 0, 0.25, 0.5, 0.75, 1.0. These values are used in
 a call to `np.arange` which is why the max is set to 1.01 to pick up the 1.0
 value.
+
+### Create cluster directory structure
+
+Eventually I want a script that creates the required directory structure, but
+it will take some work to compile them all together. For now, I have to 
+look at the different `sub_*.sh` files that make the proper series of 
+calls to the Python CLI that run the desired experiments, and based on the
+file names used create the directory structure that will accommodate 
+the file names. Because the file name is used by the cluster to write .out
+and .err files to, if an error has been made the cluster script will fail
+immediately. 
+
+Example: see `sub_tolerance_diversity_experiments.sh` which requires a directory
+structure created by the following commands:
+
+```sh
+mkdir -p output_data/tolerance_diversity/0.{1..9}/"K="{10,15,20}/
+mkdir -p output_data/tolerance_diversity/1.0/"K="{10,15,20}/
+```
