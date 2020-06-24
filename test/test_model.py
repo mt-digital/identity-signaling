@@ -42,24 +42,31 @@ def test_similarity_threshold():
     m = Model(similarity_threshold=0.5)
 
     # Set up some agents to be similar or dissimlar.
-    a1 = Agent(K=3)
-    a2 = Agent(K=3)
-    a3 = Agent(K=3)
+    a1 = Agent(K=3, agent_idx=0)
+    a2 = Agent(K=3, agent_idx=1)
+    a3 = Agent(K=3, agent_idx=2)
 
     a1.traits = np.array([1, 1, -1])
     a2.traits = np.array([1, 1, 1])
     a3.traits = np.array([1, -1, 1])
+
+    m.agents = [a1, a2, a3]
+    m._init_similar_matrix()
 
     assert m._are_similar(a1, a2)
     assert not m._are_similar(a1, a3)
     assert m._are_similar(a2, a3)
 
     m = Model(similarity_threshold=0.1)
+    m.agents = [a1, a2, a3]
+    m._init_similar_matrix()
     assert m._are_similar(a1, a2)
     assert m._are_similar(a1, a3)
     assert m._are_similar(a2, a3)
 
     m = Model(similarity_threshold=0.9)
+    m.agents = [a1, a2, a3]
+    m._init_similar_matrix()
     assert not m._are_similar(a1, a2)
     assert not m._are_similar(a1, a3)
     assert not m._are_similar(a2, a3)
@@ -69,12 +76,14 @@ def test_similarity_threshold():
 
     m = Model(similarity_threshold=0.5)
     # Set up some agents to be similar or dissimlar.
-    a1 = Agent(K=10)
-    a2 = Agent(K=10)
-    a3 = Agent(K=10)
+    a1 = Agent(K=10, agent_idx=0)
+    a2 = Agent(K=10, agent_idx=1)
+    a3 = Agent(K=10, agent_idx=2)
     a1.traits = np.array([1]*5 + [-1]*5)
     a2.traits = np.array([1]*10)
     a3.traits = np.array([-1]*4 + [1]*6)
+    m.agents = [a1, a2, a3]
+    m._init_similar_matrix()
 
     assert m._are_similar(a1, a2)
     assert m._are_similar(a2, a3)
@@ -120,6 +129,8 @@ def test_calculate_payoff():
     # Like/like. Only similar possible. Only one possible configuration.
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([1, -1, -1])
+    model.agents = [a0, a1]
+    model._init_similar_matrix()
 
     a0.attitudes = np.array([0, 1])
     a1.attitudes = np.array([1, -1])
@@ -137,6 +148,7 @@ def test_calculate_payoff():
     # Like/dislike, similar.
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([1, -1, -1])
+    model._init_similar_matrix()
 
     a0.attitudes = np.array([0, 1])
     a1.attitudes = np.array([-1, -1])
@@ -150,6 +162,10 @@ def test_calculate_payoff():
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([-1, -1, -1])
 
+    # Need to re-initialize similarity matrix whenever traits updated.
+    model._init_similar_matrix()
+    print(model.similar_matrix)
+
     a0.attitudes = np.array([0, 1])
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25
@@ -162,6 +178,8 @@ def test_calculate_payoff():
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([1, -1, -1])
 
+    model._init_similar_matrix()
+
     a0.attitudes = np.array([0, 0])
     a1.attitudes = np.array([0, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5
@@ -170,6 +188,8 @@ def test_calculate_payoff():
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([-1, -1, -1])
 
+    model._init_similar_matrix()
+
     a0.attitudes = np.array([0, 0])
     a1.attitudes = np.array([0, -1])
     assert model._calculate_payoff(a0, a1) == 1
@@ -177,6 +197,8 @@ def test_calculate_payoff():
     # Neutral/dislike, similar.
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([1, -1, -1])
+
+    model._init_similar_matrix()
 
     a0.attitudes = np.array([0, 0])
     a1.attitudes = np.array([-1, -1])
@@ -190,6 +212,8 @@ def test_calculate_payoff():
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([-1, -1, -1])
 
+    model._init_similar_matrix()
+
     a0.attitudes = np.array([0, 0])
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25
@@ -202,6 +226,8 @@ def test_calculate_payoff():
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([1, -1, -1])
 
+    model._init_similar_matrix()
+
     a0.attitudes = np.array([0, -1])
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 + 0.5 - 0.25 - 0.15
@@ -209,6 +235,8 @@ def test_calculate_payoff():
     # Dislike/dislike, dissimilar. Only one configuration.
     a0.traits = np.array([1, 1, -1])
     a1.traits = np.array([-1, -1, -1])
+
+    model._init_similar_matrix()
 
     a0.attitudes = np.array([0, -1])
     a1.attitudes = np.array([-1, -1])
@@ -305,6 +333,10 @@ def _setup_model_agents(**model_kwargs):
     assert_array_equal(agents[1].attitudes, np.array([0, 0, 0, 0]))
     assert_array_equal(agents[2].attitudes, np.array([-1, -1, -1, -1]))
     assert_array_equal(agents[3].attitudes, np.array([-1, -1, -1, -1]))
+
+    # Have to update similarity matrix using call to private method usually
+    # only called in Model constructor.
+    model._init_similar_matrix()
 
     # Because we set overt and covert signals to always be received,
     # running the model just one timestep should update all attitudes.

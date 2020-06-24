@@ -107,6 +107,13 @@ class Model:
             for idx in range(N)
         ]
 
+        # Initialize similarity matrix of shape NxN to hold boolean
+        # indicating whether or not two agents are similar.
+        self.similar_matrix = np.zeros((N, N), dtype=bool)
+
+        # It is repetetive but convenient to create the full symmetric matrix.
+        self._init_similar_matrix()
+
         # Have a marker for the run() method if it should track majority/
         # minority agents over time so we can later recover their
         # proportional strategies.
@@ -152,6 +159,14 @@ class Model:
         self.prop_covert_series = np.array([_proportion_covert(self)])
         self.prop_churlish_series = np.array([_proportion_churlish(self)])
 
+    def _init_similar_matrix(self):
+        for a1 in self.agents:
+            for a2 in self.agents:
+
+                similarity = 1 - hamming(a1.traits, a2.traits)
+                similar = similarity >= self.similarity_threshold
+
+                self.similar_matrix[a1.index, a2.index] = similar
 
     def run(self, n_iter):
         '''
@@ -203,19 +218,19 @@ class Model:
 
     def _signal_and_receive(self):
 
-        for signaller_idx, signaller in enumerate(self.agents):
+        for signaler_idx, signaler in enumerate(self.agents):
 
             # Determine which of the two receiver proportions should be used.
             receive_prob = (
                 self.prob_overt_receiving
-                if signaller.signaling_strategy == "Overt" else
+                if signaler.signaling_strategy == "Overt" else
                 self.prob_covert_receiving
             )
 
             # Build a list of receivers who will observe the signal.
             receivers = (
                 other for other in self.agents
-                if (other != signaller) and (uniform() < receive_prob)
+                if (other != signaler) and (uniform() < receive_prob)
             )
 
             # TODO: implement signaling by focal `agent` and receiving by
@@ -229,29 +244,31 @@ class Model:
                 # and equal number of similar and dissimilar traits.
                 # XXX This can be calculated just once at init after
                 # traits have been set since traits don't change.
-                similarity = np.sum(receiver.traits * signaller.traits)
+                # similarity = np.sum(receiver.traits * signaler.traits)
+                similar = self._are_similar(signaler, receiver)
 
                 # If similarity is positive, attitude independent of signaling
                 # strategy...
-                if similarity > 0:
-                    receiver.attitudes[signaller_idx] = 1
+                # if similarity > 0:
+                if similar:
+                    receiver.attitudes[signaler.index] = 1
                 # ...but if similarity is negative, need to check the
                 # signaling strategy.
-                elif similarity < 0:
+                else:
                     # If the signal was overt, change attitude to dislike.
                     # In the other case, do nothing as this will keep the
                     # default attitude towards the signaler by the receiving
                     # agent.
-                    if signaller.signaling_strategy == "Overt":
-                        receiver.attitudes[signaller_idx] = -1
+                    if signaler.signaling_strategy == "Overt":
+                        receiver.attitudes[signaler.index] = -1
 
     def _dyadic_interactions(self):
 
         # Make potential interaction dyads.
         pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
 
-        # Probabilistic dyadic interaction.
-        interacting_pairs = [
+        # Probabilistic collaboration between matched agents.
+        collaborating_pairs = [
             pair for pair in pairs
             if uniform() < self._dyadic_interaction_prob(*pair)
         ]
@@ -259,16 +276,15 @@ class Model:
         # Calculate payoffs for each pair who interact and add to each
         # agent's cumulative payoff. Increase count of number of interactions
         # for both agents in pair.
-        for pair in interacting_pairs:
+        for pair in collaborating_pairs:
             payoff = self._calculate_payoff(*pair)
             for a in pair:
                 a.gross_payoff += payoff
                 a.n_interactions += 1
 
-            # Need to add partner to list of previous partners
+            # Need to add partner to list of previous partners. (XXX still? why?)
             p0 = pair[0]
             p1 = pair[1]
-
             p0_partners = pair[0].previous_partners
             p1_partners = pair[1].previous_partners
 
@@ -356,8 +372,7 @@ class Model:
                 self.attitudes = -1 * np.ones((self.N,), dtype=int)
 
     def _are_similar(self, a1, a2):
-        similarity = 1 - hamming(a1.traits, a2.traits)
-        return similarity >= self.similarity_threshold
+        return self.similar_matrix[a1.index, a2.index]
 
     def _calculate_payoff(self, a1, a2):
         '''
