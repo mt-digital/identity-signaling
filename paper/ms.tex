@@ -8,6 +8,7 @@
 % \usepackage{fullpage}
 \usepackage{tabulary}
 \usepackage{tabularx}
+\usepackage{multirow}
 \usepackage{float}
 % \usepackage[margin=1.00in]{geometry}
 \usepackage[margin=0.90in]{geometry}
@@ -117,11 +118,18 @@ These are summarized in Table~\ref{tab:params} below.
     $\delta$ & Additional penalty when pair dislike one another & \textbf{0.25} \\
     $E_{cov}$ & \emph{Efficiency of covert signaling} & $\{0.0, 0.05, 0.1,\ldots \mathbf{0.25}, \ldots, 0.5\}$ \\
     $E_{ov}$ & \emph{Efficiency of overt signaling} & \textbf{0.5} \\
-    $s$      & \emph{Similarity benefit} received by similar interacting pair & \textbf{??} \\
+    $s$      & \emph{Similarity benefit} received by similar interacting pair & \textbf{0.25} \\
     $K$      & Number of agent identity traits & $\{\mathbf{3}, 9\}$ \\
     $S$      & Minimum fraction of traits in common for a pair to be considered similar & 
       $\{0.1, 0.2, \ldots, \mathbf{0.5}, \ldots, 1.0\}$\\
-    $M$      & Number of traits used to define majority/minority populations & $\{\mathbf{2}, 4\}$\\
+    $M$      & \emph{Number of minority/majority traits} used to define majority/minority populations & $\{\mathbf{2}, 4\}$\\
+    $R$      & \emph{Number of interaction rounds} following a signaling round \\
+    $\alpha$ & Threshold payoff multiplier to give learner 50\% chance of 
+               adopting teacher's strategy \\
+    $\beta$  & Factor that, as it increases, both lowers chance of learner 
+               adopting strategy when $\pi_{teach}/\pi_{learn} < \alpha$ and
+               raises chance of learner adopting teacher strategy when 
+               $\pi_{teach}/\pi_{learn} > \alpha$.
   \end{tabular}
   \caption{Global, as opposed to agent-specific, model parameters. 
   Explanatory model parameters are used to answer
@@ -163,6 +171,9 @@ agents to be, e.g., nations instead of people (as in Axelrod 1997).
     $a_{ij}$   & Attitude of agent $i$ towards agent $j$; $a_i$ is the $N$-dimensional 
       attitude vector of agent $i$. \\
     $\tau_{ik}$ & Trait $k$ of agent $i$; $\tau_i$ is the $K$-dimensional trait vector of agent $i$. \\
+    $s_{ij}$   & \emph{Similarity} between agents $i$ and $j$. Equal to $1-h(\tau_i,\tau_j)$ 
+                 where $h(\tau_i, \tau_j)$ is the Hamming distance between 
+                 $i$ and $j$'s trait vectors. \\ 
     Signaling strategy & Either \emph{overt} or \emph{covert}. Overt signaling always
                          results in the communication of the signaler's traits,
                          while covert signalers only reveal their traits to 
@@ -173,7 +184,7 @@ agents to be, e.g., nations instead of people (as in Axelrod 1997).
                          a neutral attitude towards others from whom they have
                          not received a signal.
   \end{tabular}
-  \caption{Agent attributes.}
+  \caption{Agent and inter-agent attributes.}
   \label{tab:agentAttributes}
 \end{table}
 
@@ -187,7 +198,14 @@ disliking, neutral, or liking. Attitudes are set at the signaling and receiving
 rounds, explained in more detail below. Briefly, if agent $i$ recieves a
 trait signal from agent $j$, $a_{ij}$ will be 1 if the two agents have
 similar traits, and $-1$ if $i$ and $j$ are sufficiently different. Similarity
-is $s_{ij} = 1 - d(\tau_i, \tau_j)$ where $d(\tau_i, \tau_j)$ is the
+is 
+
+\begin{equation}
+  s_{ij} = 1 - h(\tau_i, \tau_j)
+  \label{eq:similarity}
+\end{equation}
+\noindent
+where $h(\tau_i, \tau_j)$ is the
 Hamming distance between trait vectors. The Hamming distance is the fraction
 of vector elements that are different. So, if $\tau_i = (1,~-1,~1)$ and
 $\tau_j = (1,~-1,~-1)$, then $d(\tau_i, \tau_j) = 1/3$ and $s_{ij}=2/3$.
@@ -200,7 +218,12 @@ other hand, dissimilar agents may come to dislike one another if they signal
 their traits to one another. As explained further in the following section on
 model dynamics, inter-agent attitudes determine the probability agents will
 interact; the payoff received when a particular dyad interacts; and the
-probability that one agent chooses another as a teacher.
+probability that one agent chooses another as a teacher. Dyad similarity 
+also determines whether or not a covert signal is ``understood'' by a 
+receiver who is not sufficiently similar to the sender. In this case, the
+receiver's attitude about the sender will remain unchanged from its
+initialization: $-1$ if the receiver is churlish and $0$ if the receiver is
+generous.
 
 \subsection{Dynamics}
 
@@ -236,45 +259,100 @@ receiving strategy reaches an equilibrium (see SI dynamics plots).
 
 \subsubsection{Signaling and receiving}
 
-At the signaling and receiving step, agents form attitudes about one another if
-they receive a signal from 
+At the signaling and receiving step, an agent updates its attitude about another
+agent if they receive a signal from that agent. How many agents receive a
+single agent's signal depends on whether the signaling agent is an overt or
+covert signaler, and the global parameters \emph{efficiency of overt signaling}, $E_{ov}$,
+and \emph{efficiency of covert signaling}, $E_{cov}$. An overt signal reaches
+$E_{ov} \times N$ agents and a covert signal reaches $E_{cov} \times N$ 
+agents---which agents receive either signal type are chosen at random.
+Overt signaling efficiency is set to $E_{ov}=0.5$ for all experiments presented
+in the main text; (WE NEED TO RUN SENSITIVITY CHECKS ON THIS FOR THE SI). Covert
+signaling efficiency is varied for one of our primary experimental variations
+taking values from 0.1 to 0.5 in steps of 0.05. 
+
+\begin{itemize}
+  \item The difference between overt and covert signals is the conditions
+    under which the signal has an effect on the recieving agent's attitudes
+    towards the sender.
+    \begin{itemize}
+      \item Overt signals, when recieved, always noticed and can change the
+        receivers attitude about the signaler.
+      \item Covert signals, when received, are not ``noticed'' by receivers
+        if signaler and receiver are not sufficiently similar. 
+      \item Recall agents are similar in our model if their inter-agent
+    \end{itemize}
+\end{itemize}
 
 \subsubsection{Interaction}
 
-The two agents interact with different probabilities
-depending on their attitudes about one another, and depending on the 
-assumed homophily level. If  Note that as $w \rightarrow 0.5$,
-agents never interact with agents they dislike and always interact with 
-agents they like.
-
+Interaction occurs in two stages between two randomly-selected agents.
+In the first stage, agents are matched in dyads at random. All agents
+are matched with a partner. In the second stage, agents \emph{collaborate} with
+one another depending on their attitudes towards one another and the homophily
+level, $w$, in the experimental condition.
+Recall that increased homophily means an increased 
+preference for agents to only collaborate with similar others. 
+This is operationalized in as
 \begin{equation}
-  \Pr(\text{$i$ interacts with $j$}) = \frac{1 + w(a_{ij} + a_{ji})}{2}
+  \Pr(\text{$i$ collaborates with $j$}) = \frac{1 + w(a_{ij} + a_{ji})}{2}
+  \label{eq:homophily}
 \end{equation}
 \noindent
+where $w$ is the homophily value, constrained between 0 and 0.5, and $a_{ij}$
+is agent $i$'s attitude towards agent $j$.
+Note that as $w \rightarrow 0.5$, agents never collaborate with agents they 
+dislike. Agents will only collaborate with agents they are neutral towards
+or like. Furthermore, as $w \rightarrow 0.5$, agents more rarely are 
+penalized for disliking their collaboration partner since they will never
+interact with others whom they dislike.
+
 
 \subsubsection{Payoff}
 
-Payoffs are determined based on the similarity bonus, $s$, and the disliking
-penalty $d$\footnote{In the SI we consider the case where the disliking penalty 
+Agents gain payoffs when a dyad collaborates. Payoffs
+are determined based on the similarity bonus, $s$, and the disliking
+penalty $d$. The base payoff is 1, which is awarded if agents have neutral
+attitudes towards one another, i.e., $a_{ij}=a_{ji}=1$. 
+If the agents are similar, i.e.\ $s_{ij} > S$, then 
+the payoff is supplemented by the similarity bonus, $s$. Note that the
+collaboration penalty is not determined by \emph{dissimilarity}, but by
+\emph{disliking}. Specifically, if just one agent dislikes the other, a penalty
+of $d$ is subtracted from the base payoff. If both agents dislike one another,
+a penalty of $2d$ is subtracted from the base payoff. 
+In the SI we consider the case where the disliking penalty 
 when both agents dislike each other is different from $d$. We call this $\delta$
-and let it vary from 0 to $2d$}. 
+and let it vary from 0 to $2d$. Note that, due to the orthogonality of 
+similarity and attitude, it is possible for agents to be similar and 
+to dislike one another. All possible payoffs are given in 
+Table~\ref{tab:payoffs}.
 
 \begin{table}[h]
+  \vspace{1em}
   \centering
   \begin{tabular}{cccc}
-    Similar? & $a_{ij}$ & $a_{ji}$ & Payoff $\pi_i = \pi_j$ \\
+    Similar? & $a_{ij}$ & $a_{ji}$ & Payoff \\
     \toprule
-    Yes   & 1 & 1   & $1 + s$ \\
-    Yes   & 1 & 0   & $1 + s$ \\
-    Yes   & 1 & -1  & $1 + s - d$ \\
-    Yes   & 0 & 0   & $1 + s$ \\
-    Yes   & -1 & 0  & $1 + s - d$ \\
-    Yes   & -1 & -1 & $1 + s - 2d$ \\
+    \multirow{6}{*}{Yes}   & 1 & 1   & $1 + s$ \\
+       & 1 & 0   & $1 + s$ \\
+       & 1 & -1  & $1 + s - d$ \\
+       & 0 & 0   & $1 + s$ \\
+       & -1 & 0  & $1 + s - d$ \\
+       & -1 & -1 & $1 + s - 2d$ \\
+
+    % Yes   & 1 & 1   & $1 + s$ \\
+    % Yes   & 1 & 0   & $1 + s$ \\
+    % Yes   & 1 & -1  & $1 + s - d$ \\
+    % Yes   & 0 & 0   & $1 + s$ \\
+    % Yes   & -1 & 0  & $1 + s - d$ \\
+    % Yes   & -1 & -1 & $1 + s - 2d$ \\
     \midrule
-    No    & 1 & -1  & $1 + s - d$ \\
-    No    & 0 & 0   & $1$ \\
-    No    & -1 & 0  & $1 - d$ \\
-    No    & -1 & -1 & $1 - 2d$ \\
+    % No    & 1 & -1  & $1 - d$ \\  <-- on further review, this seems impossible...
+    %                                   since a_{ij}=1 is only possible if
+    %                                   agents are similar.
+    \multirow{3}{*}{No}    & 0 & 0   & $1$ \\
+        & -1 & 0  & $1 - d$ \\
+        & -1 & -1 & $1 - 2d$ \\
   \end{tabular}
   \caption{Interaction payoff matrix. Certain conditions are impossible, and so are not
   shown. For instance, it is necessary for two agents to be similar for 
@@ -282,6 +360,7 @@ and let it vary from 0 to $2d$}.
   due to churlish receiving, two agents may be similar, but one dislikes the
   other while the other likes the one. There could be agents who dislike one
   another due to churlish receiving if they have never signaled each other.}
+  \label{tab:payoffs}
 \end{table}
 
 \subsubsection{Social learning}
@@ -298,8 +377,7 @@ probabilities,
 \end{equation}
 % \noindent
 
-The 
-learner agent probabilistically adopts its teacher's signaling or receiving 
+The learner agent probabilistically adopts its teacher's signaling or receiving 
 strategy---which type of strategy might be learned is determined by a coin flip. 
 The probability that the learner adopts the teacher's strategy is set 
 calculated by the logistic sigmoid function applied to the quotient of 
@@ -327,14 +405,20 @@ TO PROVIDE SENSITIVITY CHECKS IN THE SUPPLEMENT).
 
 \subsection{Outcome measures}
 
-We are primarily interested in the prevalence of covert signaling at time
-$t$. Usually, $t=T$, where $T$ is the number of iterations chosen for our 
+First, we are interested in the prevalence of covert signaling in the
+whole population at time
+$t$, denoted $\rho_{cov,t}$. For a complete understanding of model dynamics,
+we also track the prevalence of overt signaling and each receiving strategy,
+denoted similarly (see Table~\ref{tab:outcomeMeasures}).
+Usually, $t=T$, where $T$ is the number of iterations chosen for our 
 computational experiments. The prevalence of overt signalers is the complement 
 of the prevalence of covert signalers. One important result shows that the
 prevalence of covert signalers at $t=T$ is positively correlated with the
-prevalence of generous receivers at $t=T$.  
+prevalence of generous receivers at $t=T$. When considering $t=T$ we (SHOULD?)
+drop the subscript and write $\rho_{cov}$, for example.
 
 \begin{table}[H]
+  \vspace{1em}
   \centering
   \begin{tabular}{rp{3in}} %p{5in}}
     Symbol & Measure \\ %& Description \\
@@ -352,6 +436,19 @@ prevalence of generous receivers at $t=T$.
   \label{tab:outcomeMeasures}
 \end{table}
 
+In addition to the prevalence of signaling and receiving strategies in the whole
+population, we need to track the prevalence of strategies within  
+minority and majority populations, where the prevalence of siganling or
+receiving strategy $s$ in the minority (majority) population at time $t$ is written
+$\rho_{s,t}^{minor}$ ($\rho_{s,t}^{major}$). Again, we may drop $t$ when 
+consider the long-time equilibrium ($t=T$) of these prevalence values.
+
+Our final computational experiment analyzes whether strategy $s$ can ``invade''
+the population and establish a stable, sizable population of agents adopting
+that strategy. Here our outcome measure is the calculated probability (i.e.\
+frequency) of invasion success, where a stable sizable population adopting
+that strategy emerges. We write this $\Pr(\text{$s$ invades})$ where $s$
+is covert, overt, generous, or churlish.
 
 \subsection{Computational experiments}
 
@@ -410,15 +507,15 @@ have all attitudes set to -1, since these agents dislike others by default.
 This and all experiments iterate the model $T$ times, which
 means $T$ signaling rounds, with $I$ interactions between signaling rounds,
 and social learning after the signaling rounds. In this basic experiment,
-we analyze the global prevalence of covert signalers at time $T$ ($\rho_{cov,T}$)
-and the global prevalence of generous receivers at time $T$ ($\rho_{gen,T}$),
-including calculating correlation between the two.
+we analyze the global prevalence of covert signalers at time $T$, denoted
+$\rho_{cov,T}$, and the global prevalence of generous receivers at time $T$,
+denoted $\rho_{gen,T}$, including calculating correlation between the two.
 
 \subsubsection{Covert signaling in minority/majority populations}
 The first variation on this basic model is intended to test our 
 hypothesis that covert signaling prevalence in 
-minority populations ($\rho_{cov}^{minor}$) is inversely correlated with
-homophily. For this, we initialize the first $M$ traits out of $K$ to mark the 
+minority populations, denoted $\rho_{cov}^{minor}$, is inversely correlated with
+homophily, $w$. For this, we initialize the first $M$ traits out of $K$ to mark the 
 minority and majority populations. The minority population has its first
 $M$ trait vector elements set to $+1$ and the majority population has its
 first $M$ trait vector elements set to $-1$. For example, if $K=5$, $M=2$,
@@ -464,56 +561,55 @@ to these parameters
 
 \section{Results}
 
-\subsection{Evolution of covert signaling...}
+\subsection{Basic covert signaling prevalence dynamics}
 
-\subsubsection{...under various homophily and disliking scenarios}
+% Here I co-vary the disliking penalties, which I set equal ($d=\delta$), and
+% homophily, $w$. Here, $=0.25$ and $R=0.5$. 
 
-Here I co-vary the disliking penalties, which I set equal ($d=\delta$), and
-homophily, $w$. Here, $r=0.25$ and $R=0.5$. 
-
-Specifically, I vary $d=\delta \in \{0.0, 0.05, 0.1, \ldots, 0.45\}$
-As in the above experiment, I set $w \in \{0.0, 0.5, \ldots, 0.45\}$.
+Our first task is to support our basic hypotheses that, other
+things being equal, (1) covert signaling will
+be the preferred strategy when penalties for disliking and 
+being disliked is high and homophily is relatively weak; (2) increased homophily reduces the utility of
+covert signaling since one rarely interacts when agents dislike one another;
+and, finally, (3) if homophily is moderate or weak, increased covert signaling
+efficiency leads to greater covert signaling prevalence.
+To support these hypotheses, we present computational experiments below where
+three explanatory parameters are varied systematically: homophily, $w$; 
+disliking penalty, $d$; and covert signaling efficiency $E_{cov}$. 
+Specifically, we co-vary homophily, disliking penalty, and covert signaling
+efficiencies all in the same range $w,d,E_{cov} \in \{0.0, 0.05, 0.1, \ldots, 0.5\}$.
+We co-vary these parameters in two separaete experiments. Both experiments
+vary $w$ over those values. One experiment varies $d$ and one varies $E_{cov}$.
 
 \begin{figure}[H]
   \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
     \includegraphics[width=\textwidth]{Figures/basic_disliking_signaling.pdf}
-    \caption{Density of covert signalers.}
+    \caption{Covert signaling prevalence under a variety of homophily and
+    disliking penalty parameter values. }
   \end{subfigure}
-  \begin{subfigure}{0.49\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{Figures/basic_disliking_receiving.pdf}
-    \caption{Density of churlish receivers.}
-  \end{subfigure}
-  
-  \caption{Density of covert signalers and churlish receivers at $t=500$, 
-    the final timestep.}
-  \label{fig:dislikingHomophilyHeatmap}
-\end{figure}
-
-\subsubsection{...as a function of covert signaling efficiency}
-
-\begin{figure}[H]
-  \centering
   \begin{subfigure}{0.49\textwidth}
     \centering
     \includegraphics[width=\textwidth]{Figures/basic_receptivity_signaling.pdf}
-    \caption{Density of covert signalers.}
-  \end{subfigure}
-  \begin{subfigure}{0.49\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{Figures/basic_receptivity_receiving.pdf}
-    \caption{Density of churlish receivers.}
+    \caption{Covert signaling prevalence under a variety of homophily and
+    covert signaling efficiency values. $d=0.25$; all other parameters set to
+  defaults listed in Table~}
   \end{subfigure}
   
-  \caption{Density of covert signalers and churlish receivers at $t=200$, 
-    final timestep recorded in this preliminary experiment. Receptivity of
-    overt signals is $R=0.5$.}
-  \label{fig:receptivityHomophilyHeatmap}
+  \caption{Covert signaling prevalence is sensitive to changes in all 
+  three explanatory parameters for our basic experiment, homophily ($w$),
+disliking penalty ($d$), and covert signaling efficiency ($E_{cov}$). 
+In (a) $E_{cov}=0.25$; in (b) $d=0.25$. All other parameters in both sets of 
+    results (a) and (b) are set to defaults listed in Table~\ref{tab:params}.}
+  \label{fig:dislikingHomophilyHeatmap}
 \end{figure}
 
+% \subsubsection{...as a function of covert signaling efficiency}
+
+
 \subsubsection{Co-evolution of covert signaling and generous receiving}
+
 
 Theoretically, conditions favorable for covert
 signalers should also be favorable for generous receivers (TRUE??). Furthermore, 
@@ -521,6 +617,7 @@ an increase in covert signalers increases the pressure towards generous receivin
 With many covert signalers it is likely an agent will get no signal on a 
 turn because they were receiving a signal from a covert signaler. Disliking
 incurs a penalty, so it is better to remain neutral.
+
 
 \begin{figure}[H]
   \centering
@@ -540,12 +637,40 @@ incurs a penalty, so it is better to remain neutral.
     churlish receivers for all tested parameter combinations in both 
     receptivity (a) and disliking (b) experiments. (NEED TO CHECK HOW I'M AVERAGING
     HERE AND POSSIBLY AGGREGATE FURTHER AS A SMOOTHING FILTER. ALSO NEED TO
-    )}
+). (THINK ABOUT HOW WE COULD USE PAIR PLOT GRIDS TO COMMUNICATE SOME OF
+These, such as in https://jakevdp.github.io/PythonDataScienceHandbook/04.14-visualization-with-seaborn.html
+I'm already going towards that with the invasion plots, but this would be
+plotting correlations between outcome variables and maybe do a 2x2 with
+signaling and receiving prevalences on x and y axes, respectively. Each plot
+with be one of $s \in {cov, ov} \times {ch, gen}$.)}
+  
   \label{fig:regressions}
 \end{figure}
 
+\subsubsection{Covert signaling is favored in less tolerant and more diverse societies}
 
-\subsection{Minority-majority dynamics}
+(THIS PART REQUIRES NEW EXPERIMENTS. These need to be explained in Model 
+  section. Below I am just writing a paragraph for myself to guide the 
+experiment.)
+
+Now we evaluate two related hypotheses, that (1) more tolerant societies
+foster greater overt signaling prevalence and less covert signaling, i.e., more
+tolerant societies promote honest communication; 
+and (2) increased cultural diversity fosters increased 
+covert signaling prevalence---that is, one must be more cautious since more
+diversity means more social norms and taboos to navigate. 
+
+To test the first hypothesis that less tolerant societies foster greater
+covert signaling prevalence, we
+systematically varied the similarity threshold $S \in \{0.1, 0.2, \ldots, 0.9\}$.
+Recall this threshold determines whether
+two agents are deemed ``similar''. Two agents are similar if their similarity
+$s_{ij} \geq S$ (see Equation~\ref{eq:similarity}; Table~\ref{tab:params}). 
+We can think of the ``tolerance'' of agents to be $1-S$; then
+high levels of tolerance mean a lower threshold for similarity. 
+
+
+\subsubsection{Covert signaling is favored among minority groups}
 
 Here we analyze the evolution of covert signaling in populations where there
 are minority and majority sub-populations, as specified by agents' trait
@@ -555,31 +680,23 @@ population is in the minority, and have the first $M$ of their traits set to
 1, and the rest of the population is the majority, with the first $M$ of their
 traits set to -1. 
 
-We primarily vary the minority prevalence, $\rho^{minor}$, and set $M=1$ and
-$K=3$, except for one heatmap in 
+We primarily vary the minority prevalence, $\rho^{minor} \in \{0.1, 0.15, \ldots, 0.45\}$. 
+We vary $\rho^{minor}$ for two parameter pairs of $(K, M)$, where $K$ is the cultural 
+complexity, and $M$ is the integer number of traits used to define 
+majority/minority populations. The similarity threshold is set to $S=0.5$. 
+We test the settings $K=3$, $M=1$, and $K=9$, $M=4$. We also test three
+values of homophily and disliking penalty, representing low, medium, and high
+levels for each: $w,d \in \{0.05, 0.25, 0.45\}$.
+
+By setting $K$ and $M$ to these two values we test two different social
+situations: in the first, $K=3$ and $M=1$, it is relatively easier for two binary traits
+to match (1/4 probability) than the second case, 
+with $K=9$ and $M=4$ where five binary traits must match (1/32 probability).
+Our current results show \dots
 Figure~\ref{fig:covert-signaling-minority-heatmap}. 
 
 \subsubsection{Covert minority signaling over minority prevalence}
 
-\begin{figure}[H]
-  \centering
-  \begin{subfigure}{0.31\textwidth}
-    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p05.pdf}
-    \caption{}
-  \end{subfigure}
-  \begin{subfigure}{0.31\textwidth}
-    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p25.pdf}
-    \caption{}
-  \end{subfigure}
-  \begin{subfigure}{0.31\textwidth}
-    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p45.pdf}
-    \caption{}
-  \end{subfigure}
-  \caption{}
-\end{figure}
-
-
-\subsubsection{Minority covert signaling over homophily and disliking}
 
 \begin{figure}[H]
   \centering
@@ -611,8 +728,147 @@ Figure~\ref{fig:covert-signaling-minority-heatmap}.
   \label{fig:covert-signaling-minority-heatmap}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.31\textwidth}
+    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p05.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.31\textwidth}
+    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p25.pdf}
+    \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.31\textwidth}
+    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p45.pdf}
+    \caption{}
+  \end{subfigure}
+  \caption{}
+\end{figure}
+
+
+
+\subsection{Covert signaling invasion}
+
+In this experiment we begin with initial proportions, $\rho$ of one of the strategies
+at 0.05 and consider this the ``invading'' strategy. $\rho_{cov,0}$ represents
+the initial covert proportion, $\rho_{ov,0}$ the initial overt proportion,
+$\rho_{ch,0}$ the initial churlish proportion, and $\rho_{gen,0}$ the 
+initial generous proportion. We measure how often
+a non-zero proportion of agents with the invading strategy manage to 
+establish a permanent population, which we call invasion success. We calculated
+invasion success for a number of experimental parameter settings, covarying
+over disliking penalty ($d=\delta$) and homophily ($w$) in the first case,
+and over relative covert receptivity ($r/R$) and homophily ($w$) 
+in the second case (Figure~\ref{fig:cov-invades} below; Figures~\ref{fig:ov-invades} and~\ref{fig:ch-gen-invades} in the supplement).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Figures/covert_invades.pdf}
+  % \caption{Covert invades, $\rho_{cov,0}=0.05$}
+  \caption{Covert and overt sending strategy invasion success rates. 
+    Lower homophily is more favorable for successful covert signaling invasion.
+    This is due to lower homophily meaning agents cannot assort well into
+    similar pairs prior to interaction.
+    Similarly, greater homophily is more favorable for successful overt
+    signaling invasion, where agents can better assort if they know each other's
+    true traits. Unexpectedly, as covert receptivity increases, overt signaling
+    is is more successful at invading and covert signaling is less successful
+    at invading when the initial churlishness is high. When initial
+    churlishness is small to moderate, the pattern is reversed.
+  }
+  \label{fig:cov-invades}
+\end{figure}
+
+
+\subsubsection{Non-signaling as an adaptive strategy}
+
+One of the most striking patterns in the invasion results is the evolution
+of a third de facto strategy of non-signaling. This strategy emerges when
+we consider both the invasion dynamics of either the covert or overt 
+signaling strategy. When simulating the invasion of covert signaling
+($\rho_{cov,0}=0.05$), the non-signaling strategy emerges when the covert
+signaling efficiency, $r$, is 0, but covert signaling still successfully
+invades as the chosen agent strategy. When $r=0$, no agents receive
+covert signals, making this more accurately a \emph{non-signaling} strategy.  
+For covert signaling invasion, this only happens when the initial churlishness
+is low ($\rho_{ch,0}=0.05$) and homophily is also low ($w \lessapprox 0.2$). 
+Non-signaling wins out evolutionarily 
+in some cases when considering of invading overt signalers when overt signalers
+fail to invade but $r=0$, again meaning agents in this society prefer not
+to signal at all. This occurs some of the time for all tested homophily
+values and low initial churlishness ($\rho_{ch,0}=0.05$) (Figure~\ref{fig:cov-invades}, bottom left plot).  
+Overt signaling continues to fail to evolve at least some of the time
+for $r=0$ for moderate initial churlishness ($\rho_{ch,0}=0.5$) up up to perfect 
+assortment homophily, $w=0.5$.
+
+\subsection{Further analyses and robustness checks}
+
+There are a number of analyses that could be done to extend or check the 
+robustness of the results presented here. In this section we present some
+we deem most important and straightforward, and present more of these extensions
+and checks in the supplement.
+
+In this main text we present
+\begin{itemize}
+  \item Correlation between churlish receiving and covert signaling.
+  \item Case where $\delta \neq d$---that is, the penalty from collaboration
+    payoff is not $2d$ when both agents dislike one another, it is $d + \delta$.
+  \item We check the robustness of our conclusions regarding covert signaling
+    in minority populations by running our minority/majority
+    experiments with $K=9$ instead of $K=3$ as we had above.
+\end{itemize}
+
+% \bibliographystyle{apacite}
+
+% \setlength{\bibleftmargin}{.125in}
+% \setlength{\bibindent}{-\bibleftmargin}
+
+% \bibliography{/Users/mt/workspace/papers/library.bib}
+
+\appendix
+
+\section{Additional analyses}
+
+\subsection{Receiving strategy prevalence dynamics}
+
+Recall that in our experiments, when agents learn they may adopt a new signaling 
+strategy or receiving strategy.  In the main text we focused on covert 
+signaling prevalence as a function of homophily, disliking penalty, and 
+covert signaling efficiency. Here we support supplemental hypotheses about
+the churlish recieving prevalence dynamics: (1) increased homophily tends
+to increase the prevalence of churlish receivers; (2) churlish receiving
+will be selected against when the disliking penalty is higher; and,
+finally, (3) the prevalence of churlish receivers increases with 
+covert signaling efficiency. 
+
+(EXPLAIN IN MORE DETAIL)
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/basic_disliking_receiving.pdf}
+    \caption{Density of covert signalers.}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{Figures/basic_receptivity_receiving.pdf}
+    \caption{Density of churlish receivers.}
+  \end{subfigure}
+  
+  \caption{Density of covert signalers and churlish receivers at $t=200$, 
+    final timestep recorded in this preliminary experiment. Receptivity of
+    overt signals is $R=0.5$.}
+  \label{fig:receptivityHomophilyHeatmap}
+\end{figure}
 
 \subsubsection{Minority churlish receiving over homophily and disliking}
+
+In the main text we showed covert signaling is more prevalent in minority 
+populations than the majority for most, but not all, parameter settings. 
+Here we supplement this analysis by analyzing what conditions lead to
+churlish receiving in the minority. (Reason out how it would benefit minority
+agents to adopt churlish receiving).
 
 \begin{figure}[H]
   \centering
@@ -642,51 +898,107 @@ Figure~\ref{fig:covert-signaling-minority-heatmap}.
   populations for different parameter settings.}
 \end{figure}
 
-\subsection{Covert signaling invasion}
+\subsection{Temporal dynamics and distribution of outcomes}
 
-In this experiment we begin with initial proportions, $\rho$ of one of the strategies
-at 0.05 and consider this the ``invading'' strategy. $\rho_{cov,0}$ represents
-the initial covert proportion, $\rho_{ov,0}$ the initial overt proportion,
-$\rho_{ch,0}$ the initial churlish proportion, and $\rho_{gen,0}$ the 
-initial generous proportion. We measure how often
-a non-zero proportion of agents with the invading strategy manage to 
-establish a permanent population, which we call invasion success. We calculated
-invasion success for a number of experimental parameter settings, covarying
-over disliking penalty ($d=\delta$) and homophily ($w$) in the first case,
-and over relative covert receptivity ($r/R$) and homophily ($w$) 
-in the second case (Figures~\ref{fig:cov-ov-invade} and~\ref{fig:ch-gen-invade}).
+To understand how the model works it is important to examine ensembles and
+means of time series for different parameter settings. In the results presented
+in the main text, all reported values were calculated using the final
+time step, where the time series had approximately reached equilibrium.
+We want to be sure that the model actually reaches equilibrium.
+
+We also want to know whether the mean of the outcomes is close to the
+median value of the outcomes. That is, if the mean
+final covert signaling prevalence is some value we want to be sure that
+this is more an estimate of a typical prevalence value, not a measure of 
+how often prevalence is either 0 or 1 at equilibrium.
+
+\subsubsection{Temporal dynamics}
 
 \begin{figure}[H]
   \centering
-    \begin{subfigure}{0.49\textwidth}
-      \includegraphics[width=\textwidth]{Figures/covert_invades.pdf}
-      \caption{Covert invades, $\rho_{cov,0}=0.05$}
-    \end{subfigure}
-    \begin{subfigure}{0.49\textwidth}
-      \includegraphics[width=\textwidth]{Figures/overt_invades.pdf}
-      \caption{Overt invades, $\rho_{cov,0}=0.95$}
-    \end{subfigure}
-  \caption{Covert and overt sending strategy invasion success rates. 
-    Lower homophily is more favorable for successful covert signaling invasion.
-    This is due to lower homophily meaning agents cannot assort well into
-    similar pairs prior to interaction.
-    Similarly, greater homophily is more favorable for successful overt
-    signaling invasion, where agents can better assort if they know each other's
-    true traits. Unexpectedly, as covert receptivity increases, overt signaling
-    is is more successful at invading and covert signaling is less successful
-    at invading when the initial churlishness is high. When initial
-    churlishness is small to moderate, the pattern is reversed.
-  }
-  \label{fig:cov-ov-invade}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/disliking_evo_d=0p1.pdf}
+  \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/disliking_evo_d=0p4.pdf}
+  \caption{}
+  \end{subfigure} \\
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/disliking_evo_w=0p1.pdf}
+  \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/disliking_evo_w=0p4.pdf}
+  \caption{}
+  \end{subfigure}
+  \caption{Time series of communication strategy prevalences under different parameter settings
+  for homophily, $w$, and disliking penalty, $d$.}
+  \label{fig:}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-    \begin{subfigure}{0.49\textwidth}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/receptivity_evo_r=0p1.pdf}
+  \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/receptivity_evo_r=0p4.pdf}
+  \caption{}
+  \end{subfigure} \\
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/receptivity_evo_w=0p1.pdf}
+  \caption{}
+  \end{subfigure}
+  \begin{subfigure}{0.49\textwidth}
+    \includegraphics[width=\textwidth]{Figures/receptivity_evo_w=0p4.pdf}
+  \caption{}
+  \end{subfigure}
+  \caption{Time series of communication strategy prevalences under different parameter settings
+  for homophily, $w$, and covert signaling efficiency, $E_{cov}$.}
+  \label{fig:}
+\end{figure}
+
+\subsubsection{Mean versus median outcomes}
+
+Here I want to examine
+\begin{enumerate}
+  \item Histograms of the final distribution of prevalences for a number of
+    parameter settings.
+  \item Show time series of a selection (e.g. 10 or 20) of trials for a number
+    of parameter settings to know that our averaged timeseries are showing
+  typical behavior, not probabilities of an extreme outcome, i.e. $\rho_s=0,1$.
+
+\end{enumerate}
+
+\subsection{$d \neq \delta$}
+
+Vary $\delta$ from 0 to $2d$.
+
+
+
+\subsection{Invasion of other strategies}
+
+In the main text we examined what conditions led to successful invasion of
+the covert signaling strategy. Here in the supplement we analyze what
+allows the other three strategies to invade: overt signaling, and churlish
+and generous receiving.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{Figures/overt_invades.pdf}
+  \caption{Overt invades, $\rho_{cov,0}=0.95$}
+  \label{fig:ov-invades}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+    \begin{subfigure}{\textwidth}
       \includegraphics[width=\textwidth]{Figures/churlish_invades.pdf}
       \caption{Churlish invades, $\rho_{ch,0}=0.05$}
-    \end{subfigure}
-    \begin{subfigure}{0.49\textwidth}
+    \end{subfigure} \\
+    \begin{subfigure}{\textwidth}
       \includegraphics[width=\textwidth]{Figures/generous_invades.pdf}
       \caption{Generous invades, $\rho_{ch,0}=0.95$}
     \end{subfigure}
@@ -698,57 +1010,28 @@ in the second case (Figures~\ref{fig:cov-ov-invade} and~\ref{fig:ch-gen-invade})
     signalers, lower homophily favors generous invasion, which is more pronounced
     for larger disliking penalties.
   }
-  \label{fig:ch-gen-invade}
+  \label{fig:ch-gen-invades}
 \end{figure}
 
-\subsubsection{Non-signaling as an adaptive strategy}
+\subsection{Different learning parameters}
 
-One of the most striking patterns in the invasion results is the evolution
-of a third de facto strategy of non-signaling. This strategy emerges when
-we consider both the invasion dynamics of either the covert or overt 
-signaling strategy. When simulating the invasion of covert signaling
-($\rho_{cov,0}=0.05$), the non-signaling strategy emerges when the covert
-signaling efficiency, $r$, is 0, but covert signaling still successfully
-invades as the chosen agent strategy. When $r=0$, no agents receive
-covert signals, making this more accurately a \emph{non-signaling} strategy.  
-For covert signaling invasion, this only happens when the initial churlishness
-is low ($\rho_{ch,0}=0.05$) and homophily is also low ($w \lessapprox 0.2$). 
-Non-signaling wins out evolutionarily 
-in some cases when considering of invading overt signalers when overt signalers
-fail to invade but $r=0$, again meaning agents in this society prefer not
-to signal at all. This occurs some of the time for all tested homophily
-values and low initial churlishness ($\rho_{ch,0}=0.05$) (Figure~\ref{fig:cov-ov-invade}b, bottom left plot).  
-Overt signaling continues to fail to evolve at least some of the time
-for $r=0$ for moderate initial churlishness ($\rho_{ch,0}=0.5$) up up to perfect 
-assortment homophily, $w=0.5$.
+In the main text we have set the learning parameters to be $\alpha=1.25$ and
+$\beta=12.0$. Setting $\alpha=1.25$ means that for there to be a 50\% chance
+of the learner to match its strategy with its teachers, the teacher's 
+accumulated payoff for that round must be 1.25 that of the learner's. This
+seems somewhat severe, and we imagine that a different adoption threshold values
+$\alpha$ could lead to different patterns in the spread of the covert signaling
+strategy. In this section we test $\alpha=1.0$ (TO BEGIN WITH THEN WE WILL TEST
+OTHER VALUES IF IT SEEMS VALUABLE TO DO SO).
 
-% \bibliographystyle{apacite}
 
-% \setlength{\bibleftmargin}{.125in}
-% \setlength{\bibindent}{-\bibleftmargin}
+\subsection{Different number of interaction rounds per model iteration}
 
-% \bibliography{/Users/mt/workspace/papers/library.bib}
-
-\appendix
-
-\section{Additional analyses}
-
-\subsection{Temporal dynamics}
-
-\subsection{Correlations between churlish receiving and covert signaling}
-
-\subsection{$d \neq \delta$}
-
-Vary $\delta$ from 0 to $2d$.
-
-\subsection{Minority dynamics} 
-
-\subsubsection{More traits ($K=9$ and $M=4$) and different similarity threshold}
-
-\subsubsection{Varying minority group size}
-
-\subsection{Invasion of other strategies}
-
+One model iteration consists of a signalling round followed by $N_I$ interaction
+rounds in which agents are matched randomly into dyads then collaborate 
+with probability proportional to the attitudes each agent in the dyad has towards
+the other (Equation~\ref{eq:homophily}). In the main text, $N_I = 10$ for
+all experiments that generated the results we presented. 
 
 \section{Model implementation}
 
