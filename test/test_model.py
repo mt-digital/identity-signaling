@@ -1,10 +1,105 @@
 import numpy as np
-import pytest
 
 from numpy.testing import assert_array_equal, assert_approx_equal
 
 from id_signaling.model import Agent, Model
 
+
+def test_minorities():
+    'Check that minorities experiment is properly initialized and payoffs are as expected.'
+
+    _test_minorities(3, 1, 0.1)
+    _test_minorities(3, 1, 0.25)
+    _test_minorities(3, 1, 0.75)
+
+    _test_minorities(9, 4, 0.1)
+    _test_minorities(9, 4, 0.25)
+    _test_minorities(9, 4, 0.75)
+
+
+def _test_minorities(K, M, minority_trait_frac, N=100):
+
+    # Set up new model with given settings.
+    model = Model(N=N, K=K, n_minmaj_traits=M,
+                  minority_trait_frac=minority_trait_frac)
+
+    # Simplest thing to test is the setup. Do we really have a minority and
+    # majority where the number of agents with the minority/majority trait
+    # are as expected?
+
+    agents = model.agents
+
+    minority = [a for a in agents if (a.traits[0:M] == [1]*M).all()]
+    majority = [a for a in agents if (a.traits[0:M] == [-1]*M).all()]
+    assert len(minority) == np.floor(minority_trait_frac * N)
+    assert len(majority) == np.floor((1 - minority_trait_frac) * N)
+
+
+def test_similarity_threshold():
+    'Check that payoffs and matching probabilities are as expected for different similarity thresholds.'
+
+    # Initialize model.
+    m = Model(similarity_threshold=0.5)
+
+    # Set up some agents to be similar or dissimlar.
+    a1 = Agent(K=3)
+    a2 = Agent(K=3)
+    a3 = Agent(K=3)
+
+    a1.traits = np.array([1, 1, -1])
+    a2.traits = np.array([1, 1, 1])
+    a3.traits = np.array([1, -1, 1])
+
+    assert m._are_similar(a1, a2)
+    assert not m._are_similar(a1, a3)
+    assert m._are_similar(a2, a3)
+
+    m = Model(similarity_threshold=0.1)
+    assert m._are_similar(a1, a2)
+    assert m._are_similar(a1, a3)
+    assert m._are_similar(a2, a3)
+
+    m = Model(similarity_threshold=0.9)
+    assert not m._are_similar(a1, a2)
+    assert not m._are_similar(a1, a3)
+    assert not m._are_similar(a2, a3)
+    assert m._are_similar(a1, a1)
+    assert m._are_similar(a2, a2)
+    assert m._are_similar(a3, a3)
+
+    m = Model(similarity_threshold=0.5)
+    # Set up some agents to be similar or dissimlar.
+    a1 = Agent(K=10)
+    a2 = Agent(K=10)
+    a3 = Agent(K=10)
+    a1.traits = np.array([1]*5 + [-1]*5)
+    a2.traits = np.array([1]*10)
+    a3.traits = np.array([-1]*4 + [1]*6)
+
+    assert m._are_similar(a1, a2)
+    assert m._are_similar(a2, a3)
+    assert not m._are_similar(a1, a3)
+
+
+def test_invasion_setup():
+    'Check that there are correct number of invading and established populations.'
+
+    _test_invasion_setup()
+    _test_invasion_setup(0.1, 0.9)
+    _test_invasion_setup(0.9, 0.1)
+    _test_invasion_setup(0.1, 0.5)
+    _test_invasion_setup(0.5, 0.1)
+
+
+def _test_invasion_setup(init_cov=0.5, init_ch=0.5, N=100):
+
+    m = Model(N=N, initial_prop_covert=init_cov, initial_prop_churlish=init_ch)
+
+    cov = [a for a in m.agents if a.signaling_strategy == 'Covert']
+    chur = [a for a in m.agents if a.receiving_strategy == 'Churlish']
+
+    assert len(cov) == np.floor(init_cov * N)
+    assert len(chur) == np.floor(init_ch * N)
 
 ##
 # Expected payoffs on interaction. Using results from test above we know the
@@ -119,6 +214,7 @@ def test_calculate_payoff():
     a1.attitudes = np.array([-1, -1])
     assert model._calculate_payoff(a0, a1) == 1 - 0.25 - 0.15
 
+
 ##
 # Signaling and receiving. Need to ensure generous/churlish receivers act as
 # we expect them to depending on covert/overt signaling from either similar
@@ -180,6 +276,7 @@ def test_expected_payoffs():
     assert_approx_equal(model.agents[2].gross_payoff, pi2, 2)
     assert_approx_equal(model.agents[3].gross_payoff, pi3, 2)
 
+
 def _setup_model_agents(**model_kwargs):
 
     model = Model(N=4, **model_kwargs)
@@ -220,7 +317,6 @@ def _setup_model_agents(**model_kwargs):
 # Calculating dyadic interaction probabilities.
 #
 def test_dyadic_interaction_probs():
-# def test_dyadic_interaction_probs():
     '''
     Dyadic interaction probabilities should match expected values calculated
 
