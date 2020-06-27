@@ -23,7 +23,7 @@ class Model:
                  homophily=0.25, random_seed=None, similarity_threshold=0.5,
                  minority_trait_frac=None,
                  initial_prop_covert=0.5, initial_prop_churlish=0.5,
-                 n_minmaj_traits=1,  # only used if minority_trait_frac ! None
+                 n_minmaj_traits=None,  # only used if minority_trait_frac ! None
                  evo_logistic_loc=1.25, evo_logistic_scale=12):
         '''
         Arguments:
@@ -73,6 +73,10 @@ class Model:
         self.evo_logistic_loc = evo_logistic_loc
         self.evo_logistic_scale = evo_logistic_scale
 
+        if n_minmaj_traits is None:
+            n_minmaj_traits = K - ((K+1) // 2)
+        self.n_minmaj_traits = n_minmaj_traits
+
         self.initial_prop_covert = initial_prop_covert
         self.initial_prop_churlish = initial_prop_churlish
 
@@ -86,12 +90,16 @@ class Model:
         n_initial_covert = int(N * initial_prop_covert)
         n_initial_overt = N - n_initial_covert
 
+        # Create array of receiving strategies and randomize to vector-assign
+        # to agents for initialization.
         rec_strategies = (
             ['Churlish'] * n_initial_churlish +
             ['Generous'] * n_initial_generous
         )
         np.random.shuffle(rec_strategies)
 
+        # Create array of signaling strategies and randomize to vector-assign
+        # to agents for initialization.
         sig_strategies = (
             ['Covert'] * n_initial_covert +
             ['Overt'] * n_initial_overt

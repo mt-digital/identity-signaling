@@ -86,7 +86,10 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
         initial_prop_churlish=[model.initial_prop_churlish]*n_tstep,
         prop_covert=model.prop_covert_series,
         prop_churlish=model.prop_churlish_series,
-        homophily=[homophily] * n_tstep
+        homophily=[homophily] * n_tstep,
+        K=[model.K] * n_tstep,
+        S=[model.similarity_threshold] * n_tstep,
+        M=[model.n_minmaj_traits] * n_tstep
     )
 
     minority_trait_frac = model_kwargs['minority_trait_frac']

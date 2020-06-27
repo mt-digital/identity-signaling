@@ -33,8 +33,7 @@ def basic_decorator():
             click.option('--initial_prop_churlish', type=float, default=0.5),
             click.option('--num_traits', '-K', type=int, default=3),
             click.option('--similarity_threshold', '-S', type=float,
-                         default=0.5),
-            click.option('--n_minmaj_traits', type=int, default=1)
+                         default=0.5)
        )
 
 
@@ -43,7 +42,7 @@ def basic_decorator():
 def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
         output_file, prob_overt_receiving, minority_trait_frac,
         initial_prop_covert, initial_prop_churlish, num_traits,
-        similarity_threshold, n_minmaj_traits):
+        similarity_threshold):
 
     # XXX Hack to deal with subexp throwing error I don't understand that
     # minority_trait_frac can't be None (the default) because it's not a
@@ -63,7 +62,6 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
                              initial_prop_covert=initial_prop_covert,
                              initial_prop_churlish=initial_prop_churlish,
                              K=num_traits, similarity_threshold=similarity_threshold,
-                             n_minmaj_traits=n_minmaj_traits
                              )
 
     out_df.to_csv(output_file, index=False)
@@ -80,7 +78,7 @@ def sub(
             experiment, param_vals, homophily_vals, n_iter, n_trials,
             output_file, prob_overt_receiving, minority_trait_frac,
             initial_prop_covert, initial_prop_churlish, num_traits,
-            similarity_threshold, n_minmaj_traits,
+            similarity_threshold,
             queue, ncpu, wall_time, dry_run, job_name  # SLURM OPTS
         ):
     """
