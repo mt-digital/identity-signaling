@@ -189,6 +189,26 @@ minority_diff_heatmap(
 )
 ```
 
+### Setting M based on K
+
+For our experiments we are only setting K odd, and setting `M=K - (K+1)/2`. 
+This occurs when a in the Model class constructor on initialization:
+
+```python
+class Model:
+    def __init__(self, ...):
+        ...
+        if n_minmaj_traits is None:
+            n_minmaj_traits = K - ((K+1) // 2)
+        self.n_minmaj_traits = n_minmaj_traits
+```
+
+Doing this makes it so majority/minority agents only need to have one additional
+trait in common with their majority/minority cohort in order to be similar
+to them. In order for majority/minority agents to be similar to their outgroup,
+they must have all `K - (K-1/2)` non-assigned traits in common. The chance of
+this happening is `1/2^((K-1)/2)`. 
+
 ## Cluster scripts
 
 See `run_disliking_homophily.py`, `run_receptivity_homophily.py`, and
@@ -219,4 +239,53 @@ structure created by the following commands:
 ```sh
 mkdir -p output_data/tolerance_diversity/0.{1..9}/"K="{10,15,20}/
 mkdir -p output_data/tolerance_diversity/1.0/"K="{10,15,20}/
+```
+
+
+### Fixing failures of experiment parts
+
+In the process of running these different parameters and creating different
+part files, there may be problems. For instance, due to cluster issues
+(all clusters have them sometimes!), I had some trials dropped from the
+Minority/Tolerance experiments. Specifically, 7 different parameter settings
+out of the 80 tested (`K=3,9`, `M=1,4`, `S=0.1, 0.2, ..., 1.0`, and 
+`rho_minor=0.1, 0.2`) failed. The seven are (3, 1, .3, 0.1), (3, 1, .4, 0.1), 
+(3, 1, .5, 0.1), (3, 1, .3, 0.2), (3, 1, .5, 0.2), (3, 1, .7, 0.2), 
+and (9, 4, .4, 0.2).
+
+Here is how one could modify the lists of parameter values to only
+contain the missing parameters. Note that in all minority experiments we are
+setting `M=K - (K+1)/2` (see above), so we do not inlcude explicit settings for `M`.
+Here is a script one could run to get only those missing parameter combinations:
+
+```bash
+# Submit missing trials for K=3, rho_minor=0.1.
+for similarity_threshold in 0.3 0.4 0.5; do
+    K=3
+    minority_trait_frac=0.1
+    fname=output_data/minority_supp/$minority_trait_frac/part-`uuidgen`
+    subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 50 $fname.csv -R0.5  \
+        -qfast.q -j$fname -n24 -t"04:00:00" -m$minority_trait_frac \
+        -K$K -S$similarity_threshold 
+done
+
+# Submit missing trials for K=3, rho_minor=0.2.
+for similarity_threshold in 0.3 0.5 0.7; do
+    K=3
+    minority_trait_frac=0.2
+    fname=output_data/minority_supp/$minority_trait_frac/part-`uuidgen`
+    subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 50 $fname.csv -R0.5  \
+        -qfast.q -j$fname -n24 -t"04:00:00" -m$minority_trait_frac \
+        -K$K -S$similarity_threshold 
+done
+
+# Only one failed for K=9 across both similarity thresholds; no need to loop.
+K=9
+similarity_threshold=0.4
+minority_trait_frac=0.2
+
+fname=output_data/minority_supp/$minority_trait_frac/part-`uuidgen`
+subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 50 $fname.csv -R0.5  \
+    -qfast.q -j$fname -n24 -t"04:00:00" -m$minority_trait_frac \
+    -K$K -S$similarity_threshold 
 ```
