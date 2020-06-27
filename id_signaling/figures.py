@@ -491,7 +491,8 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
 
     ax.set_xticks(range(1, 10, 2))
     ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds[1::2]])
-    # ax.set_yticks(np.arange(0.2, 1.1, 0.1))
+    ax.set_xticks(range(0, 10, 2), minor=True)
+    ax.set_yticks(np.arange(0.0, 1.1, 0.25))
 
 
 def invasion_heatmaps(disliking_df, recept_df,
