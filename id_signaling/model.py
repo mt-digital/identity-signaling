@@ -115,13 +115,6 @@ class Model:
             for idx in range(N)
         ]
 
-        # Initialize similarity matrix of shape NxN to hold boolean
-        # indicating whether or not two agents are similar.
-        self.similar_matrix = np.zeros((N, N), dtype=bool)
-
-        # It is repetetive but convenient to create the full symmetric matrix.
-        self._init_similar_matrix()
-
         # Have a marker for the run() method if it should track majority/
         # minority agents over time so we can later recover their
         # proportional strategies.
@@ -167,6 +160,14 @@ class Model:
         self.prop_covert_series = np.array([_proportion_covert(self)])
         self.prop_churlish_series = np.array([_proportion_churlish(self)])
 
+        # Initialize similarity matrix of shape NxN to hold boolean
+        # indicating whether or not two agents are similar.
+        self.similar_matrix = np.zeros((N, N), dtype=bool)
+
+        # It is repetetive but convenient to create the full symmetric matrix.
+        self._init_similar_matrix()
+
+
     def _init_similar_matrix(self):
         for a1 in self.agents:
             for a2 in self.agents:
@@ -194,10 +195,10 @@ class Model:
 
             self._evolve()
 
-            self.prop_covert_series= np.append(
+            self.prop_covert_series = np.append(
                 self.prop_covert_series, _proportion_covert(self)
             )
-            self.prop_churlish_series= np.append(
+            self.prop_churlish_series = np.append(
                 self.prop_churlish_series, _proportion_churlish(self)
             )
 

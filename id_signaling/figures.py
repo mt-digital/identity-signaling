@@ -450,7 +450,14 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
                          dislikings=[0.05, 0.25, 0.45], homophily=0.2,
                          ax=None, savefig_path=None, ylow=0.2, yhigh=1.0,
-                         legend=False, xlabel=True, ylabel=True):
+                         legend=False, xlabel=True, ylabel=True,
+                         minority_majority=None):
+    '''
+
+    Arguments:
+        minority_majority (str): Either 'minority' or 'majority', or None by
+            default if this is not a majority/minority test.
+    '''
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(5, 4))
