@@ -4,6 +4,10 @@
 % \documentclass{report}
 % \documentclass{book}
 \usepackage[bookmarks]{hyperref}
+\hypersetup{
+    colorlinks=true,
+    allcolors=cyan
+}
 \usepackage{amssymb,amsmath}
 % \usepackage{fullpage}
 \usepackage{tabulary}
@@ -38,67 +42,160 @@
 \begin{document}
 \maketitle
 
-\section{Introduction}
+\begin{abstract}
+    This document is a snapshot of the Model and Results sections outline.
+    It is very much a work in progress. I believe there is enough information 
+    for it to be valuable to share, and there are two important new results
+    I try to explain in the Results section. The Appendix is just basically
+    an outline. In many cases there are old results in there serving as
+    placeholders. I tried to note where old data was being presented and
+    make notes on where supplemental analyses need to go. I will be taking
+    care of this in the coming days.
 
-When we interact with others it is often to mutually benefit from the
-exchange. For instance, we shop at a store to buy things we want from one or
-a group of people who want to do the hard work of shopkeeping. When we are
-dissimilar from those with whom we interact, the benefit can be lessened.
-For instance, you might be wearing a shirt with a political slogan and 
-the shopkeeper has posted signs boasting their political affiliation. Perhaps
-the shopkeeper decides to charge you more, or perhaps you feel a sense of 
-resentment for giving money to someone with whom you disagree politically;
-maybe the shopkeeper's signage distracted you from making all the purchases 
-you needed to make. Shopping is rather inconsequential, but illustrates the issue. 
-A much more critical situation is the interaction of political partisans, who
-must mutually benefit one another for democracy to work.
+    The Model section is a first
+    draft just past outline stage. I think it has all the model elements, but 
+    needs a lot of work. Note that I split the ``interaction'' stage into
+    the random ``matching'' stage and then 
+    a dyad reaches the ``collaboration'' stage with probability
+    given in Equation~\ref{eq:collaborationProbability}. 
+    If you see any big problems please let me know. 
+    Otherwise I will hopefully catch more issues on revision and expansion.
 
-In response to the fact that
-interpersonal disliking often lowers payoffs from interaction, humans have
-developed \emph{covert signaling} strategies so that, e.g.,
-customer and shopkeeper can signal their political affiliations so that like-minded
-people will know they are similar, but dissimilar others will be unaware
-of political or identity signaling at all. Different social settings present
-different signaling pressures. Sometimes it is possible to choose who we assort
-with for interaction, which means the practice of homophily---selectively
-interacting with similar others---is widespread. In that case, there is little
-reason to signal covertly because we can preferentially 
-interact with similar others, avoiding penalties for interaction with 
-dissimilar others. Sometimes the penalties for
-disliking one another are very high, which pressures individuals to choose
-covert signaling more often in order to not be disliked. While there are
-interaction costs for dislike there are benefits for the case where two, which are
-also included in the model.
+    \textbf{The most important new results are} 
+    \begin{enumerate}
+        \item Complex dependence of covert signaling prevalence $\rho_{cov}$ on
+            the similarity threshold ($S$), homophily ($w$),
+            and the disliking penalty ($d$)
+            (Figures~\ref{fig:covertAndSimilarity} and~\ref{fig:overtAndSimilarity}).
+            In some cases where $w$ and $S$ are large, increased $S$ 
+            favors \emph{overt}, not covert, signaling. For small $K$ this
+            relationhsip is monotonic. For larger $K$, $\rho_{cov}$ decreases
+            for a while with $S$, but then shoots up to $\rho_{cov}=1$ at
+            some critical value of $S$. Full results from these ``similarity 
+            experiments'' are given across three pages in the
+            Appendix/Supplement, Figure~\ref{fig:similarity_supp}.
+        \item Covert signaling in minority/majority populations also showed a
+            complex relationship with $S$, $K$, $w$, and $d$. The latest results
+            show the primary thing we want to show in many cases: that 
+            increased disliking cost leads to increased covert signaling, and
+            that covert signaling is further preferred when $K=9$ and $M=4$.
+            Furthermore,
+            \begin{itemize}
+                \item When homophily is large enough, the \emph{majority}
+                    covert signals more than the minority.
+                \item Increasing minority prevalence $\rho^{minor}$ decreases
+                    the prevalence of covert signaling in the minority 
+                    population overall.
+                \item When similarity is high ($S=0.8$), covert signaling
+                    dominates in the minority population for high enough
+                    levels of homophily. This is so that they have a better
+                    chance of collaborating with a majority member to at least
+                    get \emph{some} payoff---when homophily is high, an overt
+                    signaling minority agent may have a harder time successfully
+                    collaborating with a majority partner.
+                \item When similarity threshold is small ($S=0.3$), 
+                    there is little difference between minority and majority 
+                    strategy prevalence, as expected (WILL GO IN SUPPLEMENT,
+                    NOT THERE YET).
+            \end{itemize}
+            
+    \end{enumerate}
 
-Here we present a model of identity signaling, social interaction,
-and social learning to identify mechanisms for the evolution of the covert 
-signaling strategy, as opposed to an overt signaling strategy. The precise 
-definitions of overt and covert signaling are given in the Model section.
-Our results are thus predictions of when covert signaling will or
-will not evolve. This depends on a number of model parameters and the 
-co-evolution of the \emph{receiving} strategy, which may be either \emph{generous}
-or \emph{churlish}. Generous individuals do not dislike
-others with whom they have not previously interacted. Churlish individuals 
-dislike others with whom they have not previously interacted.
+    The Results section is in rough shape, basically an outline. I tried to
+    clear out some garbage, but there is still a bit left that I will
+    expand on and shape up.
 
-The model predicts that covert signaling evolves when homophily is low (agents
-do not efficiently assort) and the costs of disliking are high. The model also 
-predicts that covert signaling co-evolves with generous receiving. This is due
-to the fact that covert signalers are simply ignored by those with whom
-they are different. If most of the individuals are churlish receivers, there is
-no benefit to being unknown since most individuals dislike unknown others. 
-We also use our model to predict differences in covert signaling prevalence
-among minority and majority populations, where the minority and majority all
-share the same in-group traits along a number of trait dimensions, but exactly
-the opposite traits. If homophily is weak and disliking costs are high, the
-minority will tend to become covert signalers. However, if homophily is
-sufficiently high it is better for the minority to overtly signal so they can
-efficiently identify similar interaction partners. We close by finding the
-conditions that promote either signaling or receiving strategies to ``invade'',
-i.e.\ become prevalent after starting as just a small fraction of the population.
-We find here that sometimes no signaling is better than overt signaling: 
-covert signaling can evolve even when the efficiency of covert signaling is
-zero, i.e.\ covert signals are not understood by any model individuals (agents).
+    Please see the Model section tables for default parameter values. If I 
+    failed to list the value of a parameter in the main text I will likely 
+    catch it in a future iteration. If something is very confusing please
+    just contact me and we can have a look together. Hopefully we can clear 
+    things up over a video call/screen share Tuesday.
+
+    If there are no results or text in a given section that means I have not
+    done that analysis/experiment yet. Notably, I have not yet done the case
+    where $d \neq \delta$ and I have not performed improved 
+    correlational analyses between signaling and receiving strategies.
+
+    We are currently getting underwhelming results for the invasion experiments.
+    I think one thing that might improve this is to lower $\alpha$ in the
+    learning rule from $\alpha=1.25$ to $\alpha=1.0$. This would encourage more
+    ``exploration'' of strategies that are as good as an agents current one
+    and boost the chances that an agent will adopt a better-performing alternative
+    strategy. I could imagine that with the current setting a better-performing
+    alternative is not catching on due to our cautious updating assumption
+    with $\alpha=1.25$. This could have a big effect on other results, and
+    I think this is one of the primary further analyses we should pursue. 
+
+    Another sensitivity analysis would be to see what happens in minority 
+    experiments (and others) when the population is increased from 100, 
+    perhaps $N=200,500,1000$.
+\end{abstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% \section{Introduction}
+
+% When we interact with others it is often to mutually benefit from the
+% exchange. For instance, we shop at a store to buy things we want from one or
+% a group of people who want to do the hard work of shopkeeping. When we are
+% dissimilar from those with whom we interact, the benefit can be lessened.
+% For instance, you might be wearing a shirt with a political slogan and 
+% the shopkeeper has posted signs boasting their political affiliation. Perhaps
+% the shopkeeper decides to charge you more, or perhaps you feel a sense of 
+% resentment for giving money to someone with whom you disagree politically;
+% maybe the shopkeeper's signage distracted you from making all the purchases 
+% you needed to make. Shopping is rather inconsequential, but illustrates the issue. 
+% A much more critical situation is the interaction of political partisans, who
+% must mutually benefit one another for democracy to work.
+
+% In response to the fact that
+% interpersonal disliking often lowers payoffs from interaction, humans have
+% developed \emph{covert signaling} strategies so that, e.g.,
+% customer and shopkeeper can signal their political affiliations so that like-minded
+% people will know they are similar, but dissimilar others will be unaware
+% of political or identity signaling at all. Different social settings present
+% different signaling pressures. Sometimes it is possible to choose who we assort
+% with for interaction, which means the practice of homophily---selectively
+% interacting with similar others---is widespread. In that case, there is little
+% reason to signal covertly because we can preferentially 
+% interact with similar others, avoiding penalties for interaction with 
+% dissimilar others. Sometimes the penalties for
+% disliking one another are very high, which pressures individuals to choose
+% covert signaling more often in order to not be disliked. While there are
+% interaction costs for dislike there are benefits for the case where two, which are
+% also included in the model.
+
+% Here we present a model of identity signaling, social interaction,
+% and social learning to identify mechanisms for the evolution of the covert 
+% signaling strategy, as opposed to an overt signaling strategy. The precise 
+% definitions of overt and covert signaling are given in the Model section.
+% Our results are thus predictions of when covert signaling will or
+% will not evolve. This depends on a number of model parameters and the 
+% co-evolution of the \emph{receiving} strategy, which may be either \emph{generous}
+% or \emph{churlish}. Generous individuals do not dislike
+% others with whom they have not previously interacted. Churlish individuals 
+% dislike others with whom they have not previously interacted.
+
+% The model predicts that covert signaling evolves when homophily is low (agents
+% do not efficiently assort) and the costs of disliking are high. The model also 
+% predicts that covert signaling co-evolves with generous receiving. This is due
+% to the fact that covert signalers are simply ignored by those with whom
+% they are different. If most of the individuals are churlish receivers, there is
+% no benefit to being unknown since most individuals dislike unknown others. 
+% We also use our model to predict differences in covert signaling prevalence
+% among minority and majority populations, where the minority and majority all
+% share the same in-group traits along a number of trait dimensions, but exactly
+% the opposite traits. If homophily is weak and disliking costs are high, the
+% minority will tend to become covert signalers. However, if homophily is
+% sufficiently high it is better for the minority to overtly signal so they can
+% efficiently identify similar interaction partners. We close by finding the
+% conditions that promote either signaling or receiving strategies to ``invade'',
+% i.e.\ become prevalent after starting as just a small fraction of the population.
+% We find here that sometimes no signaling is better than overt signaling: 
+% covert signaling can evolve even when the efficiency of covert signaling is
+% zero, i.e.\ covert signals are not understood by any model individuals (agents).
 
 \section{Model}
 
@@ -113,23 +210,23 @@ These are summarized in Table~\ref{tab:params} below.
   \begin{tabular}{cp{3.5in}c}
     Symbol & Definition & Values tested (default in bold)  \\
     \toprule 
-    $w$      & \emph{Homophily}, the ability of agents to preferentially interact with similar others & $\{0.0, 0.05, 0.10, \ldots, 0.5\}$ \\
+    $w$      & \emph{Homophily}, the ability of agents to preferentially interact with similar others & $\{0.0, 0.05, 0.1,\ldots \mathbf{0.25}, \ldots, 0.5\}$\\
     $d$      & \emph{Disliking penalty} imposed when one agent dislikes the other & $\{0.0, 0.05, 0.1,\ldots \mathbf{0.25}, \ldots, 0.5\}$ \\
     $\delta$ & Additional penalty when pair dislike one another & \textbf{0.25} \\
     $E_{cov}$ & \emph{Efficiency of covert signaling} & $\{0.0, 0.05, 0.1,\ldots \mathbf{0.25}, \ldots, 0.5\}$ \\
     $E_{ov}$ & \emph{Efficiency of overt signaling} & \textbf{0.5} \\
     $s$      & \emph{Similarity benefit} received by similar interacting pair & \textbf{0.25} \\
-    $K$      & Number of agent identity traits & $\{\mathbf{3}, 9\}$ \\
+    $K$      & Number of agent identity traits & $\{\mathbf{3}, 5, 9, 15, 21\}$ \\
     $S$      & Minimum fraction of traits in common for a pair to be considered similar & 
       $\{0.1, 0.2, \ldots, \mathbf{0.5}, \ldots, 1.0\}$\\
-    $M$      & \emph{Number of minority/majority traits} used to define majority/minority populations & $\{\mathbf{2}, 4\}$\\
-    $R$      & \emph{Number of interaction rounds} following a signaling round \\
+    $M$      & \emph{Number of minority/majority traits} used to define majority/minority populations & $\{\mathbf{1}, 4\}$\\
+    $N_I$      & \emph{Number of interaction rounds} following a signaling round & \textbf{10} \\
     $\alpha$ & Threshold payoff multiplier to give learner 50\% chance of 
-               adopting teacher's strategy \\
+        adopting teacher's strategy & \textbf{1.25}\\
     $\beta$  & Factor that, as it increases, both lowers chance of learner 
                adopting strategy when $\pi_{teach}/\pi_{learn} < \alpha$ and
                raises chance of learner adopting teacher strategy when 
-               $\pi_{teach}/\pi_{learn} > \alpha$.
+               $\pi_{teach}/\pi_{learn} > \alpha$. & \textbf{12.0}
   \end{tabular}
   \caption{Global, as opposed to agent-specific, model parameters. 
   Explanatory model parameters are used to answer
@@ -280,7 +377,9 @@ taking values from 0.1 to 0.5 in steps of 0.05.
         receivers attitude about the signaler.
       \item Covert signals, when received, are not ``noticed'' by receivers
         if signaler and receiver are not sufficiently similar. 
-      \item Recall agents are similar in our model if their inter-agent
+      \item Recall agents are similar in our model if their similarity measure
+          (Equation~\ref{eq:similarity}) is greater than the similarity
+          threshold $S$, set to 0.5 in the default case.
     \end{itemize}
 \end{itemize}
 
@@ -566,6 +665,8 @@ to these parameters
 % Here I co-vary the disliking penalties, which I set equal ($d=\delta$), and
 % homophily, $w$. Here, $=0.25$ and $R=0.5$. 
 
+(FIGURES ARE CURRENT, BUT TEXT IS OLD OUTLINE TEXT; NEED TO UPDATE)
+
 Our first task is to support our basic hypotheses that, other
 things being equal, (1) covert signaling will
 be the preferred strategy when penalties for disliking and 
@@ -610,13 +711,14 @@ In (a) $E_{cov}=0.25$; in (b) $d=0.25$. All other parameters in both sets of
 
 \subsubsection{Co-evolution of covert signaling and generous receiving}
 
+(DID NOT YET GET TO RE-DO CORRELATIONS AND WRITE THIS SECTION)
 
-Theoretically, conditions favorable for covert
-signalers should also be favorable for generous receivers (TRUE??). Furthermore, 
-an increase in covert signalers increases the pressure towards generous receiving.
-With many covert signalers it is likely an agent will get no signal on a 
-turn because they were receiving a signal from a covert signaler. Disliking
-incurs a penalty, so it is better to remain neutral.
+% Theoretically, conditions favorable for covert
+% signalers should also be favorable for generous receivers (TRUE??). Furthermore, 
+% an increase in covert signalers increases the pressure towards generous receiving.
+% With many covert signalers it is likely an agent will get no signal on a 
+% turn because they were receiving a signal from a covert signaler. Disliking
+% incurs a penalty, so it is better to remain neutral.
 
 
 \begin{figure}[H]
@@ -647,11 +749,9 @@ with be one of $s \in {cov, ov} \times {ch, gen}$.)}
   \label{fig:regressions}
 \end{figure}
 
-\subsubsection{Covert signaling is favored in less tolerant and more diverse societies}
+\subsubsection{Complex relationship between similarity threshold, homophily, and covert signaling}
 
-(THIS PART REQUIRES NEW EXPERIMENTS. These need to be explained in Model 
-  section. Below I am just writing a paragraph for myself to guide the 
-experiment.)
+(BELOW IS PRELIMINARY/OUTLINE TEXT TO UPDATE)
 
 Now we evaluate two related hypotheses, that (1) more tolerant societies
 foster greater overt signaling prevalence and less covert signaling, i.e., more
@@ -669,8 +769,90 @@ $s_{ij} \geq S$ (see Equation~\ref{eq:similarity}; Table~\ref{tab:params}).
 We can think of the ``tolerance'' of agents to be $1-S$; then
 high levels of tolerance mean a lower threshold for similarity. 
 
+We found that covert signaling is indeed sensitive to the similarity threshold, 
+$S$. In most cases, increased $S$ leads to increased covert signaling
+prevalence. However, when homophily is high, increased $S$ leads to increased
+\emph{overt}, not covert, signaling prevalence. This is understandable by
+considering the interaction process composed of two phases, matching and
+collaboration. Matching is totally random---all 100 agents are paired into
+50 random dyads. Collaboration occurs probabilistically with the chance of
+collaboration increasing with the attitudes each agent has towards the other.
 
-\subsubsection{Covert signaling is favored among minority groups}
+To understand why overt signaling is sometimes favored over covert signaling,
+consider the default situation, which we used in our
+computational experiments. Covert signaling is
+half as efficient than overt signaling, which is set to $E_{ov} = 2E_{cov} = 0.5$. 
+Recall this means that when an agent signals, half of all other agents receive
+an overt signal and one quarter receive a covert signal. Say a dyad is formed
+where the agents are similar, but covert signalers and generous receivers
+so they each have an attitude of 0 about the other, $a_{ij} = a_{ji} = 0$. 
+There is a high probability that both agents do not get a signal about the other
+in a given round of communication: $\frac{1}{4} \cdot \frac{1}{4} = \frac{1}{16}$.
+The probability of collaboration is $\frac{1}{2}$ in this situation 
+(Equation~\ref{eq:homophily}). If instead both agents were 
+overt signalers the chance they like one another is $\frac{1}{4}$ and if
+$w=0.5$ they are guaranteed to collaborate and reap a payoff of $1 + s$. 
+If just one likes the other, the chance they collaborate is $\frac{3}{4}$
+instead of $\frac{1}{2}$. There is a much higher chance of payoff if agents
+know they like one another. We will see that this same pattern is inverted for
+minority group agents when homophily is high so that they have a fighting chance to
+get a payoff with a majority group agent they would likely be matched with. 
+
+What to show with figures
+\begin{itemize}
+  \item In most all cases, when the similarity threshold reaches a large enough 
+    value, covert signaling dominates. Exception is $K=3$ and $K=5$ with 
+    $w=0.5$. When homophily is not maximal ($w \leq 0.4$) an increased 
+    similarity threshold tends to increase covert signaling prevalence. 
+    We consider $w=0.5$ and other select exceptions to this pattern later; 
+    for now, we focus on showing this general trend of increased covert signaling
+    with increased similarity (Figure~\ref{fig:covertAndSimilarity}).
+  \item Unexpectedly, for moderately high levels of $S$ and high $w$, overt signaling is
+    favored. As showed in previous result this goes away when $S$ gets to
+    maximal values. However, for maximal $S=1.0$ and $w=0.5$ covert signaling
+    does not come to dominate. When $K=3$, overt signaling becomes more
+    preferred when $S$ goes from $0.5$\footnote{For $K=3$, $S=0.5$ is equivalent
+        to $S=0.4$ and $S=0.6$---all refer to the situation where a pair matches
+    two of three traits. For $K=5$, $S=0.5$ is only equivalent to $S=0.6$.}
+    to $0.8$. For $K=5$, covert signaling prevalence recovers somewhat going
+    from $S=0.7,0.8$ to $S=0.9,1.0$ (Figure~\ref{fig:overtAndSimilarity}).
+  \item Worthwhile to note that when the disliking penalty is high and $S$ is low, 
+      overt signaling is weakly favored for $w=0.3$. There also seems to be a
+      weak effect at $w=0.4$ that is like dominance of overt signaling for
+      moderate-high $S$ with maximal $w=0.5$.
+      (GIVE DETAILS IN SUPPLEMENT \ref{fig:similarity_supp}) 
+\end{itemize}
+
+\begin{figure}
+  \centering
+  \large{Low to moderate homophily, $w=0.2$}
+  \includegraphics[width=0.8\textwidth]{Figures/similarity/similarity_low_medium_S_homophily.pdf}
+  \caption{When homophily is low to moderate ($0.0 \leq w \leq 0.3$), covert signaling
+  prevalence increases monotonically with similarity threshold, $S$.}
+  \label{fig:covertAndSimilarity}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \large{High homophily, $w=0.5$}
+  \includegraphics[width=0.8\textwidth]{Figures/similarity/similarity_high_S_homophily.pdf}
+  \caption{
+      When homophily is maximal ($w=0.5$) and $K$ is small (top row,
+      $K=3$ and $K=5$), covert signaling
+      prevalence is \emph{negatively} correlated with increased similarity 
+      threshold, meaning larger $S$ favors \emph{overt}, not covert signaling. 
+      This also occurs for maximal homophily and larger values of $K$, but 
+      only to a point (bottom row). For larger values of $K$, $\rho_{cov}$
+      decreases at first with $S$, but then undergoes a sudden transition to
+      $\rho_{cov} \approx 1.0$.
+  }
+  \label{fig:overtAndSimilarity}
+\end{figure}
+
+
+
+
+\subsubsection{Evolution of signaling strategy in minority and majority groups}
 
 Here we analyze the evolution of covert signaling in populations where there
 are minority and majority sub-populations, as specified by agents' trait
@@ -688,62 +870,149 @@ We test the settings $K=3$, $M=1$, and $K=9$, $M=4$. We also test three
 values of homophily and disliking penalty, representing low, medium, and high
 levels for each: $w,d \in \{0.05, 0.25, 0.45\}$.
 
-By setting $K$ and $M$ to these two values we test two different social
-situations: in the first, $K=3$ and $M=1$, it is relatively easier for two binary traits
-to match (1/4 probability) than the second case, 
-with $K=9$ and $M=4$ where five binary traits must match (1/32 probability).
-Our current results show \dots
-Figure~\ref{fig:covert-signaling-minority-heatmap}. 
+We found (SUPPORTED BY FIGURES)\dots
+\begin{itemize}
+    \item Basic results (FIRST FIGURE)
+        \begin{itemize}
+          \item High levels of homophily and low costs for disliking favor 
+              decreased covert signaling prevalence among minority for 
+              $S=0.5$ (Figures: all conditions
+              with $S=0.5$)
+          \item Larger minority population size decreases covert 
+              signaling prevalence among the minority,
+            but weakly if at all---would want to integrate over $d$, $w$ values.
+            (Compare, e.g., K=9, S=0.5, and $\rho^{minor}=0.1,0.2$).
+          \item Increased overall diversity (increased $K$) increases prevalence of 
+            covert signaling among minority for low to moderate 
+            similarity thresholds (Figures: compare $K=3,9$ over 
+            $S=0.3, 0.5$---Four plots---TWO ALREADY THERE,
+            PUT S=0.3 IN SUPPLEMENT).
+        \end{itemize}
+  \item High levels of homophily and similarity threshold favor covert signaling.
+    (Figures: selection of two figures where $S=0.8$ SECOND FIGURE IN MAIN TEXT)
+\end{itemize}
 
-\subsubsection{Covert minority signaling over minority prevalence}
+(ALL FIGURES BELOW WERE RUN PRELIMINARY WITH 20 TRIALS. I HAVE DATA FOR 100
+TRIALS BUT HAVE NOT YET ANALYZED IT)
 
-
-\begin{figure}[H]
+\begin{figure}
   \centering
-  \begin{subfigure}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p05.pdf}
-    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.10$.}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p10.pdf}
-    % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.25$.}
-  \end{subfigure} \\[.25in]
-  \begin{subfigure}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p25.pdf}
-    % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.10$.}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p10_K=10_M=4.pdf}
-    \caption{(NEED TO UPDATE WITH K=9 AND M=4. Ran these, just need to pull from
-    MERCED and analyze.)}
-  \end{subfigure}
-  \caption{Difference in covert signaling prevalence between minority and
-  majority populations for different parameters settings.}
-  \label{fig:covert-signaling-minority-heatmap}
+  \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/minority_tolerance/3_0p10_0p5.pdf}
+      \caption{}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/minority_tolerance/9_0p10_0p5.pdf}
+      \caption{}
+    \end{subfigure} \\[1em]
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/minority_tolerance/3_0p20_0p5.pdf}
+      \caption{}
+      \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/minority_tolerance/9_0p20_0p5.pdf}
+      \caption{}
+    \end{subfigure}
+    \caption{When homophily is high, disliking costs are low, and
+      similarity threshold is moderate ($S=0.5$ in these heatmaps), covert 
+    signaling is more common among the majority than the minority. When 
+  disliking costs are high and homophily is not, covert signaling is more
+prevalent among the minority than the majority. Results shown from condition
+where $\rho^{minor}=0.1$. We observe the same pattern with $\rho^{minor}=0.2$
+(Figure~\ref{fig:suppBasicMinorityResult}). All parameters not specified are set
+to their default values (Table~\ref{tab:params}).}
+  \label{fig:}
 \end{figure}
 
-\begin{figure}[H]
+
+\begin{figure}
   \centering
-  \begin{subfigure}{0.31\textwidth}
-    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p05.pdf}
-    \caption{}
-  \end{subfigure}
-  \begin{subfigure}{0.31\textwidth}
-    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p25.pdf}
-    \caption{}
-  \end{subfigure}
-  \begin{subfigure}{0.31\textwidth}
-    \includegraphics[width=\textwidth]{Figures/minority-homophily=0p45.pdf}
-    \caption{}
-  \end{subfigure}
-  \caption{}
+  \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/minority_tolerance/3_0p10_0p8.pdf}
+      \caption{}
+    \end{subfigure}
+    \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]{Figures/minority_tolerance/9_0p10_0p8.pdf}
+      \caption{}
+    \end{subfigure}
+    \caption{A high similarity threshold ($S=0.8$ here) promotes covert
+    signaling differentially among the minority when homophily is also high.
+    Here $\rho^{minor}=0.1$, but the same pattern is also observed for 
+  $\rho^{minor}=0.2$ (NEED TO PUT IN A SUPPLEMENT FIGURE~\ref{fig:highSimilarityHomophily_supp}).}
+  \label{fig:highSimilarityHomophily}
 \end{figure}
+
+
+% \begin{figure}
+%   \centering
+%   \begin{subfigure}{0.49\textwidth}
+%       \includegraphics[width=\textwidth]{Figures/minority_tolerance/3_0p10_0p5.pdf}
+%       \caption{}
+%     \end{subfigure}
+%     \begin{subfigure}{0.49\textwidth}
+%       \includegraphics[width=\textwidth]{Figures/minority_tolerance/9_0p10_0p5.pdf}
+%       \caption{}
+%     \end{subfigure}
+%     \caption{When homophily is high, disliking costs are low, and
+%       similarity threshold is moderate ($S=0.5$ in these heatmaps), covert 
+%     signaling is more common among the majority than the minority. When 
+%   disliking costs are high and homophily is not, covert signaling is more
+% prevalent among the minority than the majority. Results shown from condition
+% where $\rho^{minor}=0.1$. We observe the same pattern with $\rho^{minor}=0.2$
+% (Figure~\ref{fig:suppBasicMinorityResult}). All parameters not specified are set
+% to their default values (Table~\ref{tab:params}).}
+%   \label{fig:}
+% \end{figure}
+
+% % \subsubsection{Covert minority signaling over minority prevalence}
+
+
+% % \begin{figure}[H]
+% %   \centering
+% %   \begin{subfigure}{0.48\textwidth}
+% %     \centering
+% %     \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p05.pdf}
+% %     % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.10$.}
+% %   \end{subfigure}
+% %   \hfill
+% %   \begin{subfigure}{0.48\textwidth}
+% %     \centering
+% %     \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p10.pdf}
+% %     % \caption{Prevalence of minority covert receivers; $\rho^{minor} = 0.25$.}
+% %   \end{subfigure} \\[.25in]
+% %   \begin{subfigure}{0.48\textwidth}
+% %     \centering
+% %     \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p25.pdf}
+% %     % \caption{Prevalence of minority churilsh receivers; $\rho^{minor} = 0.10$.}
+% %   \end{subfigure}
+% %   \hfill
+% %   \begin{subfigure}{0.48\textwidth}
+% %     \centering
+% %     \includegraphics[width=\textwidth]{Figures/covert_signalers_diff_0p10_K=10_M=4.pdf}
+% %     \caption{(NEED TO UPDATE WITH K=9 AND M=4. Ran these, just need to pull from
+% %     MERCED and analyze.)}
+% %   \end{subfigure}
+% %   \caption{Difference in covert signaling prevalence between minority and
+% %   majority populations for different parameters settings.}
+% %   \label{fig:covert-signaling-minority-heatmap}
+% % \end{figure}
+
+% \begin{figure}[H]
+%   \centering
+%   \begin{subfigure}{0.31\textwidth}
+%     \includegraphics[width=\textwidth]{Figures/minority-homophily=0p05.pdf}
+%     \caption{}
+%   \end{subfigure}
+%   \begin{subfigure}{0.31\textwidth}
+%     \includegraphics[width=\textwidth]{Figures/minority-homophily=0p25.pdf}
+%     \caption{}
+%   \end{subfigure}
+%   \begin{subfigure}{0.31\textwidth}
+%     \includegraphics[width=\textwidth]{Figures/minority-homophily=0p45.pdf}
+%     \caption{}
+%   \end{subfigure}
+%   \caption{}
+% \end{figure}
 
 
 
@@ -829,6 +1098,57 @@ In this main text we present
 
 \section{Additional analyses}
 
+\subsection{Similarity threshold experiment---further details}
+
+\begin{figure}[H]
+    \centering
+  \label{fig:}
+  \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+      \includegraphics[width=0.8\textwidth]{Figures/similarity_threshold_matrix_K=3.pdf}
+      \caption{}
+  \end{subfigure}
+  \begin{subfigure}{\textwidth}
+    \centering
+      \includegraphics[width=0.8\textwidth]{Figures/similarity_threshold_matrix_K=5.pdf}
+      \caption{}
+  \end{subfigure}
+  \caption{}
+\end{figure}
+\begin{figure}[H]
+  \ContinuedFloat
+    \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+      \includegraphics[width=0.8\textwidth]{Figures/similarity_threshold_matrix_K=9.pdf}
+      \caption{}
+  \end{subfigure}
+  \begin{subfigure}{\textwidth}
+    \centering
+      \includegraphics[width=0.8\textwidth]{Figures/similarity_threshold_matrix_K=15.pdf}
+      \caption{}
+  \end{subfigure}
+  \caption{}
+\end{figure}
+\begin{figure}[H]
+    \ContinuedFloat
+    \centering
+  \begin{subfigure}{\textwidth}
+    \centering
+      \includegraphics[width=0.8\textwidth]{Figures/similarity_threshold_matrix_K=21.pdf}
+      \caption{}
+  \end{subfigure}
+  \label{fig:similarity_supp}
+  \caption{All results for experiments varying the similarity threshold, which
+      could be thougth of as the additive inverse of tolerance. There are a
+      number of subtle patterns described in detail in the main text and here
+      in the supplement. Notably\dots (RECAP BRIEFLY HERE AND HIGHLIGHT 
+      STUFF NOT INCLUDED IN MAIN).
+}
+\end{figure}
+
+
 \subsection{Receiving strategy prevalence dynamics}
 
 Recall that in our experiments, when agents learn they may adopt a new signaling 
@@ -858,7 +1178,8 @@ covert signaling efficiency.
   
   \caption{Density of covert signalers and churlish receivers at $t=200$, 
     final timestep recorded in this preliminary experiment. Receptivity of
-    overt signals is $R=0.5$.}
+    overt signals is $R=0.5$. (THIS IS USING OLD DATA---NEED TO UPDATE WITH
+    LATEST DATA USED TO GENERATE PLOTS ABOVE).}
   \label{fig:receptivityHomophilyHeatmap}
 \end{figure}
 
@@ -869,6 +1190,9 @@ populations than the majority for most, but not all, parameter settings.
 Here we supplement this analysis by analyzing what conditions lead to
 churlish receiving in the minority. (Reason out how it would benefit minority
 agents to adopt churlish receiving).
+
+(THESE ARE OLD RESULTS, NOT TAKEN FROM DATASETS USED TO MAKE CURRENT MAIN
+TEXT SIGNALING STRATEGY RESULTS. NEED TO UPDATE THESE.)
 
 \begin{figure}[H]
   \centering

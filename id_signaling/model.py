@@ -167,7 +167,6 @@ class Model:
         # It is repetetive but convenient to create the full symmetric matrix.
         self._init_similar_matrix()
 
-
     def _init_similar_matrix(self):
         for a1 in self.agents:
             for a2 in self.agents:
@@ -247,13 +246,7 @@ class Model:
             for receiver in receivers:
 
                 # Calculate similarity and set whether receiver likes
-                # signaling agent. "Liking" is determined by how many traits
-                # they have in common---if they have a majority of their traits
-                # in common they like the signaling agent. Neutral if K even
-                # and equal number of similar and dissimilar traits.
-                # XXX This can be calculated just once at init after
-                # traits have been set since traits don't change.
-                # similarity = np.sum(receiver.traits * signaler.traits)
+                # signaling agent.
                 similar = self._are_similar(signaler, receiver)
 
                 # If similarity is positive, attitude independent of signaling

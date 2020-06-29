@@ -221,6 +221,7 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     if savefig_path is not None:
         plt.savefig(savefig_path)
 
+
 def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
                           figsize=(6.35, 4.75), vmin=None, vmax=None,
                           title=None):
@@ -253,7 +254,7 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     plt.figure(figsize=figsize)
     ax = sns.heatmap(
         diff.stack(), square=True, vmin=vmin, vmax=vmax,
-        cmap=sns.diverging_palette(10, 220, sep=80, n=10), #, center='dark'),
+        cmap=sns.diverging_palette(10, 220, sep=30, n=26), #, center='dark'),
         cbar_kws={
             'label':
                 f'Difference in {strategy_inset.lower()}\n'
