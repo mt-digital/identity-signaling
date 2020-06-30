@@ -34,7 +34,8 @@ def basic_decorator():
             click.option('--num_traits', '-K', type=int, default=3),
             click.option('--similarity_threshold', '-S', type=float,
                          default=0.5),
-            click.option('--learning_alpha', type=float, default=1.25)
+            click.option('--learning_alpha', type=float, default=1.25),
+            click.option('--n_agents', '-N', type=int, default=100)
        )
 
 
@@ -43,7 +44,7 @@ def basic_decorator():
 def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
         output_file, prob_overt_receiving, minority_trait_frac,
         initial_prop_covert, initial_prop_churlish, num_traits,
-        similarity_threshold, learning_alpha):
+        similarity_threshold, learning_alpha, n_agents):
 
     # XXX Hack to deal with subexp throwing error I don't understand that
     # minority_trait_frac can't be None (the default) because it's not a
@@ -64,7 +65,8 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
                              initial_prop_churlish=initial_prop_churlish,
                              K=num_traits,
                              similarity_threshold=similarity_threshold,
-                             learning_alpha=learning_alpha
+                             learning_alpha=learning_alpha,
+                             N=n_agents
                              )
 
     out_df.to_csv(output_file, index=False)
@@ -81,7 +83,7 @@ def sub(
             experiment, param_vals, homophily_vals, n_iter, n_trials,
             output_file, prob_overt_receiving, minority_trait_frac,
             initial_prop_covert, initial_prop_churlish, num_traits,
-            similarity_threshold, learning_alpha,
+            similarity_threshold, learning_alpha, n_agents,
             queue, ncpu, wall_time, dry_run, job_name  # SLURM OPTS
         ):
     """
@@ -108,7 +110,7 @@ printf "******************\\nStarting {job_name} at `uptime`\\n"
 
 runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     {output_file} -R{prob_overt_receiving} -m{minority_trait_frac} \\
-    -K{num_traits} -S{similarity_threshold} \\
+    -K{num_traits} -S{similarity_threshold} -N{n_agents} \\
     --initial_prop_covert={initial_prop_covert} \\
     --initial_prop_churlish={initial_prop_churlish} \\
     --learning_alpha={learning_alpha}
