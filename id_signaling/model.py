@@ -24,7 +24,7 @@ class Model:
                  minority_trait_frac=None,
                  initial_prop_covert=0.5, initial_prop_churlish=0.5,
                  n_minmaj_traits=None,  # only used if minority_trait_frac ! None
-                 evo_logistic_loc=1.25, evo_logistic_scale=12):
+                 learning_alpha=1.25, learning_beta=12):
         '''
         Arguments:
             N (int): Number of agents, i.e. population
@@ -51,11 +51,11 @@ class Model:
             n_minmaj_traits (int): number of traits to use in assigning
                 minority and majority agents; short name is M in paper and
                 CLI.
-            evo_logistic_loc (float): location where logistic function = 0.5
+            learning_alpha (float): location where logistic function = 0.5
                 probability of switching strategies depending on relative
                 payoff. I.e. default is set so that 50% chance of switching
                 when the teacher has accumulated 1.25x more than the learner.
-            evo_logistic_scale (float): scale defining the sharpness of the
+            learning_beta (float): scale defining the sharpness of the
                 transition from 0 to 1 in the logistic function. Default chosen
                 so that probability of switching is ~1/50 when
                 relative payoff is 0.9 and ~3/50 when relative payoff is 1.0.
@@ -70,8 +70,8 @@ class Model:
         self.two_dislike_penalty = two_dislike_penalty
         self.homophily = homophily
         self.similarity_threshold = similarity_threshold
-        self.evo_logistic_loc = evo_logistic_loc
-        self.evo_logistic_scale = evo_logistic_scale
+        self.learning_alpha = learning_alpha
+        self.learning_beta = learning_beta
 
         if n_minmaj_traits is None:
             n_minmaj_traits = K - ((K+1) // 2)
@@ -343,11 +343,11 @@ class Model:
                 payoff_proportion = teacher.payoff / learner.payoff
             # ... if it is, set chance to switch to be 0.5.
             else:
-                payoff_proportion = self.evo_logistic_loc
+                payoff_proportion = self.learning_alpha
 
             switch_prob = _logistic(payoff_proportion,
-                                    loc=self.evo_logistic_loc,
-                                    scale=self.evo_logistic_scale)
+                                    loc=self.learning_alpha,
+                                    scale=self.learning_beta)
 
             if uniform() < switch_prob:
                 # Coin flip to switch either signaling or receiving strategy.
