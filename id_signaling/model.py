@@ -272,7 +272,7 @@ class Model:
         # Probabilistic collaboration between matched agents.
         collaborating_pairs = [
             pair for pair in pairs
-            if uniform() < self._dyadic_interaction_prob(*pair)
+            if uniform() < self._dyadic_interaction_factor(*pair)
         ]
 
         # Calculate payoffs for each pair who interact and add to each
@@ -296,7 +296,7 @@ class Model:
             if p1 not in p0_partners:
                 p0_partners.add(p1.index)
 
-    def _dyadic_interaction_prob(self, a1, a2):
+    def _dyadic_interaction_factor(self, a1, a2):
 
         a1_att = a1.attitudes[a2.index]
         a2_att = a2.attitudes[a1.index]
@@ -304,6 +304,20 @@ class Model:
         att_sum = a1_att + a2_att
 
         return 0.5 + (self.homophily * att_sum / 2.0)
+
+    def _interaction_probs(self, agent, available_others):
+        '''
+        Arguments:
+            agent (Agent): Focal agent choosing an interaction partner.
+            available_others ([Agent]): Other agents who have not yet in
+                an interacting dyad.
+        '''
+        return [0 for _ in range(self.N)]
+
+    def _make_dyads(self):
+        # XXX Placeholder; need more advanced algorithm to make one pair at
+        # a time with .
+        return choice(self.agents, size=(self.N//2, 2), replace=False)
 
     def _evolve(self):
         # TODO: implement learning selection using _dyadic_interaction_prob
@@ -327,7 +341,7 @@ class Model:
 
             probs = np.array(
                 [
-                    self._dyadic_interaction_prob(learner, maybe_teacher)
+                    self._dyadic_interaction_factor(learner, maybe_teacher)
                     if maybe_teacher != learner else 0.0
 
                     for maybe_teacher in maybe_teachers
