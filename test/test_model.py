@@ -1,6 +1,8 @@
 import numpy as np
 
+from collections import Counter
 from numpy.testing import assert_array_equal, assert_approx_equal
+
 
 from id_signaling.model import Agent, Model
 
@@ -439,35 +441,66 @@ def test_interaction_probs():
 
     a0_expected = [0.0, 1.4, 1.0, 1.0]
     a1_expected = [1.4, 0.0, 1.0, 0.6]
-    a3_expected = [1.0, 0.6, 0.8, 0.0]
 
     a0_expected = np.array(a0_expected) / np.sum(a0_expected)
     a1_expected = np.array(a1_expected) / np.sum(a1_expected)
-    a2_expected = np.array(a2_expected) / np.sum(a2_expected)
-    a3_expected = np.array(a3_expected) / np.sum(a3_expected)
 
     # Test three others.
     others = agents[1:]
-    assert_array_equal(model._interaction_probs(a0), a0_expected, others)
+    assert_array_equal(model._interaction_probs(a0, others), a0_expected)
     others = [a0, a2, a3]
-    assert_array_equal(model._interaction_probs(a1), a1_expected, others)
+    assert_array_equal(model._interaction_probs(a1, others), a1_expected)
 
     # Two others not possible with N=4, but that's OK for this test.
-    others = [a0, a2]
+    others = [a0, a3]
     a2_expected = np.array([1.0, 0.0, 0.0, 0.8]) / 1.8
-    assert_array_equal(model._interaction_probs(a2), a2_expected, others)
+    a2_expected = np.array(a2_expected) / np.sum(a2_expected)
+    assert_array_equal(model._interaction_probs(a2, others), a2_expected)
 
     # Need to correctly handle case of one other agent. This is a dumb way
     # to handle this particular case, but we are just making sure it's doing
     # what we expect.
     others = [a1]
     a3_expected = np.array([0.0, 1.0, 0.0, 0.0])
-    assert_array_equal(model._interaction_probs(a3), a3_expected, others)
+    a3_expected = np.array(a3_expected) / np.sum(a3_expected)
+    assert_array_equal(model._interaction_probs(a3, others), a3_expected)
+
+    # Test case of perfect homophily and a_ij = a_ji = -1 for all possible
+    # interaction partners.
+    model, agents = _setup_model_agents(homophily=0.5)
+
+    a0 = agents[0]
+    a1 = agents[1]
+    a2 = agents[2]
+    a3 = agents[3]
+
+    a0.attitudes = [-1, -1, -1, -1]
+    a1.attitudes = [-1, 0, 1, -1]
+    a2.attitudes = [-1, 1, 0, 0]
+    a3.attitudes = [-1, 1, 1, 0]
+
+    others = [a1, a2, a3]
+
+    n_trials = 1000
+    results = np.zeros(n_trials)
+
+    # Check over many instances that the other agents are chosen equally often
+    # and that the focal agent a0 never has probability > 0 of interacting
+    # with itself, which is forbidden.
+    for t_idx in range(n_trials):
+        probs = model._interaction_probs(a0, others)
+        selected_agent_idx = np.where(probs == 1.0)
+        assert len(selected_agent_idx) == 1
+        selected_agent_idx = selected_agent_idx[0]
+        assert selected_agent_idx != 0
+        results[t_idx] = selected_agent_idx
+
+    counts = Counter(results)
+    for val in counts.values():
+        assert_approx_equal(val/n_trials, 1/3, 1)
 
 
 def test_make_dyads():
-
-    from collections import Counter
 
     model, agents = _setup_model_agents(homophily=0.2)
 
@@ -494,16 +527,21 @@ def test_make_dyads():
     a2_expected = np.array(a2_expected) / np.sum(a2_expected)
     a3_expected = np.array(a3_expected) / np.sum(a3_expected)
 
-    # I am expecting that, since who picks their partner first is random that
-    # the frequency of pairings will average out to be equal to the probability
-    # of interaction of each pair.
+    # With four agents we can easily calculate the probability any given pair
+    # i and j interact. It is Pr(i interacts with j) = Pr(i chooses j) +
+    # Pr(j chooses i) + Pr(k chooses l) + Pr(l chooses k) = Pr(k interacts with l).
+    amat = np.array([a0_expected, a1_expected, a2_expected, a3_expected])
+    nmat = amat / amat.sum()
+
     expected_frequencies = {
-        (0, 1): a0_expected[1], (0, 2): a0_expected[2],
-        (0, 3): a0_expected[3], (1, 2): a1_expected[2],
-        (1, 3): a1_expected[3], (2, 3): a2_expected[3]
+        (0, 1): nmat[0, 1] + nmat[1, 0] + nmat[2, 3] + nmat[3, 2],
+        (0, 2): nmat[0, 2] + nmat[2, 0] + nmat[1, 3] + nmat[3, 1],
+        (0, 3): nmat[0, 3] + nmat[3, 0] + nmat[1, 2] + nmat[2, 1],
+        (1, 2): nmat[1, 2] + nmat[2, 1] + nmat[0, 3] + nmat[3, 0],
+        (1, 3): nmat[1, 3] + nmat[3, 1] + nmat[0, 2] + nmat[2, 0],
+        (2, 3): nmat[2, 3] + nmat[3, 2] + nmat[0, 1] + nmat[1, 0]
     }
 
-    all_dyads = []  # model._make_dyads()
     n_trials = 10000
     all_dyads = [set(a.index for a in dyad) for dyad in model._make_dyads()]
     print(all_dyads)
@@ -525,4 +563,7 @@ def test_make_dyads():
         k: v / n_trials for k, v in calculated_frequencies.items()
     }
 
-    assert calculated_frequencies == expected_frequencies
+    for key in calculated_frequencies.keys():
+        assert_approx_equal(
+            calculated_frequencies[key], expected_frequencies[key], 2
+        )

@@ -5,8 +5,10 @@ Author: Matthew A. Turner
 Date: 2020-02-25
 '''
 import numpy as np
+import warnings
 
-from numpy.random import choice, uniform
+from copy import deepcopy
+from numpy.random import choice, uniform, shuffle
 from scipy.special import expit
 from scipy.spatial.distance import hamming
 
@@ -267,34 +269,37 @@ class Model:
     def _dyadic_interactions(self):
 
         # Make potential interaction dyads.
-        pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
+        # pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
+        dyads = self._make_dyads()
 
         # Probabilistic collaboration between matched agents.
-        collaborating_pairs = [
-            pair for pair in pairs
-            if uniform() < self._dyadic_interaction_factor(*pair)
-        ]
+        # collaborating_pairs = [
+        #     pair for pair in pairs
+        #     if uniform() < self._dyadic_interaction_factor(*pair)
+        # ]
 
         # Calculate payoffs for each pair who interact and add to each
         # agent's cumulative payoff. Increase count of number of interactions
         # for both agents in pair.
-        for pair in collaborating_pairs:
-            payoff = self._calculate_payoff(*pair)
-            for a in pair:
+        for dyad in dyads:
+            payoff = self._calculate_payoff(*dyad)
+            for a in dyad:
                 a.gross_payoff += payoff
                 a.n_interactions += 1
 
-            # Need to add partner to list of previous partners. (XXX still? why?)
-            p0 = pair[0]
-            p1 = pair[1]
-            p0_partners = pair[0].previous_partners
-            p1_partners = pair[1].previous_partners
+            # Need to add partner to list of previous partners.
+            # (XXX still? why?... IDK now commented out. Get rid if nothing
+            # bad happens. Have no idea where this is used.
+            # p0 = dyad[0]
+            # p1 = dyad[1]
+            # p0_partners = dyad[0].previous_partners
+            # p1_partners = dyad[1].previous_partners
 
-            if p0 not in p1_partners:
-                p1_partners.add(p0.index)
+            # if p0 not in p1_partners:
+            #     p1_partners.add(p0.index)
 
-            if p1 not in p0_partners:
-                p0_partners.add(p1.index)
+            # if p1 not in p0_partners:
+            #     p0_partners.add(p1.index)
 
     def _dyadic_interaction_factor(self, a1, a2):
 
@@ -312,12 +317,62 @@ class Model:
             available_others ([Agent]): Other agents who have not yet in
                 an interacting dyad.
         '''
-        return [0 for _ in range(self.N)]
+        factors = np.zeros(self.N)
+        for other in available_others:
+            factors[other.index] = \
+                self._dyadic_interaction_factor(agent, other)
+
+        # Return either normalized factors or a randomly selected other having
+        # a factor/probability 1 if
+        # normalization denominator is zero for that focal agent,
+        # indicating all factors are zero
+        # in this case, which may happen if there is mutual dislike between
+        # one agent and all others.
+        denom = factors.sum()
+        if denom > 0:
+            return factors / factors.sum()
+        elif denom == 0:
+            other_indexes = [agent.index for agent in available_others]
+            other_index = choice(other_indexes)
+            factors[other_index] = 1.0
+            return factors
+        else:
+            raise RuntimeError('Negative interaction probability factors!')
 
     def _make_dyads(self):
+
+        # Need to draw agents for pairing from a copy of list of agents,
+        # finishing once there are no more available agents.
+        available_agent_indexes = [agent.index for agent in self.agents]
+
+        # Initialize empty list of dyads to which we'll add in loop below.
+        dyads = []
+
+        # As long as there are more available agents, keep making dyads.
+        # XXX Assumes even number of agents.
+        while available_agent_indexes:
+            # Randomly select focal agent to choose an interaction partner.
+            focal_agent_index = choice(available_agent_indexes)
+            focal_agent = self.agents[focal_agent_index]
+            available_agent_indexes.remove(focal_agent_index)
+
+            # Select interaction partner for focal agent.
+            available_agents = \
+                [self.agents[index] for index in available_agent_indexes]
+
+            interaction_probs = \
+                self._interaction_probs(focal_agent, available_agents)
+
+            partner = choice(self.agents, p=interaction_probs)
+            available_agent_indexes.remove(partner.index)
+
+            dyads.append((focal_agent, partner))
+
+        return dyads
+
         # XXX Placeholder; need more advanced algorithm to make one pair at
         # a time with .
-        return choice(self.agents, size=(self.N//2, 2), replace=False)
+        # return choice(self.agents, size=(self.N//2, 2), replace=False)
 
     def _evolve(self):
         # TODO: implement learning selection using _dyadic_interaction_prob
@@ -564,7 +619,7 @@ class Agent:
         self.n_interactions = 0
 
         # Remember who I have interacted with by their index.
-        self.previous_partners = set()
+        # self.previous_partners = set()
 
     @property
     def payoff(self):
