@@ -1,6 +1,8 @@
 import numpy as np
 
+from collections import Counter
 from numpy.testing import assert_array_equal, assert_approx_equal
+
 
 from id_signaling.model import Agent, Model
 
@@ -294,10 +296,10 @@ def test_expected_payoffs():
     # Expected payoffs. 1/2 for w=0, 1/3 for interacting with other agents
     # approx 1/3 the time. There may be a combinatorial correction since
     # pairing two agents changes conditional prob of other agent pairings.
-    pi0 = 0.5 * (1/3) * (pi01 + pi02 + pi03) * n_rounds
-    pi1 = 0.5 * (1/3) * (pi10 + pi12 + pi13) * n_rounds
-    pi2 = 0.5 * (1/3) * (pi20 + pi21 + pi23) * n_rounds
-    pi3 = 0.5 * (1/3) * (pi30 + pi31 + pi32) * n_rounds
+    pi0 = (1/3) * (pi01 + pi02 + pi03) * n_rounds
+    pi1 = (1/3) * (pi10 + pi12 + pi13) * n_rounds
+    pi2 = (1/3) * (pi20 + pi21 + pi23) * n_rounds
+    pi3 = (1/3) * (pi30 + pi31 + pi32) * n_rounds
 
     assert_approx_equal(model.agents[0].gross_payoff, pi0, 2)
     assert_approx_equal(model.agents[1].gross_payoff, pi1, 2)
@@ -348,7 +350,7 @@ def _setup_model_agents(**model_kwargs):
 ##
 # Calculating dyadic interaction probabilities.
 #
-def test_dyadic_interaction_probs():
+def test_dyadic_interaction_factors():
     '''
     Dyadic interaction probabilities should match expected values calculated
 
@@ -363,59 +365,294 @@ def test_dyadic_interaction_probs():
     a1, a2 = (Agent(agent_idx=1), Agent(agent_idx=2))
     a1.attitudes[2] = 1
     a2.attitudes[1] = 1
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.6
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.8
-    assert model5._dyadic_interaction_prob(a1, a2) == 1.0
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.6
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.8
+    assert model5._dyadic_interaction_factor(a1, a2) == 1.0
 
     # Like/neutral.
     a1.attitudes[2] = 1
     a2.attitudes[1] = 0
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.55
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.65
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.75
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.55
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.65
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.75
 
     a1.attitudes[2] = 1
     a2.attitudes[1] = 0
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.55
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.65
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.75
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.55
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.65
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.75
 
     # Like/dislike.
     a1.attitudes[2] = 1
     a2.attitudes[1] = -1
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.5
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.5
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.5
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.5
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.5
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.5
 
     a1.attitudes[2] = -1
     a2.attitudes[1] = 1
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.5
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.5
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.5
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.5
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.5
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.5
 
     # Neutral/neutral.
     a1.attitudes[2] = 0
     a2.attitudes[1] = 0
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.5
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.5
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.5
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.5
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.5
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.5
 
     # Neutral/dislike.
     a1.attitudes[2] = -1
     a2.attitudes[1] = 0
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.45
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.35
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.25
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.45
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.35
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.25
 
     a1.attitudes[2] = 0
     a2.attitudes[1] = -1
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.45
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.35
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.25
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.45
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.35
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.25
 
     # Dislike/dislike.
     a1.attitudes[2] = -1
     a2.attitudes[1] = -1
-    assert model1._dyadic_interaction_prob(a1, a2) == 0.4
-    assert model3._dyadic_interaction_prob(a1, a2) == 0.2
-    assert model5._dyadic_interaction_prob(a1, a2) == 0.0
+    assert model1._dyadic_interaction_factor(a1, a2) == 0.4
+    assert model3._dyadic_interaction_factor(a1, a2) == 0.2
+    assert model5._dyadic_interaction_factor(a1, a2) == 0.0
+
+
+def test_interaction_probs():
+    '''
+    Calculate interaction probability vector for all other agents and itself, which should always be 0.
+    '''
+    model, agents = _setup_model_agents(homophily=0.2)
+
+    a0 = agents[0]
+    a1 = agents[1]
+    a2 = agents[2]
+    a3 = agents[3]
+
+    a0.attitudes = [0, 1, 0, -1]
+    a1.attitudes = [1, 0, -1, -1]
+    a2.attitudes = [0, 1, 0, 0]
+    a3.attitudes = [1, -1, -1, 0]
+
+    a0_expected = [0.0, 1.4, 1.0, 1.0]
+    a1_expected = [1.4, 0.0, 1.0, 0.6]
+
+    a0_expected = np.array(a0_expected) / np.sum(a0_expected)
+    a1_expected = np.array(a1_expected) / np.sum(a1_expected)
+
+    # Test three others.
+    others = agents[1:]
+    assert_array_equal(model._interaction_probs(a0, others), a0_expected)
+    others = [a0, a2, a3]
+    assert_array_equal(model._interaction_probs(a1, others), a1_expected)
+
+    # Two others not possible with N=4, but that's OK for this test.
+    others = [a0, a3]
+    a2_expected = np.array([1.0, 0.0, 0.0, 0.8]) / 1.8
+    a2_expected = np.array(a2_expected) / np.sum(a2_expected)
+    assert_array_equal(model._interaction_probs(a2, others), a2_expected)
+
+    # Need to correctly handle case of one other agent. This is a dumb way
+    # to handle this particular case, but we are just making sure it's doing
+    # what we expect.
+    others = [a1]
+    a3_expected = np.array([0.0, 1.0, 0.0, 0.0])
+    a3_expected = np.array(a3_expected) / np.sum(a3_expected)
+    assert_array_equal(model._interaction_probs(a3, others), a3_expected)
+
+    # Test case of perfect homophily and a_ij = a_ji = -1 for all possible
+    # interaction partners.
+    model, agents = _setup_model_agents(homophily=0.5)
+
+    a0 = agents[0]
+    a1 = agents[1]
+    a2 = agents[2]
+    a3 = agents[3]
+
+    a0.attitudes = [-1, -1, -1, -1]
+    a1.attitudes = [-1, 0, 1, -1]
+    a2.attitudes = [-1, 1, 0, 0]
+    a3.attitudes = [-1, 1, 1, 0]
+
+    others = [a1, a2, a3]
+
+    n_trials = 1000
+    results = np.zeros(n_trials)
+
+    # Check over many instances that the other agents are chosen equally often
+    # and that the focal agent a0 never has probability > 0 of interacting
+    # with itself, which is forbidden.
+    for t_idx in range(n_trials):
+        probs = model._interaction_probs(a0, others)
+        selected_agent_idx = np.where(probs == 1.0)
+        assert len(selected_agent_idx) == 1
+        selected_agent_idx = selected_agent_idx[0]
+        assert selected_agent_idx != 0
+        results[t_idx] = selected_agent_idx
+
+    counts = Counter(results)
+    for val in counts.values():
+        assert_approx_equal(val/n_trials, 1/3, 1)
+
+
+def test_make_dyads():
+
+    model, agents = _setup_model_agents(homophily=0.2)
+
+    # Check that the correct number of pairs are being made. Check that the
+    # frequency of pairings is as expected.
+
+    a0 = agents[0]
+    a1 = agents[1]
+    a2 = agents[2]
+    a3 = agents[3]
+
+    a0.attitudes = [0, 1, 0, -1]
+    a1.attitudes = [1, 0, -1, -1]
+    a2.attitudes = [0, 1, 0, 0]
+    a3.attitudes = [1, -1, -1, 0]
+
+    a0_expected = [0.0, 1.4, 1.0, 1.0]
+    a1_expected = [1.4, 0.0, 1.0, 0.6]
+    a2_expected = [1.0, 1.0, 0.0, 0.8]
+    a3_expected = [1.0, 0.6, 0.8, 0.0]
+
+    a0_expected = np.array(a0_expected) / np.sum(a0_expected)
+    a1_expected = np.array(a1_expected) / np.sum(a1_expected)
+    a2_expected = np.array(a2_expected) / np.sum(a2_expected)
+    a3_expected = np.array(a3_expected) / np.sum(a3_expected)
+
+    # With four agents we can easily calculate the probability any given pair
+    # i and j interact. It is Pr(i interacts with j) = Pr(i chooses j) +
+    # Pr(j chooses i) + Pr(k chooses l) + Pr(l chooses k) = Pr(k interacts with l).
+    amat = np.array([a0_expected, a1_expected, a2_expected, a3_expected])
+    nmat = amat / amat.sum()
+
+    expected_frequencies = {
+        (0, 1): nmat[0, 1] + nmat[1, 0] + nmat[2, 3] + nmat[3, 2],
+        (0, 2): nmat[0, 2] + nmat[2, 0] + nmat[1, 3] + nmat[3, 1],
+        (0, 3): nmat[0, 3] + nmat[3, 0] + nmat[1, 2] + nmat[2, 1],
+        (1, 2): nmat[1, 2] + nmat[2, 1] + nmat[0, 3] + nmat[3, 0],
+        (1, 3): nmat[1, 3] + nmat[3, 1] + nmat[0, 2] + nmat[2, 0],
+        (2, 3): nmat[2, 3] + nmat[3, 2] + nmat[0, 1] + nmat[1, 0]
+    }
+
+    n_trials = 10000
+    all_dyads = [set(a.index for a in dyad) for dyad in model._make_dyads()]
+    print(all_dyads)
+    for ii in range(n_trials):
+        # XXX super inefficient, would be good to clean up.
+        all_dyads = np.append(
+            all_dyads,
+            [set(a.index for a in dyad) for dyad in model._make_dyads()]
+        )
+
+    # Sort each pairing to get the keys in expected_frequencies above.
+    all_dyads = [tuple(np.sort(np.array(list(dyad)))) for dyad in all_dyads]
+
+    # First step: count number of instances of each series.
+    calculated_frequencies = Counter(all_dyads)
+
+    # Next: calculate frequency by dividing by number of trials.
+    calculated_frequencies = {
+        k: v / n_trials for k, v in calculated_frequencies.items()
+    }
+
+    for key in calculated_frequencies.keys():
+        assert_approx_equal(
+            calculated_frequencies[key], expected_frequencies[key], 2
+        )
+
+
+##
+# Testing agent-focused learning.
+#
+
+def test_maybe_update_strategy():
+
+    a0 = Agent()
+    a1 = Agent()
+
+    a0.gross_payoff = 1.0
+    a1.gross_payoff = 3.0
+
+    a0.index = 0
+    a1.index = 1
+
+    model = Model()
+    model.agents = [a0, a1]
+
+    # Each agent will both teach and learn from each other, so the expected
+    # frequency is f(teacher - learner).
+    a0_expected_freq = 0.8807970779778824
+    a1_expected_freq = 0.11920292202211755
+
+    n_trials = 10000
+    a0_changed = np.zeros(n_trials, bool)
+    a1_changed = np.zeros(n_trials, bool)
+
+    for idx in range(n_trials):
+        # a0 & a1 are references to the same model.agents.
+        a0.signaling_strategy = 'Overt'
+        a1.signaling_strategy = 'Covert'
+
+        a0.receiving_strategy = 'Generous'
+        a1.receiving_strategy = 'Churlish'
+
+        model._social_learning()
+
+        a0_changed[idx] = (
+            a0.signaling_strategy != 'Overt' or
+            a0.receiving_strategy != 'Generous'
+        )
+
+        a1_changed[idx] = (
+            a1.signaling_strategy != 'Covert' or
+            a1.receiving_strategy != 'Churlish'
+        )
+
+    assert_approx_equal(a0_changed.sum(), n_trials * a0_expected_freq, 2)
+    assert_approx_equal(a1_changed.sum(), n_trials * a1_expected_freq, 2)
+
+
+    # # a1 teacher. Using manual calcluation in ipython I calculate a probability
+    # # of = f(-2) = 0.11920292202211755. f(x) = 1 / (1 + np.exp(-x)),
+    # # learning_alpha = 0, learning_beta = 1.
+
+    # n_trials = 10000
+
+    # changed_strategies = _run_maybe_update_trials(a1, a2, n_trials)
+
+    # assert_approx_equal(changed_strategies.sum(), n_trials * expected_freq)
+
+    # # Now a2 is teacher. f(x) = 1 - f(-x), so f(2) = 0.8807970779778824.
+
+    # changed_strategies = _run_maybe_update_trials(a2, a1, n_trials)
+
+    # assert_approx_equal(changed_strategies.sum(), n_trials * expected_freq)
+
+
+def _run_maybe_update_trials(model, teacher, learner, n_trials):
+
+    changed_strategies = np.zeros(n_trials, dtype=bool)
+
+    for idx in range(n_trials):
+        teacher.signaling_strategy = 'Overt'
+        learner.signaling_strategy = 'Covert'
+
+        teacher.receiving_strategy = 'Generous'
+        learner.receiving_strategy = 'Churlish'
+
+        learner.maybe_update_strategy(teacher)
+
+        changed_strategies[idx] = (
+            learner.signaling_strategy != 'Covert' or
+            learner.receiving_strategy != 'Churlish'
+        )
+
+    return changed_strategies

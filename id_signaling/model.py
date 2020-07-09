@@ -5,8 +5,10 @@ Author: Matthew A. Turner
 Date: 2020-02-25
 '''
 import numpy as np
+import warnings
 
-from numpy.random import choice, uniform
+from copy import deepcopy
+from numpy.random import choice, uniform, shuffle
 from scipy.special import expit
 from scipy.spatial.distance import hamming
 
@@ -192,7 +194,7 @@ class Model:
             for round_idx in range(self.n_rounds):
                 self._dyadic_interactions()
 
-            self._evolve()
+            self._social_learning()
 
             self.prop_covert_series = np.append(
                 self.prop_covert_series, _proportion_covert(self)
@@ -267,36 +269,39 @@ class Model:
     def _dyadic_interactions(self):
 
         # Make potential interaction dyads.
-        pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
+        # pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
+        dyads = self._make_dyads()
 
         # Probabilistic collaboration between matched agents.
-        collaborating_pairs = [
-            pair for pair in pairs
-            if uniform() < self._dyadic_interaction_prob(*pair)
-        ]
+        # collaborating_pairs = [
+        #     pair for pair in pairs
+        #     if uniform() < self._dyadic_interaction_factor(*pair)
+        # ]
 
         # Calculate payoffs for each pair who interact and add to each
         # agent's cumulative payoff. Increase count of number of interactions
         # for both agents in pair.
-        for pair in collaborating_pairs:
-            payoff = self._calculate_payoff(*pair)
-            for a in pair:
+        for dyad in dyads:
+            payoff = self._calculate_payoff(*dyad)
+            for a in dyad:
                 a.gross_payoff += payoff
                 a.n_interactions += 1
 
-            # Need to add partner to list of previous partners. (XXX still? why?)
-            p0 = pair[0]
-            p1 = pair[1]
-            p0_partners = pair[0].previous_partners
-            p1_partners = pair[1].previous_partners
+            # Need to add partner to list of previous partners.
+            # (XXX still? why?... IDK now commented out. Get rid if nothing
+            # bad happens. Have no idea where this is used.
+            # p0 = dyad[0]
+            # p1 = dyad[1]
+            # p0_partners = dyad[0].previous_partners
+            # p1_partners = dyad[1].previous_partners
 
-            if p0 not in p1_partners:
-                p1_partners.add(p0.index)
+            # if p0 not in p1_partners:
+            #     p1_partners.add(p0.index)
 
-            if p1 not in p0_partners:
-                p0_partners.add(p1.index)
+            # if p1 not in p0_partners:
+            #     p0_partners.add(p1.index)
 
-    def _dyadic_interaction_prob(self, a1, a2):
+    def _dyadic_interaction_factor(self, a1, a2):
 
         a1_att = a1.attitudes[a2.index]
         a2_att = a2.attitudes[a1.index]
@@ -305,63 +310,158 @@ class Model:
 
         return 0.5 + (self.homophily * att_sum / 2.0)
 
-    def _evolve(self):
+    def _interaction_probs(self, agent, available_others):
+        '''
+        Arguments:
+            agent (Agent): Focal agent choosing an interaction partner.
+            available_others ([Agent]): Other agents who have not yet in
+                an interacting dyad.
+        '''
+        factors = np.zeros(self.N)
+        for other in available_others:
+            factors[other.index] = \
+                self._dyadic_interaction_factor(agent, other)
+
+        # Return either normalized factors or a randomly selected other having
+        # a factor/probability 1 if
+        # normalization denominator is zero for that focal agent,
+        # indicating all factors are zero
+        # in this case, which may happen if there is mutual dislike between
+        # one agent and all others.
+        denom = factors.sum()
+        if denom > 0:
+            return factors / factors.sum()
+        elif denom == 0:
+            other_indexes = [agent.index for agent in available_others]
+            other_index = choice(other_indexes)
+            factors[other_index] = 1.0
+            return factors
+        else:
+            raise RuntimeError('Negative interaction probability factors!')
+
+    def _make_dyads(self):
+
+        # Need to draw agents for pairing from a copy of list of agents,
+        # finishing once there are no more available agents.
+        available_agent_indexes = [agent.index for agent in self.agents]
+
+        # Initialize empty list of dyads to which we'll add in loop below.
+        dyads = []
+
+        # As long as there are more available agents, keep making dyads.
+        # XXX Assumes even number of agents.
+        while available_agent_indexes:
+            # Randomly select focal agent to choose an interaction partner.
+            focal_agent_index = choice(available_agent_indexes)
+            focal_agent = self.agents[focal_agent_index]
+            available_agent_indexes.remove(focal_agent_index)
+
+            # Select interaction partner for focal agent.
+            available_agents = \
+                [self.agents[index] for index in available_agent_indexes]
+
+            interaction_probs = \
+                self._interaction_probs(focal_agent, available_agents)
+
+            partner = choice(self.agents, p=interaction_probs)
+            available_agent_indexes.remove(partner.index)
+
+            dyads.append((focal_agent, partner))
+
+        return dyads
+
+        # XXX Placeholder; need more advanced algorithm to make one pair at
+        # a time with .
+        # return choice(self.agents, size=(self.N//2, 2), replace=False)
+
+    def _social_learning(self):
+        '''
+        Returns: None
+        '''
+        # Learners are paired at random with teachers, then the learner
+        # decides which strategy to adopt in maybe_update_strategy: the learner
+        # either keeps its existing strategy or updates its strategy with the
+        # teacher's strategy.
+        for learner in self.agents:
+            teacher = None
+            while teacher is None or teacher == learner:
+                # TODO add interaction probabilities to test case where
+                # w≠0. Here this implicitly assumes no homophily for teacher
+                # selection.
+                teacher = choice(self.agents)
+
+            # maybe_update_strategy will set the learner's next_strategy
+            # attribute, used after all learners
+            learner.maybe_update_strategy(teacher)
+
+        # Go through all agents and update strategies according to what is
+        # contained in the Agent's `next_strategy` attribute.
+        for agent in self.agents:
+            # next_strategy is a dict with key that is the strategy type,
+            # signaling or receiving.
+            if agent.next_strategy is not None:
+                strategy_type = list(agent.next_strategy.keys())[0]
+                if strategy_type == 'signaling':
+                    agent.signaling_strategy = agent.next_strategy[strategy_type]
+                if strategy_type == 'receiving':
+                    agent.receiving_strategy = agent.next_strategy[strategy_type]
+
         # TODO: implement learning selection using _dyadic_interaction_prob
         # and according to process outlined in model document.
-        for learner in self.agents:
-            # Select teacher at random and re-select if teacher is focal agent.
-            # XXX this is not quite what the model spec says. Partner
-            # selection should also involve homophily using
-            # _dyadic_interaction_prob somehow. Maybe each agent's choice
-            # should be weighted by the dyadic interaction prob.
+        # for learner in self.agents:
+        #     # Select teacher at random and re-select if teacher is focal agent.
+        #     # XXX this is not quite what the model spec says. Partner
+        #     # selection should also involve homophily using
+        #     # _dyadic_interaction_prob somehow. Maybe each agent's choice
+        #     # should be weighted by the dyadic interaction prob.
 
-            # Calculate interaction probability for every possible teacher,
-            # setting self-teaching probability to zero.
-            if self.minority_test:
-                if learner in self.minority_agents:
-                    maybe_teachers = self.minority_agents
-                else:
-                    maybe_teachers = self.majority_agents
-            else:
-                maybe_teachers = self.agents
+        #     # Calculate interaction probability for every possible teacher,
+        #     # setting self-teaching probability to zero.
+        #     if self.minority_test:
+        #         if learner in self.minority_agents:
+        #             maybe_teachers = self.minority_agents
+        #         else:
+        #             maybe_teachers = self.majority_agents
+        #     else:
+        #         maybe_teachers = self.agents
 
-            probs = np.array(
-                [
-                    self._dyadic_interaction_prob(learner, maybe_teacher)
-                    if maybe_teacher != learner else 0.0
+        #     probs = np.array(
+        #         [
+        #             self._dyadic_interaction_factor(learner, maybe_teacher)
+        #             if maybe_teacher != learner else 0.0
 
-                    for maybe_teacher in maybe_teachers
-                ]
-            )
-            # Normalize probabilities.
-            probs = probs / probs.sum()
-            # Weight random teacher selection by calculated probabilities.
-            teacher = choice(maybe_teachers, p=probs)
+        #             for maybe_teacher in maybe_teachers
+        #         ]
+        #     )
+        #     # Normalize probabilities.
+        #     probs = probs / probs.sum()
+        #     # Weight random teacher selection by calculated probabilities.
+        #     teacher = choice(maybe_teachers, p=probs)
 
-            # Learner payoff sometimes is zero at the beginning of the model...
-            if learner.payoff > 0:
-                payoff_proportion = teacher.payoff / learner.payoff
-            # ... if it is, set chance to switch to be 0.5.
-            else:
-                payoff_proportion = self.learning_alpha
+        #     # Learner payoff sometimes is zero at the beginning of the model...
+        #     if learner.payoff > 0:
+        #         payoff_proportion = teacher.payoff / learner.payoff
+        #     # ... if it is, set chance to switch to be 0.5.
+        #     else:
+        #         payoff_proportion = self.learning_alpha
 
-            switch_prob = _logistic(payoff_proportion,
-                                    loc=self.learning_alpha,
-                                    scale=self.learning_beta)
+        #     switch_prob = _logistic(payoff_proportion,
+        #                             loc=self.learning_alpha,
+        #                             scale=self.learning_beta)
 
-            if uniform() < switch_prob:
-                # Coin flip to switch either signaling or receiving strategy.
-                strategy_type = (
-                    "Signaling" if 0.5 < uniform() else "Receiving"
-                )
-                # Switch specified teacher strategy for learner's in-place.
-                # XXX setting strategy type explicitly for now.
-                # strategy_type = "Signaling"
-                # print(strategy_type)
-                if strategy_type == "Signaling":
-                    learner.signaling_strategy = teacher.signaling_strategy
-                else:
-                    learner.receiving_strategy = teacher.receiving_strategy
+        #     if uniform() < switch_prob:
+        #         # Coin flip to switch either signaling or receiving strategy.
+        #         strategy_type = (
+        #             "Signaling" if 0.5 < uniform() else "Receiving"
+        #         )
+        #         # Switch specified teacher strategy for learner's in-place.
+        #         # XXX setting strategy type explicitly for now.
+        #         # strategy_type = "Signaling"
+        #         # print(strategy_type)
+        #         if strategy_type == "Signaling":
+        #             learner.signaling_strategy = teacher.signaling_strategy
+        #         else:
+        #             learner.receiving_strategy = teacher.receiving_strategy
 
     def _reset_attitudes(self):
         '''
@@ -549,8 +649,45 @@ class Agent:
         # Total number of interactions agent has had.
         self.n_interactions = 0
 
+        # Attribute for tracking what the next strategy will be after
+        # a teacher/learner interaction.
+        self.next_strategy = None
+
         # Remember who I have interacted with by their index.
-        self.previous_partners = set()
+        # self.previous_partners = set()
+
+    def maybe_update_strategy(self, teacher, homophily=0.0):
+        '''
+        Update either signaling or receiving strategy to match teacher's with
+        probability proportional to logistic difference between teacher and
+        learner payoffs.
+        '''
+        if homophily > 0.0:
+            raise NotImplementedError(
+                'Learning does not yet support nonrandom teacher selection, '
+                'i.e. homophily > 0'
+            )
+
+        # See if this learner will update.
+        diff = teacher.gross_payoff - self.gross_payoff
+        print(diff)
+        update = uniform() < _logistic(diff)
+        print(update)
+
+        if update:
+            # Which strategy is updated is random.
+            strategy_type = choice(['signaling', 'receiving'])
+            if strategy_type == 'signaling':
+                teacher_strategy = teacher.signaling_strategy
+            elif strategy_type == 'receiving':
+                teacher_strategy = teacher.receiving_strategy
+            else:
+                raise RuntimeError('Encountered unknown strategy type!')
+
+            self.next_strategy = {strategy_type: teacher_strategy}
+
+        else:
+            self.next_strategy = None
 
     @property
     def payoff(self):
