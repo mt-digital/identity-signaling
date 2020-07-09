@@ -225,6 +225,8 @@ class Model:
                 )
 
             self._reset_attitudes()
+            for agent in self.agents:
+                agent.gross_payoff = 0.0
 
     def _signal_and_receive(self):
 
@@ -670,9 +672,7 @@ class Agent:
 
         # See if this learner will update.
         diff = teacher.gross_payoff - self.gross_payoff
-        print(diff)
         update = uniform() < _logistic(diff)
-        print(update)
 
         if update:
             # Which strategy is updated is random.
