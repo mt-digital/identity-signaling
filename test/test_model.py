@@ -567,3 +567,92 @@ def test_make_dyads():
         assert_approx_equal(
             calculated_frequencies[key], expected_frequencies[key], 2
         )
+
+
+##
+# Testing agent-focused learning.
+#
+
+def test_maybe_update_strategy():
+
+    a0 = Agent()
+    a1 = Agent()
+
+    a0.gross_payoff = 1.0
+    a1.gross_payoff = 3.0
+
+    a0.index = 0
+    a1.index = 1
+
+    model = Model()
+    model.agents = [a0, a1]
+
+    # Each agent will both teach and learn from each other, so the expected
+    # frequency is f(teacher - learner).
+    a0_expected_freq = 0.8807970779778824
+    a1_expected_freq = 0.11920292202211755
+
+    n_trials = 10000
+    a0_changed = np.zeros(n_trials, bool)
+    a1_changed = np.zeros(n_trials, bool)
+
+    for idx in range(n_trials):
+        # a0 & a1 are references to the same model.agents.
+        a0.signaling_strategy = 'Overt'
+        a1.signaling_strategy = 'Covert'
+
+        a0.receiving_strategy = 'Generous'
+        a1.receiving_strategy = 'Churlish'
+
+        model._social_learning()
+
+        a0_changed[idx] = (
+            a0.signaling_strategy != 'Overt' or
+            a0.receiving_strategy != 'Generous'
+        )
+
+        a1_changed[idx] = (
+            a1.signaling_strategy != 'Covert' or
+            a1.receiving_strategy != 'Churlish'
+        )
+
+    assert_approx_equal(a0_changed.sum(), n_trials * a0_expected_freq, 2)
+    assert_approx_equal(a1_changed.sum(), n_trials * a1_expected_freq, 2)
+
+
+    # # a1 teacher. Using manual calcluation in ipython I calculate a probability
+    # # of = f(-2) = 0.11920292202211755. f(x) = 1 / (1 + np.exp(-x)),
+    # # learning_alpha = 0, learning_beta = 1.
+
+    # n_trials = 10000
+
+    # changed_strategies = _run_maybe_update_trials(a1, a2, n_trials)
+
+    # assert_approx_equal(changed_strategies.sum(), n_trials * expected_freq)
+
+    # # Now a2 is teacher. f(x) = 1 - f(-x), so f(2) = 0.8807970779778824.
+
+    # changed_strategies = _run_maybe_update_trials(a2, a1, n_trials)
+
+    # assert_approx_equal(changed_strategies.sum(), n_trials * expected_freq)
+
+
+def _run_maybe_update_trials(model, teacher, learner, n_trials):
+
+    changed_strategies = np.zeros(n_trials, dtype=bool)
+
+    for idx in range(n_trials):
+        teacher.signaling_strategy = 'Overt'
+        learner.signaling_strategy = 'Covert'
+
+        teacher.receiving_strategy = 'Generous'
+        learner.receiving_strategy = 'Churlish'
+
+        learner.maybe_update_strategy(teacher)
+
+        changed_strategies[idx] = (
+            learner.signaling_strategy != 'Covert' or
+            learner.receiving_strategy != 'Churlish'
+        )
+
+    return changed_strategies

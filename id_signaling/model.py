@@ -194,7 +194,7 @@ class Model:
             for round_idx in range(self.n_rounds):
                 self._dyadic_interactions()
 
-            self._evolve()
+            self._social_learning()
 
             self.prop_covert_series = np.append(
                 self.prop_covert_series, _proportion_covert(self)
@@ -374,63 +374,94 @@ class Model:
         # a time with .
         # return choice(self.agents, size=(self.N//2, 2), replace=False)
 
-    def _evolve(self):
+    def _social_learning(self):
+        '''
+        Returns: None
+        '''
+        # Learners are paired at random with teachers, then the learner
+        # decides which strategy to adopt in maybe_update_strategy: the learner
+        # either keeps its existing strategy or updates its strategy with the
+        # teacher's strategy.
+        for learner in self.agents:
+            teacher = None
+            while teacher is None or teacher == learner:
+                # TODO add interaction probabilities to test case where
+                # w≠0. Here this implicitly assumes no homophily for teacher
+                # selection.
+                teacher = choice(self.agents)
+
+            # maybe_update_strategy will set the learner's next_strategy
+            # attribute, used after all learners
+            learner.maybe_update_strategy(teacher)
+
+        # Go through all agents and update strategies according to what is
+        # contained in the Agent's `next_strategy` attribute.
+        for agent in self.agents:
+            # next_strategy is a dict with key that is the strategy type,
+            # signaling or receiving.
+            if agent.next_strategy is not None:
+                strategy_type = list(agent.next_strategy.keys())[0]
+                if strategy_type == 'signaling':
+                    agent.signaling_strategy = agent.next_strategy[strategy_type]
+                if strategy_type == 'receiving':
+                    agent.receiving_strategy = agent.next_strategy[strategy_type]
+
         # TODO: implement learning selection using _dyadic_interaction_prob
         # and according to process outlined in model document.
-        for learner in self.agents:
-            # Select teacher at random and re-select if teacher is focal agent.
-            # XXX this is not quite what the model spec says. Partner
-            # selection should also involve homophily using
-            # _dyadic_interaction_prob somehow. Maybe each agent's choice
-            # should be weighted by the dyadic interaction prob.
+        # for learner in self.agents:
+        #     # Select teacher at random and re-select if teacher is focal agent.
+        #     # XXX this is not quite what the model spec says. Partner
+        #     # selection should also involve homophily using
+        #     # _dyadic_interaction_prob somehow. Maybe each agent's choice
+        #     # should be weighted by the dyadic interaction prob.
 
-            # Calculate interaction probability for every possible teacher,
-            # setting self-teaching probability to zero.
-            if self.minority_test:
-                if learner in self.minority_agents:
-                    maybe_teachers = self.minority_agents
-                else:
-                    maybe_teachers = self.majority_agents
-            else:
-                maybe_teachers = self.agents
+        #     # Calculate interaction probability for every possible teacher,
+        #     # setting self-teaching probability to zero.
+        #     if self.minority_test:
+        #         if learner in self.minority_agents:
+        #             maybe_teachers = self.minority_agents
+        #         else:
+        #             maybe_teachers = self.majority_agents
+        #     else:
+        #         maybe_teachers = self.agents
 
-            probs = np.array(
-                [
-                    self._dyadic_interaction_factor(learner, maybe_teacher)
-                    if maybe_teacher != learner else 0.0
+        #     probs = np.array(
+        #         [
+        #             self._dyadic_interaction_factor(learner, maybe_teacher)
+        #             if maybe_teacher != learner else 0.0
 
-                    for maybe_teacher in maybe_teachers
-                ]
-            )
-            # Normalize probabilities.
-            probs = probs / probs.sum()
-            # Weight random teacher selection by calculated probabilities.
-            teacher = choice(maybe_teachers, p=probs)
+        #             for maybe_teacher in maybe_teachers
+        #         ]
+        #     )
+        #     # Normalize probabilities.
+        #     probs = probs / probs.sum()
+        #     # Weight random teacher selection by calculated probabilities.
+        #     teacher = choice(maybe_teachers, p=probs)
 
-            # Learner payoff sometimes is zero at the beginning of the model...
-            if learner.payoff > 0:
-                payoff_proportion = teacher.payoff / learner.payoff
-            # ... if it is, set chance to switch to be 0.5.
-            else:
-                payoff_proportion = self.learning_alpha
+        #     # Learner payoff sometimes is zero at the beginning of the model...
+        #     if learner.payoff > 0:
+        #         payoff_proportion = teacher.payoff / learner.payoff
+        #     # ... if it is, set chance to switch to be 0.5.
+        #     else:
+        #         payoff_proportion = self.learning_alpha
 
-            switch_prob = _logistic(payoff_proportion,
-                                    loc=self.learning_alpha,
-                                    scale=self.learning_beta)
+        #     switch_prob = _logistic(payoff_proportion,
+        #                             loc=self.learning_alpha,
+        #                             scale=self.learning_beta)
 
-            if uniform() < switch_prob:
-                # Coin flip to switch either signaling or receiving strategy.
-                strategy_type = (
-                    "Signaling" if 0.5 < uniform() else "Receiving"
-                )
-                # Switch specified teacher strategy for learner's in-place.
-                # XXX setting strategy type explicitly for now.
-                # strategy_type = "Signaling"
-                # print(strategy_type)
-                if strategy_type == "Signaling":
-                    learner.signaling_strategy = teacher.signaling_strategy
-                else:
-                    learner.receiving_strategy = teacher.receiving_strategy
+        #     if uniform() < switch_prob:
+        #         # Coin flip to switch either signaling or receiving strategy.
+        #         strategy_type = (
+        #             "Signaling" if 0.5 < uniform() else "Receiving"
+        #         )
+        #         # Switch specified teacher strategy for learner's in-place.
+        #         # XXX setting strategy type explicitly for now.
+        #         # strategy_type = "Signaling"
+        #         # print(strategy_type)
+        #         if strategy_type == "Signaling":
+        #             learner.signaling_strategy = teacher.signaling_strategy
+        #         else:
+        #             learner.receiving_strategy = teacher.receiving_strategy
 
     def _reset_attitudes(self):
         '''
@@ -618,8 +649,45 @@ class Agent:
         # Total number of interactions agent has had.
         self.n_interactions = 0
 
+        # Attribute for tracking what the next strategy will be after
+        # a teacher/learner interaction.
+        self.next_strategy = None
+
         # Remember who I have interacted with by their index.
         # self.previous_partners = set()
+
+    def maybe_update_strategy(self, teacher, homophily=0.0):
+        '''
+        Update either signaling or receiving strategy to match teacher's with
+        probability proportional to logistic difference between teacher and
+        learner payoffs.
+        '''
+        if homophily > 0.0:
+            raise NotImplementedError(
+                'Learning does not yet support nonrandom teacher selection, '
+                'i.e. homophily > 0'
+            )
+
+        # See if this learner will update.
+        diff = teacher.gross_payoff - self.gross_payoff
+        print(diff)
+        update = uniform() < _logistic(diff)
+        print(update)
+
+        if update:
+            # Which strategy is updated is random.
+            strategy_type = choice(['signaling', 'receiving'])
+            if strategy_type == 'signaling':
+                teacher_strategy = teacher.signaling_strategy
+            elif strategy_type == 'receiving':
+                teacher_strategy = teacher.receiving_strategy
+            else:
+                raise RuntimeError('Encountered unknown strategy type!')
+
+            self.next_strategy = {strategy_type: teacher_strategy}
+
+        else:
+            self.next_strategy = None
 
     @property
     def payoff(self):
