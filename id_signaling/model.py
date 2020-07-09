@@ -402,66 +402,11 @@ class Model:
             if agent.next_strategy is not None:
                 strategy_type = list(agent.next_strategy.keys())[0]
                 if strategy_type == 'signaling':
-                    agent.signaling_strategy = agent.next_strategy[strategy_type]
+                    agent.signaling_strategy = \
+                        agent.next_strategy[strategy_type]
                 if strategy_type == 'receiving':
-                    agent.receiving_strategy = agent.next_strategy[strategy_type]
-
-        # TODO: implement learning selection using _dyadic_interaction_prob
-        # and according to process outlined in model document.
-        # for learner in self.agents:
-        #     # Select teacher at random and re-select if teacher is focal agent.
-        #     # XXX this is not quite what the model spec says. Partner
-        #     # selection should also involve homophily using
-        #     # _dyadic_interaction_prob somehow. Maybe each agent's choice
-        #     # should be weighted by the dyadic interaction prob.
-
-        #     # Calculate interaction probability for every possible teacher,
-        #     # setting self-teaching probability to zero.
-        #     if self.minority_test:
-        #         if learner in self.minority_agents:
-        #             maybe_teachers = self.minority_agents
-        #         else:
-        #             maybe_teachers = self.majority_agents
-        #     else:
-        #         maybe_teachers = self.agents
-
-        #     probs = np.array(
-        #         [
-        #             self._dyadic_interaction_factor(learner, maybe_teacher)
-        #             if maybe_teacher != learner else 0.0
-
-        #             for maybe_teacher in maybe_teachers
-        #         ]
-        #     )
-        #     # Normalize probabilities.
-        #     probs = probs / probs.sum()
-        #     # Weight random teacher selection by calculated probabilities.
-        #     teacher = choice(maybe_teachers, p=probs)
-
-        #     # Learner payoff sometimes is zero at the beginning of the model...
-        #     if learner.payoff > 0:
-        #         payoff_proportion = teacher.payoff / learner.payoff
-        #     # ... if it is, set chance to switch to be 0.5.
-        #     else:
-        #         payoff_proportion = self.learning_alpha
-
-        #     switch_prob = _logistic(payoff_proportion,
-        #                             loc=self.learning_alpha,
-        #                             scale=self.learning_beta)
-
-        #     if uniform() < switch_prob:
-        #         # Coin flip to switch either signaling or receiving strategy.
-        #         strategy_type = (
-        #             "Signaling" if 0.5 < uniform() else "Receiving"
-        #         )
-        #         # Switch specified teacher strategy for learner's in-place.
-        #         # XXX setting strategy type explicitly for now.
-        #         # strategy_type = "Signaling"
-        #         # print(strategy_type)
-        #         if strategy_type == "Signaling":
-        #             learner.signaling_strategy = teacher.signaling_strategy
-        #         else:
-        #             learner.receiving_strategy = teacher.receiving_strategy
+                    agent.receiving_strategy = \
+                        agent.next_strategy[strategy_type]
 
     def _reset_attitudes(self):
         '''
