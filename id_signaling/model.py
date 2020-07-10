@@ -169,6 +169,16 @@ class Model:
         # It is repetetive but convenient to create the full symmetric matrix.
         self._init_similar_matrix()
 
+        # These are only defined after communication round has concluded. We
+        # store/calculate all N^2 instead of N(N-1)/2 one could do since
+        # there is symmetry in interaction factors.
+        self.interaction_factors = {
+            (a1.index, a2.index): None
+            for a1 in self.agents
+            for a2 in self.agents
+        }
+        self._calculate_interaction_factors()
+
     def _init_similar_matrix(self):
         for a1 in self.agents:
             for a2 in self.agents:
@@ -189,7 +199,18 @@ class Model:
         '''
         for iter_idx in range(n_iter):
 
+            for agent in self.agents:
+                agent.gross_payoff = 0.0
+
             self._signal_and_receive()
+
+            # Interaction factors determine probability one agent picks another
+            # as an interaction partner. The probability cannot be determined
+            # now, but the factors can. With N=100, this saves
+            # 99 * 97 * ... * 3 operations for every interaction round. Add
+            # another factor of 10 when there are ten interactions per
+            # time step.
+            self._calculate_interaction_factors()
 
             for round_idx in range(self.n_rounds):
                 self._dyadic_interactions()
@@ -225,8 +246,6 @@ class Model:
                 )
 
             self._reset_attitudes()
-            for agent in self.agents:
-                agent.gross_payoff = 0.0
 
     def _signal_and_receive(self):
 
@@ -268,6 +287,24 @@ class Model:
                     if signaler.signaling_strategy == "Overt":
                         receiver.attitudes[signaler.index] = -1
 
+    def _calculate_interaction_factors(self):
+
+        # This calculates the factor for both permutations of agent pairings,
+        # which is redundant, but simple to implement and understand and
+        # we only have N~100, NxN = 10e4. If N=1e3 and NxN=1e6 maybe there
+        # will be a problem, but I don't think 1mil elements is too much
+        # of a problem if dicts pre-initialized.
+        for a1 in self.agents:
+            for a2 in self.agents:
+                a1_att = a1.attitudes[a2.index]
+                a2_att = a2.attitudes[a1.index]
+
+                att_sum = a1_att + a2_att
+
+                factor = 0.5 + (self.homophily * att_sum / 2.0)
+
+                self.interaction_factors[(a1.index, a2.index)] = factor
+
     def _dyadic_interactions(self):
 
         # Make potential interaction dyads.
@@ -305,12 +342,13 @@ class Model:
 
     def _dyadic_interaction_factor(self, a1, a2):
 
-        a1_att = a1.attitudes[a2.index]
-        a2_att = a2.attitudes[a1.index]
+        return self.interaction_factors[a1.index, a2.index]
+        # a1_att = a1.attitudes[a2.index]
+        # a2_att = a2.attitudes[a1.index]
 
-        att_sum = a1_att + a2_att
+        # att_sum = a1_att + a2_att
 
-        return 0.5 + (self.homophily * att_sum / 2.0)
+        # return 0.5 + (self.homophily * att_sum / 2.0)
 
     def _interaction_probs(self, agent, available_others):
         '''

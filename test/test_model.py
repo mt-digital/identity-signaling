@@ -340,6 +340,10 @@ def _setup_model_agents(**model_kwargs):
     # only called in Model constructor.
     model._init_similar_matrix()
 
+    # Need to update the interaction factors after re-defining agent
+    # receiving strategies that determine initial attitudes.
+    model._calculate_interaction_factors()
+
     # Because we set overt and covert signals to always be received,
     # running the model just one timestep should update all attitudes.
     model.run(1)
@@ -361,10 +365,17 @@ def test_dyadic_interaction_factors():
     model3 = Model(homophily=0.3)
     model5 = Model(homophily=0.5)
 
+    def _update_models(a1, a2):
+        for m in [model1, model3, model5]:
+            m.agents = [a1, a2]
+            m._calculate_interaction_factors()
+
     # Like/like.
     a1, a2 = (Agent(agent_idx=1), Agent(agent_idx=2))
     a1.attitudes[2] = 1
     a2.attitudes[1] = 1
+
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.6
     assert model3._dyadic_interaction_factor(a1, a2) == 0.8
     assert model5._dyadic_interaction_factor(a1, a2) == 1.0
@@ -372,12 +383,14 @@ def test_dyadic_interaction_factors():
     # Like/neutral.
     a1.attitudes[2] = 1
     a2.attitudes[1] = 0
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.55
     assert model3._dyadic_interaction_factor(a1, a2) == 0.65
     assert model5._dyadic_interaction_factor(a1, a2) == 0.75
 
     a1.attitudes[2] = 1
     a2.attitudes[1] = 0
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.55
     assert model3._dyadic_interaction_factor(a1, a2) == 0.65
     assert model5._dyadic_interaction_factor(a1, a2) == 0.75
@@ -385,12 +398,14 @@ def test_dyadic_interaction_factors():
     # Like/dislike.
     a1.attitudes[2] = 1
     a2.attitudes[1] = -1
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.5
     assert model3._dyadic_interaction_factor(a1, a2) == 0.5
     assert model5._dyadic_interaction_factor(a1, a2) == 0.5
 
     a1.attitudes[2] = -1
     a2.attitudes[1] = 1
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.5
     assert model3._dyadic_interaction_factor(a1, a2) == 0.5
     assert model5._dyadic_interaction_factor(a1, a2) == 0.5
@@ -398,6 +413,7 @@ def test_dyadic_interaction_factors():
     # Neutral/neutral.
     a1.attitudes[2] = 0
     a2.attitudes[1] = 0
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.5
     assert model3._dyadic_interaction_factor(a1, a2) == 0.5
     assert model5._dyadic_interaction_factor(a1, a2) == 0.5
@@ -405,12 +421,14 @@ def test_dyadic_interaction_factors():
     # Neutral/dislike.
     a1.attitudes[2] = -1
     a2.attitudes[1] = 0
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.45
     assert model3._dyadic_interaction_factor(a1, a2) == 0.35
     assert model5._dyadic_interaction_factor(a1, a2) == 0.25
 
     a1.attitudes[2] = 0
     a2.attitudes[1] = -1
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.45
     assert model3._dyadic_interaction_factor(a1, a2) == 0.35
     assert model5._dyadic_interaction_factor(a1, a2) == 0.25
@@ -418,6 +436,7 @@ def test_dyadic_interaction_factors():
     # Dislike/dislike.
     a1.attitudes[2] = -1
     a2.attitudes[1] = -1
+    _update_models(a1, a2)
     assert model1._dyadic_interaction_factor(a1, a2) == 0.4
     assert model3._dyadic_interaction_factor(a1, a2) == 0.2
     assert model5._dyadic_interaction_factor(a1, a2) == 0.0
@@ -438,6 +457,8 @@ def test_interaction_probs():
     a1.attitudes = [1, 0, -1, -1]
     a2.attitudes = [0, 1, 0, 0]
     a3.attitudes = [1, -1, -1, 0]
+
+    model._calculate_interaction_factors()
 
     a0_expected = [0.0, 1.4, 1.0, 1.0]
     a1_expected = [1.4, 0.0, 1.0, 0.6]
@@ -478,6 +499,7 @@ def test_interaction_probs():
     a1.attitudes = [-1, 0, 1, -1]
     a2.attitudes = [-1, 1, 0, 0]
     a3.attitudes = [-1, 1, 1, 0]
+    model._calculate_interaction_factors()
 
     others = [a1, a2, a3]
 
@@ -516,6 +538,9 @@ def test_make_dyads():
     a1.attitudes = [1, 0, -1, -1]
     a2.attitudes = [0, 1, 0, 0]
     a3.attitudes = [1, -1, -1, 0]
+
+    # Need to re-calculate interaction factors after setting attitudes.
+    model._calculate_interaction_factors()
 
     a0_expected = [0.0, 1.4, 1.0, 1.0]
     a1_expected = [1.4, 0.0, 1.0, 0.6]
@@ -599,9 +624,9 @@ def test_maybe_update_strategy():
     for idx in range(n_trials):
         # a0 & a1 are references to the same model.agents.
         a0.signaling_strategy = 'Overt'
-        a1.signaling_strategy = 'Covert'
-
         a0.receiving_strategy = 'Generous'
+
+        a1.signaling_strategy = 'Covert'
         a1.receiving_strategy = 'Churlish'
 
         model._social_learning()
@@ -618,23 +643,6 @@ def test_maybe_update_strategy():
 
     assert_approx_equal(a0_changed.sum(), n_trials * a0_expected_freq, 2)
     assert_approx_equal(a1_changed.sum(), n_trials * a1_expected_freq, 2)
-
-
-    # # a1 teacher. Using manual calcluation in ipython I calculate a probability
-    # # of = f(-2) = 0.11920292202211755. f(x) = 1 / (1 + np.exp(-x)),
-    # # learning_alpha = 0, learning_beta = 1.
-
-    # n_trials = 10000
-
-    # changed_strategies = _run_maybe_update_trials(a1, a2, n_trials)
-
-    # assert_approx_equal(changed_strategies.sum(), n_trials * expected_freq)
-
-    # # Now a2 is teacher. f(x) = 1 - f(-x), so f(2) = 0.8807970779778824.
-
-    # changed_strategies = _run_maybe_update_trials(a2, a1, n_trials)
-
-    # assert_approx_equal(changed_strategies.sum(), n_trials * expected_freq)
 
 
 def _run_maybe_update_trials(model, teacher, learner, n_trials):
