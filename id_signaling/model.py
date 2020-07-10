@@ -26,7 +26,7 @@ class Model:
                  minority_trait_frac=None,
                  initial_prop_covert=0.5, initial_prop_churlish=0.5,
                  n_minmaj_traits=None,  # only used if minority_trait_frac ! None
-                 learning_alpha=1.25, learning_beta=12):
+                 learning_alpha=0.0, learning_beta=1.0):
         '''
         Arguments:
             N (int): Number of agents, i.e. population
@@ -432,7 +432,9 @@ class Model:
 
             # maybe_update_strategy will set the learner's next_strategy
             # attribute, used after all learners
-            learner.maybe_update_strategy(teacher)
+            learner.maybe_update_strategy(
+                teacher, learning_beta=self.learning_beta
+            )
 
         # Go through all agents and update strategies according to what is
         # contained in the Agent's `next_strategy` attribute.
@@ -641,7 +643,8 @@ class Agent:
         # Remember who I have interacted with by their index.
         # self.previous_partners = set()
 
-    def maybe_update_strategy(self, teacher, homophily=0.0):
+    def maybe_update_strategy(self, teacher,
+                              homophily=0.0, learning_beta=1.0):
         '''
         Update either signaling or receiving strategy to match teacher's with
         probability proportional to logistic difference between teacher and
@@ -655,7 +658,7 @@ class Agent:
 
         # See if this learner will update.
         diff = teacher.gross_payoff - self.gross_payoff
-        update = uniform() < _logistic(diff)
+        update = uniform() < _logistic(diff, scale=learning_beta)
 
         if update:
             # Which strategy is updated is random.
