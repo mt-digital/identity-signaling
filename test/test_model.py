@@ -687,3 +687,65 @@ def test_logistic():
 
     assert_approx_equal(_logistic(-3), 1 - 0.9525741268224334, significant=9)
     assert_approx_equal(_logistic(-1, scale=3), 1 - 0.9525741268224334, significant=9)
+
+
+def test_minority_learning():
+    '''
+    In the current version of the model, minorities should only learn from other minorities.
+    '''
+
+    # First, create model and four agents, two "minority" two not.
+    min0 = Agent(minority=True)
+    min1 = Agent(minority=True)
+    maj = Agent()
+    # maj1 = Agent()
+
+    # Next, set up a situation where one minority agent will always adopt the
+    # other minority agent's strategy, and the other minority agent will never
+    # adopt the other minority's opinion. If, however, the minority agents
+    # interact with majority agents the opposite will happen. So, this
+    # checks that minority only ever interact with minority.
+
+    # min0 should always adopt min1's strategies, and never keep their own
+    # unless they interact with maj1 in the minority. Similarly, min1 will
+    # should always keep its strategies unless it interacts with maj, when
+    # it would always switch strategies.
+    min0.gross_payoff = 1.0
+    min1.gross_payoff = 3.0
+    maj.gross_payoff = 4.0
+
+    min0.receiving_strategy = 'Generous'
+    min0.signaling_strategy = 'Covert'
+
+    min1.receiving_strategy = 'Churlish'
+    min1.signaling_strategy = 'Overt'
+
+    maj.receiving_strategy = 'Generous'
+    maj.signaling_strategy = 'Covert'
+
+    model = Model(learning_beta=1e6)
+    # Normally this is set only if a minority_frac is given and not set
+    # directly. But we circumvent this convenience for this test.
+    model.minority_test = True
+    model.agents = [min0, min1, maj]
+
+    for _ in range(10000):
+
+        model._social_learning()
+
+        # min0 must have changed one strategy.
+        assert (
+            min0.receiving_strategy == 'Churlish' or
+            min0.signaling_strategy == 'Overt'
+        )
+        # min1 should have not changed strategy.
+        assert (
+            min1.receiving_strategy == 'Churlish' and
+            min1.signaling_strategy == 'Overt'
+        )
+        # maj should never change strategy since its payoffs are superior;
+        # sort of unrelated, but why not.
+        assert (
+            maj.receiving_strategy == 'Generous' and
+            maj.signaling_strategy == 'Covert'
+        )

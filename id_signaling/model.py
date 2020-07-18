@@ -428,7 +428,12 @@ class Model:
                 # TODO add interaction probabilities to test case where
                 # w≠0. Here this implicitly assumes no homophily for teacher
                 # selection.
-                teacher = choice(self.agents)
+                if self.minority_test and learner.minority:
+                    teachers = [a for a in self.agents if a.minority]
+                else:
+                    teachers = self.agents
+
+                teacher = choice(teachers)
 
             # maybe_update_strategy will set the learner's next_strategy
             # attribute, used after all learners
@@ -597,12 +602,13 @@ def _proportion_churlish(model, subset=None):
 
 class Agent:
 
-    def __init__(self, agent_idx=0, K=3, N=100,
+    def __init__(self, agent_idx=0, K=3, N=100, minority=False,
                  receiving_strategy=None, signaling_strategy=None):
         '''
         Agent initialization is fully random in this model.
         '''
         self.index = agent_idx
+        self.minority = minority
 
         # Agents initially have K binary traits. ±1 is used for determining
         # similarity or dissimilarity with other agents via summation.
