@@ -510,8 +510,10 @@ def invasion_heatmaps(disliking_df, recept_df,
                       ),
                       invading='covert',
                       vmin=-0.05, vmax=0.05,
+                      annot=False,
                       base_filename='reports/Figures/invasion',
                       figsize=(8, 5),
+                      invading_prop=0.10,
                       save_path=None):
     '''
     Plot 3x2 heatmaps in subplots. 3-element rows are each for one of the
@@ -531,11 +533,11 @@ def invasion_heatmaps(disliking_df, recept_df,
     if invading in ('overt', 'covert'):
 
         if invading == 'covert':
-            init_cov = 0.05
+            init_cov = invading_prop
         else:
-            init_cov = 0.95
+            init_cov = 1 - invading_prop
 
-        init_churs = [0.05, 0.5, 0.95]
+        init_churs = [invading_prop, 0.5, 1 - invading_prop]
 
         # final_dis = disliking_df[disliking_df.timestep == timesteps]
         # final_rec = recept_df[recept_df.timestep == timesteps]
@@ -555,17 +557,18 @@ def invasion_heatmaps(disliking_df, recept_df,
 
                 rate_df = _one_invasion_heatmap(
                     axes, name, df_lim, invading, init_cov, init_chur, exp_idx,
-                    chur_idx, timesteps, cmap)
+                    chur_idx, timesteps, cmap, annot=annot,
+                    low_success_prevalence=invading_prop)
                 rate_dfs.append(rate_df)
 
     elif invading in ('churlish', 'generous'):
 
         if invading == 'churlish':
-            init_chur = 0.05
+            init_chur = invading_prop
         else:
-            init_chur = 0.95
+            init_chur = 1 - invading_prop
 
-        init_covs = [0.05, 0.5, 0.95]
+        init_covs = [invading_prop, 0.5, 1 - invading_prop]
 
         for exp_idx, name_df in enumerate(
                         [("Disliking penalty", disliking_df),
@@ -582,7 +585,8 @@ def invasion_heatmaps(disliking_df, recept_df,
 
                 rate_df = _one_invasion_heatmap(
                     axes, name, df_lim, invading, init_cov, init_chur, exp_idx,
-                    cov_idx, timesteps, cmap)
+                    cov_idx, timesteps, cmap, annot=annot,
+                    low_success_prevalence=invading_prop)
                 rate_dfs.append(rate_df)
 
     plt.tight_layout()
@@ -595,7 +599,7 @@ def invasion_heatmaps(disliking_df, recept_df,
 
 def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
                           init_chur, exp_idx, chur_cov_idx, timesteps,
-                          cmap, low_success_prevalence=0.05):
+                          cmap, low_success_prevalence=0.05, annot=False):
     '''
 
     Arguments:
@@ -646,7 +650,8 @@ def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
     sns.heatmap(
         rate['success'].unstack(),
         cmap=cmap, square=True, vmin=0, vmax=1,
-        ax=ax, cbar=cbar, cbar_kws=cbar_kws
+        ax=ax, cbar=cbar, cbar_kws=cbar_kws,
+        annot=annot, fmt='0.2f'
     )
 
     ax.set_xticklabels(
