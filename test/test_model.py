@@ -1,7 +1,7 @@
 import numpy as np
 
 from collections import Counter
-from numpy.testing import assert_array_equal, assert_approx_equal
+from numpy.testing import assert_array_equal, assert_approx_equal, assert_equal
 
 
 from id_signaling.model import Agent, Model
@@ -664,3 +664,26 @@ def _run_maybe_update_trials(model, teacher, learner, n_trials):
         )
 
     return changed_strategies
+
+
+def test_logistic():
+    '''
+    Check that logistic function gives expected probabilities.
+    '''
+    from id_signaling.model import _logistic
+
+    assert_equal(_logistic(1), 0.7310585786300049)
+    assert_equal(_logistic(2, scale=0.5), 0.7310585786300049)
+    assert_equal(_logistic(0.5, scale=2), 0.7310585786300049)
+
+    assert_equal(_logistic(2), 0.8807970779778823)
+    assert_equal(_logistic(1, scale=2), 0.8807970779778823)
+
+    assert_approx_equal(_logistic(-2), 1 - 0.8807970779778823, significant=9)
+    assert_approx_equal(_logistic(-1, scale=2), 1 - 0.8807970779778823, significant=9)
+
+    assert_equal(_logistic(3), 0.9525741268224334)
+    assert_equal(_logistic(1, scale=3), 0.9525741268224334)
+
+    assert_approx_equal(_logistic(-3), 1 - 0.9525741268224334, significant=9)
+    assert_approx_equal(_logistic(-1, scale=3), 1 - 0.9525741268224334, significant=9)
