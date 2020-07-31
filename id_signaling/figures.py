@@ -513,7 +513,9 @@ def invasion_heatmaps(disliking_df, recept_df,
                       annot=False,
                       base_filename='reports/Figures/invasion',
                       figsize=(8, 5),
-                      invading_prop=0.10,
+                      invading_prev=0.10,
+                      timesteps=500,
+                      cbar_label_size=11,
                       save_path=None):
     '''
     Plot 3x2 heatmaps in subplots. 3-element rows are each for one of the
@@ -524,7 +526,7 @@ def invasion_heatmaps(disliking_df, recept_df,
     code from overt/covert to generous/churlish plotting. It's just the
     fastest way right now that shouldn't be too onerous.
     '''
-    timesteps = 500
+    # timesteps = 500
 
     fig, axes = plt.subplots(2, 3, sharex=True, figsize=figsize)
 
@@ -533,11 +535,11 @@ def invasion_heatmaps(disliking_df, recept_df,
     if invading in ('overt', 'covert'):
 
         if invading == 'covert':
-            init_cov = invading_prop
+            init_cov = invading_prev
         else:
-            init_cov = 1 - invading_prop
+            init_cov = 1 - invading_prev
 
-        init_churs = [invading_prop, 0.5, 1 - invading_prop]
+        init_churs = [invading_prev, 0.5, 1 - invading_prev]
 
         # final_dis = disliking_df[disliking_df.timestep == timesteps]
         # final_rec = recept_df[recept_df.timestep == timesteps]
@@ -556,19 +558,24 @@ def invasion_heatmaps(disliking_df, recept_df,
                             (df.initial_prop_churlish == init_chur)]
 
                 rate_df = _one_invasion_heatmap(
-                    axes, name, df_lim, invading, init_cov, init_chur, exp_idx,
+                    axes, df_lim, invading, init_cov, init_chur, exp_idx,
                     chur_idx, timesteps, cmap, annot=annot,
-                    low_success_prevalence=invading_prop)
+                    low_success_prevalence=invading_prev,
+                    cbar_label_size=cbar_label_size)
+                # rate_df = _one_invasion_heatmap(
+                #     axes, name, df_lim, invading, init_cov, init_chur, exp_idx,
+                #     chur_idx, timesteps, cmap, annot=annot,
+                #     low_success_prevalence=invading_prev)
                 rate_dfs.append(rate_df)
 
     elif invading in ('churlish', 'generous'):
 
         if invading == 'churlish':
-            init_chur = invading_prop
+            init_chur = invading_prev
         else:
-            init_chur = 1 - invading_prop
+            init_chur = 1 - invading_prev
 
-        init_covs = [invading_prop, 0.5, 1 - invading_prop]
+        init_covs = [invading_prev, 0.5, 1 - invading_prev]
 
         for exp_idx, name_df in enumerate(
                         [("Disliking penalty", disliking_df),
@@ -577,16 +584,21 @@ def invasion_heatmaps(disliking_df, recept_df,
 
             for cov_idx, init_cov in enumerate(init_covs):
 
-                name = name_df[0]
+                # name = name_df[0]
                 df = name_df[1]
 
                 df_lim = df[(df.initial_prop_covert == init_cov) &
                             (df.initial_prop_churlish == init_chur)]
 
                 rate_df = _one_invasion_heatmap(
-                    axes, name, df_lim, invading, init_cov, init_chur, exp_idx,
+                    axes, df_lim, invading, init_cov, init_chur, exp_idx,
                     cov_idx, timesteps, cmap, annot=annot,
-                    low_success_prevalence=invading_prop)
+                    low_success_prevalence=invading_prev,
+                    cbar_label_size=cbar_label_size)
+                # rate_df = _one_invasion_heatmap(
+                #     axes, name, df_lim, invading, init_cov, init_chur, exp_idx,
+                #     cov_idx, timesteps, cmap, annot=annot,
+                #     low_success_prevalence=invading_prev)
                 rate_dfs.append(rate_df)
 
     plt.tight_layout()
@@ -597,9 +609,10 @@ def invasion_heatmaps(disliking_df, recept_df,
     return rate_dfs
 
 
-def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
+def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
                           init_chur, exp_idx, chur_cov_idx, timesteps,
-                          cmap, low_success_prevalence=0.05, annot=False):
+                          cmap, low_success_prevalence=0.05, annot=False,
+                          cbar_kws=None, cbar_label_size=18):
     '''
 
     Arguments:
@@ -639,20 +652,19 @@ def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
     ax = axes[exp_idx, chur_cov_idx]
 
     shrink = 0.6
-    if chur_cov_idx != 2:
-        # cbar=False
-        cbar = True
-        cbar_kws = {'shrink': shrink}
-    else:
-        cbar = True
-        cbar_kws = {'label': 'Invasion success ratio', 'shrink': shrink}
+    if cbar_kws is None:
+        if chur_cov_idx != 2:
+            cbar_kws = {'shrink': shrink}
+        else:
+            cbar_kws = {'label': 'Invasion success rate', 'shrink': shrink}
 
     sns.heatmap(
         rate['success'].unstack(),
         cmap=cmap, square=True, vmin=0, vmax=1,
-        ax=ax, cbar=cbar, cbar_kws=cbar_kws,
+        ax=ax, cbar=True, cbar_kws=cbar_kws,
         annot=annot, fmt='0.2f'
     )
+    ax.figure.axes[-1].yaxis.label.set_size(cbar_label_size)
 
     ax.set_xticklabels(
         [f'{x:.1f}' for x in np.sort(df_lim.homophily.unique())],
@@ -684,7 +696,7 @@ def _one_invasion_heatmap(axes, name, df_lim, invading, init_cov,
             ax.set_title(f'$\\rho_{{cov,0}} = {init_cov}$', size=12)
 
     if chur_cov_idx == 0:
-        ax.set_ylabel(name, size=12)
+        ax.set_ylabel(colname, size=12)
     else:
         ax.set_ylabel('')
 
