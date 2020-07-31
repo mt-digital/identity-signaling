@@ -35,7 +35,8 @@ def basic_decorator():
             click.option('--similarity_threshold', '-S', type=float,
                          default=0.5),
             click.option('--learning_beta', type=float, default=1.0),
-            click.option('--n_agents', '-N', type=int, default=100)
+            click.option('--n_agents', '-N', type=int, default=100),
+            click.option('--n_rounds', type=int, default=10)
        )
 
 
@@ -44,7 +45,7 @@ def basic_decorator():
 def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
         output_file, prob_overt_receiving, minority_trait_frac,
         initial_prop_covert, initial_prop_churlish, num_traits,
-        similarity_threshold, learning_beta, n_agents):
+        similarity_threshold, learning_beta, n_agents, n_rounds):
 
     # XXX Hack to deal with subexp throwing error I don't understand that
     # minority_trait_frac can't be None (the default) because it's not a
