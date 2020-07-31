@@ -19,14 +19,14 @@ SIGNALING_STRATEGIES = ['Overt', 'Covert']
 
 class Model:
 
-    def __init__(self, N=100, n_rounds=10, K=3, prob_overt_receiving=0.75,
-                 prob_covert_receiving=0.25, similarity_benefit=0.25,
+    def __init__(self, N=100, n_rounds=100, K=3, prob_overt_receiving=1.0,
+                 prob_covert_receiving=0.5, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
                  homophily=0.25, random_seed=None, similarity_threshold=0.5,
                  minority_trait_frac=None,
                  initial_prop_covert=0.5, initial_prop_churlish=0.5,
                  n_minmaj_traits=None,  # only used if minority_trait_frac ! None
-                 learning_alpha=0.0, learning_beta=1.0):
+                 learning_alpha=0.0, learning_beta=10.0):
         '''
         Arguments:
             N (int): Number of agents, i.e. population
