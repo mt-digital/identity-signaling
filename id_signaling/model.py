@@ -424,14 +424,16 @@ class Model:
         # teacher's strategy.
         for learner in self.agents:
             teacher = None
-            while teacher is None or teacher == learner:
+            while teacher is None:
                 # TODO add interaction probabilities to test case where
                 # w≠0. Here this implicitly assumes no homophily for teacher
                 # selection.
-                if self.minority_test and learner.minority:
-                    teachers = [a for a in self.agents if a.minority]
+                if self.minority_test and learner in self.minority_agents:
+                    teachers = [a for a in self.minority_agents
+                                if a != learner]
                 else:
-                    teachers = self.agents
+                    teachers = [a for a in self.agents
+                                if a != learner]
 
                 teacher = choice(teachers)
 
@@ -546,6 +548,7 @@ def _logistic(x, loc=0, scale=1):
     xtrans = scale * (x - loc)
     return expit(xtrans)
 
+
 #: Calculate proportion of covert agents in a Model instance.
 def _proportion_covert(model, subset=None):
 
@@ -602,13 +605,12 @@ def _proportion_churlish(model, subset=None):
 
 class Agent:
 
-    def __init__(self, agent_idx=0, K=3, N=100, minority=False,
+    def __init__(self, agent_idx=0, K=3, N=100,
                  receiving_strategy=None, signaling_strategy=None):
         '''
         Agent initialization is fully random in this model.
         '''
         self.index = agent_idx
-        self.minority = minority
 
         # Agents initially have K binary traits. ±1 is used for determining
         # similarity or dissimilarity with other agents via summation.

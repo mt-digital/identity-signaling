@@ -609,7 +609,7 @@ def test_maybe_update_strategy():
     a0.index = 0
     a1.index = 1
 
-    model = Model()
+    model = Model(learning_beta=1.0)
     model.agents = [a0, a1]
 
     # Each agent will both teach and learn from each other, so the expected
@@ -694,11 +694,11 @@ def test_minority_learning():
     In the current version of the model, minorities should only learn from other minorities.
     '''
 
-    # First, create model and four agents, two "minority" two not.
-    min0 = Agent(minority=True)
-    min1 = Agent(minority=True)
+    # First, create model and three agents, two will be minority agents,
+    # specified after the model is initialized below.
+    min0 = Agent()
+    min1 = Agent()
     maj = Agent()
-    # maj1 = Agent()
 
     # Next, set up a situation where one minority agent will always adopt the
     # other minority agent's strategy, and the other minority agent will never
@@ -727,6 +727,7 @@ def test_minority_learning():
     # Normally this is set only if a minority_frac is given and not set
     # directly. But we circumvent this convenience for this test.
     model.minority_test = True
+    model.minority_agents = [min0, min1]
     model.agents = [min0, min1, maj]
 
     for _ in range(10000):

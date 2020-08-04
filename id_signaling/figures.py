@@ -140,13 +140,14 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
 
 def heatmap(df, experiment='disliking', strategy='signaling',
             figsize=(6, 4.75), minority_subset=None, savefig_path=None,
-            title=None, cmap='YlGnBu_r', **heatmap_kwargs):
+            title=None, cmap='YlGnBu_r', overt_signaling_reach=1.0,
+            **heatmap_kwargs):
 
     if experiment == 'disliking':
-        exp_inset = '$(d=\delta,~w)$'
+        # exp_inset = '$(d=\delta,~w)$'
         exp_col = 'disliking'
     elif experiment == 'receptivity':
-        exp_inset = '$(r/R,~w)$'
+        # exp_inset = '$(r/R,~w)$'
         exp_col = 'receptivity'
     else:
         raise RuntimeError(f'{experiment} not recognized')
@@ -175,19 +176,13 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     means = gb_mean.unstack(level=(0, 1))
 
     final_means = means[means.index == means.index[-1]]
-    # final_means = means[means.timestep == means.timestep.max()]
-    # print(final_means.stack().max())
-    # print(final_means.stack())
-    # print(final_means.head())
-
 
     plt.figure(figsize=figsize)
 
     ax = sns.heatmap(final_means.stack(), cmap=cmap, square=True,
                      vmin=0.0, vmax=1.0,
-                     # cbar_kws={'label': f'Density of {strategy_inset.lower()}'},
                      **heatmap_kwargs
-                    )
+                     )
 
     # Set size of colorbar title.
     ax.figure.axes[-1].yaxis.label.set_size(14)
@@ -200,19 +195,20 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     # ax.set_yticklabels(['0.1', '0.25', '0.4'])
     ax.set_ylabel('Homophily, $w$', size=15)
     if experiment == 'receptivity':
-        ax.set_xlabel('Relative covert receptivity, $r/R$', size=15)
+        ax.set_xlabel('Covert signaling efficiency, $r/R$', size=15)
     elif experiment == 'disliking':
-        ax.set_xlabel('Cost of disliking, $d=\delta$', size=15)
-
+        ax.set_xlabel('Cost of disliking, $d$', size=15)
 
     if experiment == 'receptivity':
-        relative_receptivity = np.sort(df.receptivity.unique() / 0.5)
-        ax.set_xticklabels([f'{x:.1f}' for x in relative_receptivity], rotation=30)
+        relative_receptivity = np.sort(
+            df.receptivity.unique() / overt_signaling_reach
+        )
+        ax.set_xticklabels([f'{x:.1f}' for x in relative_receptivity],
+                           rotation=0)
     else:
-        ax.set_xticklabels([f'{x:.2f}'
-                            for x in np.sort(df.disliking.unique())], rotation=30)
-
-    # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
+        ax.set_xticklabels([f'{x:.1f}'
+                           for x in np.sort(df.disliking.unique())],
+                           rotation=0)
 
     ax.set_yticklabels([f'{y:.2f}' for y in np.sort(df['homophily'].unique())])
 
@@ -696,7 +692,11 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
             ax.set_title(f'$\\rho_{{cov,0}} = {init_cov}$', size=12)
 
     if chur_cov_idx == 0:
-        ax.set_ylabel(colname, size=12)
+        ylab = {
+            'disliking': 'Disliking penalty, $d$',
+            'receptivity': 'Covert signaling efficiency, $r/R$'
+        }[colname]
+        ax.set_ylabel(ylab, size=12)
     else:
         ax.set_ylabel('')
 
