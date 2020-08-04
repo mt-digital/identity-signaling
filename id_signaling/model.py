@@ -423,19 +423,17 @@ class Model:
         # either keeps its existing strategy or updates its strategy with the
         # teacher's strategy.
         for learner in self.agents:
-            teacher = None
-            while teacher is None:
-                # TODO add interaction probabilities to test case where
-                # w≠0. Here this implicitly assumes no homophily for teacher
-                # selection.
-                if self.minority_test and learner in self.minority_agents:
-                    teachers = [a for a in self.minority_agents
-                                if a != learner]
-                else:
-                    teachers = [a for a in self.agents
-                                if a != learner]
+            # TODO add interaction probabilities to test case where
+            # w≠0. Here this implicitly assumes no homophily for teacher
+            # selection.
+            if self.minority_test and learner in self.minority_agents:
+                teachers = [a for a in self.minority_agents
+                            if a != learner]
+            else:
+                teachers = [a for a in self.agents
+                            if a != learner]
 
-                teacher = choice(teachers)
+            teacher = choice(teachers)
 
             # maybe_update_strategy will set the learner's next_strategy
             # attribute, used after all learners
