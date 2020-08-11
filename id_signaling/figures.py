@@ -220,7 +220,7 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
 def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
                           figsize=(6.35, 4.75), vmin=None, vmax=None,
-                          title=None):
+                          title=None, annot=True, cmap=None):
 
     if strategy == 'signaling':
         strategy_inset = 'Covert signalers'
@@ -250,7 +250,10 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     plt.figure(figsize=figsize)
     ax = sns.heatmap(
         diff.stack(), square=True, vmin=vmin, vmax=vmax,
-        cmap=sns.diverging_palette(10, 220, sep=30, n=26), #, center='dark'),
+        annot=annot,
+        fmt='1.1f',
+        cmap=cmap,
+        # cmap=sns.diverging_palette(10, 220, sep=30), #, center='dark'),
         cbar_kws={
             'label':
                 f'Difference in {strategy_inset.lower()}\n'
@@ -281,7 +284,7 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
     xvals = np.sort(pre.disliking.unique())
     yvals = np.sort(pre.homophily.unique())
 
-    ax.set_xticklabels([f'{x:.2f}' for x in xvals], rotation=25)
+    ax.set_xticklabels([f'{x:.1f}' for x in xvals], rotation=0)
     ax.set_yticklabels([f'{y:.2f}' for y in yvals])
 
     if savefig_path is not None:
@@ -448,7 +451,7 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
                          dislikings=[0.05, 0.25, 0.45], homophily=0.2,
                          ax=None, savefig_path=None, ylow=0.2, yhigh=1.0,
                          legend=False, xlabel=True, ylabel=True,
-                         minority_majority=None):
+                         minority_majority=None, n_rounds=100):
     '''
 
     Arguments:
@@ -470,15 +473,17 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
 
             mean_covert_prevalence.append(
                 df[
-                    (df.timestep == 500) &
+                    (df.timestep == n_rounds) &
                     (df.disliking == disliking) &
                     (np.isclose(df.homophily, homophily))
                 ].prop_covert.mean()
             )
 
-        ax.plot(mean_covert_prevalence, color='black', ls=line_styles[d_idx],
-                marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
-                label=f'$d=\\delta={disliking:.2f}$')
+        ax.plot(thresholds, mean_covert_prevalence,
+                color='black', ls=line_styles[d_idx],
+                marker=marker_styles[d_idx], mfc='white',
+                mec='black', mew=1,
+                label=f'$d={disliking:.2f}$')
 
     if legend:
         ax.legend()
@@ -493,9 +498,15 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
     if ylabel:
         ax.set_ylabel('Covert prev., $\\rho_{cov,t=T}$', size=14)
 
-    ax.set_xticks(range(1, 10, 2))
-    ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds[1::2]])
-    ax.set_xticks(range(0, 10, 2), minor=True)
+    # Hack to get x labels correct.
+    if len(thresholds) < 10:
+        ax.set_xticks(thresholds)
+        ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds])
+    else:
+        ax.set_xticks(thresholds[1::2])
+        ax.set_xticklabels([f'{threshold:1.1f}'
+                            for threshold in thresholds[1::2]])
+    # ax.set_xticks(range(0, 10, 2), minor=True)
     ax.set_yticks(np.arange(0.0, 1.1, 0.25))
 
 
