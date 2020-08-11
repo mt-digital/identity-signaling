@@ -36,7 +36,7 @@ def basic_decorator():
                          default=0.5),
             click.option('--learning_beta', type=float, default=1.0),
             click.option('--n_agents', '-N', type=int, default=100),
-            click.option('--n_rounds', type=int, default=10)
+            click.option('--n_rounds', type=int, default=100)
        )
 
 
@@ -84,7 +84,7 @@ def sub(
             experiment, param_vals, homophily_vals, n_iter, n_trials,
             output_file, prob_overt_receiving, minority_trait_frac,
             initial_prop_covert, initial_prop_churlish, num_traits,
-            similarity_threshold, learning_beta, n_agents,
+            similarity_threshold, learning_beta, n_agents, n_rounds,
             queue, ncpu, wall_time, dry_run, job_name  # SLURM OPTS
         ):
     """
@@ -106,6 +106,7 @@ f'''#! /bin/bash
 #SBATCH -n 1
 #SBATCH -c {ncpu}
 #SBATCH -t {wall_time}
+#SBATCH --exclude=mrcd[89-102]
 
 printf "******************\\nStarting {job_name} at `uptime`\\n"
 
@@ -114,7 +115,8 @@ runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     -K{num_traits} -S{similarity_threshold} -N{n_agents} \\
     --initial_prop_covert={initial_prop_covert} \\
     --initial_prop_churlish={initial_prop_churlish} \\
-    --learning_beta={learning_beta}
+    --learning_beta={learning_beta} \\
+    --n_rounds={n_rounds}
 
 
 printf "******************\\nFinished at `uptime`"
