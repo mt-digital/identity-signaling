@@ -218,7 +218,7 @@ def heatmap(df, experiment='disliking', strategy='signaling',
         plt.savefig(savefig_path)
 
 
-def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
+def minority_diff_heatmap(df, strategy= 'signaling', savefig_path=None,
                           figsize=(6.35, 4.75), vmin=None, vmax=None,
                           title=None, annot=True, cmap=None):
 
@@ -722,3 +722,60 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
         spine.set_visible(True)
 
     return rate
+
+
+def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
+                        disliking=0.5, timesteps=100, K='3',
+                        save_dir='/Users/mt/workspace/papers/id-sig/Figures/minority_tolerance'
+                        ):
+    '''
+    Minority line plots; same data as heatmaps but for a single disliking
+    penalty value along homophily. Uses strings for some specifications
+    because those are used in building path to part files.
+    '''
+    for S in thresholds:
+
+        df = [b for b in df_blobs if
+              (b['K'] == K and b['minority_frac'] == '0.10' and b['S'] == S)
+              ][0]['df']
+
+        hmeans = _summary(df, disliking, timesteps, summ_func=np.mean)
+
+        plt.figure()
+
+        ms = 4
+        hmeans.prop_covert_minority.plot(label='Minority', color='black',
+                                         style='--', marker='s', ms=ms)
+        hmeans.prop_covert_majority.plot(label='Majority', color='black',
+                                         marker='s', ms=ms)
+
+        plt.legend(fontsize=14)
+
+        plt.title(f'$S={S}$', size=15)
+        plt.ylabel('Covert signaling prevalence', size=14)
+
+        plt.xlabel('Homophily', size=14)
+        plt.xticks(hmeans.index)
+
+        if save_dir is not None:
+            d = str(disliking).replace('.', 'p')
+            S = S.replace('.', 'p')
+            save_path = os.path.join(save_dir,
+                                     f'line_K={K}_S={S}_d={d}.pdf')
+            plt.savefig(save_path)
+
+
+def _summary(df, disliking=0.5, timesteps=100, summ_func=np.mean):
+    '''
+    Create either a 'mean' or 'std' summary of the data for creating
+    line/err plots in minority_line_plots directly above.
+
+    Arguments:
+        df (pd.DataFrame): Data frame output from minority experiment.
+    '''
+    summ_df = df[(df.timestep == timesteps) & (df.disliking == disliking)]
+    summ_df = df.groupby('homophily').agg(summ_func)
+
+    return summ_df[['prop_covert_minority', 'prop_covert_majority']]
+
+
