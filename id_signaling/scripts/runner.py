@@ -119,7 +119,8 @@ runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     --initial_prop_covert={initial_prop_covert} \\
     --initial_prop_churlish={initial_prop_churlish} \\
     --learning_beta={learning_beta} \\
-    --n_rounds={n_rounds}
+    --n_rounds={n_rounds} \\
+    --two_dislike_penalty={two_dislike_penalty}
 
 
 printf "******************\\nFinished at `uptime`"
