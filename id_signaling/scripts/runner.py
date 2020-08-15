@@ -36,7 +36,8 @@ def basic_decorator():
                          default=0.5),
             click.option('--learning_beta', type=float, default=1.0),
             click.option('--n_agents', '-N', type=int, default=100),
-            click.option('--n_rounds', type=int, default=100)
+            click.option('--n_rounds', type=int, default=100),
+            click.option('--two_dislike_penalty', type=float, default=0.25)
        )
 
 
@@ -45,7 +46,8 @@ def basic_decorator():
 def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
         output_file, prob_overt_receiving, minority_trait_frac,
         initial_prop_covert, initial_prop_churlish, num_traits,
-        similarity_threshold, learning_beta, n_agents, n_rounds):
+        similarity_threshold, learning_beta, n_agents, n_rounds,
+        two_dislike_penalty):
 
     # XXX Hack to deal with subexp throwing error I don't understand that
     # minority_trait_frac can't be None (the default) because it's not a
@@ -66,8 +68,8 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
                              initial_prop_churlish=initial_prop_churlish,
                              K=num_traits,
                              similarity_threshold=similarity_threshold,
-                             learning_beta=learning_beta,
-                             N=n_agents
+                             learning_beta=learning_beta, N=n_agents,
+                             two_dislike_penalty=two_dislike_penalty
                              )
 
     out_df.to_csv(output_file, index=False)
@@ -85,6 +87,7 @@ def sub(
             output_file, prob_overt_receiving, minority_trait_frac,
             initial_prop_covert, initial_prop_churlish, num_traits,
             similarity_threshold, learning_beta, n_agents, n_rounds,
+            two_dislike_penalty,  # END MODEL OPTS
             queue, ncpu, wall_time, dry_run, job_name  # SLURM OPTS
         ):
     """

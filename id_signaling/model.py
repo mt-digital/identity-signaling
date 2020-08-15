@@ -311,12 +311,6 @@ class Model:
         # pairs = choice(self.agents, size=(self.N//2, 2), replace=False)
         dyads = self._make_dyads()
 
-        # Probabilistic collaboration between matched agents.
-        # collaborating_pairs = [
-        #     pair for pair in pairs
-        #     if uniform() < self._dyadic_interaction_factor(*pair)
-        # ]
-
         # Calculate payoffs for each pair who interact and add to each
         # agent's cumulative payoff. Increase count of number of interactions
         # for both agents in pair.
@@ -325,20 +319,6 @@ class Model:
             for a in dyad:
                 a.gross_payoff += payoff
                 a.n_interactions += 1
-
-            # Need to add partner to list of previous partners.
-            # (XXX still? why?... IDK now commented out. Get rid if nothing
-            # bad happens. Have no idea where this is used.
-            # p0 = dyad[0]
-            # p1 = dyad[1]
-            # p0_partners = dyad[0].previous_partners
-            # p1_partners = dyad[1].previous_partners
-
-            # if p0 not in p1_partners:
-            #     p1_partners.add(p0.index)
-
-            # if p1 not in p0_partners:
-            #     p0_partners.add(p1.index)
 
     def _dyadic_interaction_factor(self, a1, a2):
 
@@ -681,10 +661,10 @@ class Agent:
         else:
             self.next_strategy = None
 
-    @property
-    def payoff(self):
-        # Avoid divide by zero. If agent has not interacted, no payoffs yet.
-        if self.n_interactions > 0:
-            return self.gross_payoff / self.n_interactions
-        else:
-            return 0
+#     @property
+#     def payoff(self):
+#         # Avoid divide by zero. If agent has not interacted, no payoffs yet.
+#         if self.n_interactions > 0:
+#             return self.gross_payoff / self.n_interactions
+#         else:
+#             return 0
