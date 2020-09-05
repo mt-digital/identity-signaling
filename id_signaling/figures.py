@@ -65,6 +65,10 @@ def plot_evolution(df, experiment='receptivity',
     title = f'{strategy_inset}\nover time for various {exp_inset} pairs'
 
     # Limit data to specified parameter values.
+    df[exp_col] = np.array([
+        float(v) for v in
+        [f'{vv:1.1f}' for vv in df[exp_col]]
+    ])
     df = df[
         df['homophily'].isin(homophily_vals) &
         df[exp_col].isin(exp_param_vals)
@@ -81,6 +85,7 @@ def plot_evolution(df, experiment='receptivity',
     plt.legend(bbox_to_anchor=(1.01, 0.9), loc='upper left', ncol=1, title=exp_inset,
                borderaxespad=0, frameon=False, prop={'size': 12}, title_fontsize=14)
 
+    plt.ylim(-0.05, 1.05)
     plt.xticks(size=12)
     plt.yticks(size=12)
     plt.ylabel(f'Proportion of\n{strategy_inset.lower()}', size=16)
@@ -117,7 +122,7 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
 
     plt.title('Coevolution of sending\nand receiving strategies')
 
-    plt.ylabel(r'$\rho_{cov}$ (solid)' '\n' r'$\rho_{ch}$ (dashed)',
+    plt.ylabel(r'$<\rho_{cov}>$ (solid)' '\n' r'$<\rho_{ch}>$ (dashed)',
                rotation=0, ha='right', size=14)
 
     plt.yticks(np.arange(0, 1.01, 0.25));
@@ -130,9 +135,11 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
     elif experiment == 'receptivity':
         exp_inset = r'$(r,~w)$'
 
-    ax.legend(handles[:3], labels[:3], bbox_to_anchor=(1.01, 0.9), loc='upper left',
-          ncol=1, title=exp_inset, borderaxespad=0, frameon=False, prop={'size': 12},
-          title_fontsize=14)
+    ax.legend(
+        handles[:3], labels[:3], bbox_to_anchor=(1.01, 0.9),
+        loc='upper left', ncol=1, title=exp_inset, borderaxespad=0,
+        frameon=False, prop={'size': 12}, title_fontsize=14
+    )
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
@@ -172,7 +179,7 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
     # Some lines I hacked together to take mean over trials and get something
     # easy to plot.
-    gb_mean = df.groupby([exp_col, 'homophily', 'timestep'])[data_col].mean()
+    gb_mean = df.groupby(['homophily', exp_col, 'timestep'])[data_col].mean()
     means = gb_mean.unstack(level=(0, 1))
 
     final_means = means[means.index == means.index[-1]]
@@ -193,24 +200,25 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     # Clean up some other things.
     ax.invert_yaxis()
     # ax.set_yticklabels(['0.1', '0.25', '0.4'])
-    ax.set_ylabel('Homophily, $w$', size=15)
+    ax.set_xlabel('Homophily, $w$', size=15)
     if experiment == 'receptivity':
-        ax.set_xlabel('Covert signaling efficiency, $r/R$', size=15)
+        ax.set_ylabel('Fraction receiving covert signal, $r$', size=15)
     elif experiment == 'disliking':
-        ax.set_xlabel('Cost of disliking, $d$', size=15)
+        ax.set_ylabel('Cost of disliking, $d$', size=15)
 
     if experiment == 'receptivity':
         relative_receptivity = np.sort(
             df.receptivity.unique() / overt_signaling_reach
         )
-        ax.set_xticklabels([f'{x:.1f}' for x in relative_receptivity],
+        ax.set_yticklabels([f'{y:.1f}' for y in relative_receptivity],
                            rotation=0)
     else:
-        ax.set_xticklabels([f'{x:.1f}'
-                           for x in np.sort(df.disliking.unique())],
+        ax.set_yticklabels([f'{y:.1f}'
+                           for y in np.sort(df.disliking.unique())],
                            rotation=0)
 
-    ax.set_yticklabels([f'{y:.2f}' for y in np.sort(df['homophily'].unique())])
+    ax.set_xticklabels([f'{x:.2f}' for x in np.sort(df['homophily'].unique())],
+                       rotation=0)
 
     if title is not None:
         ax.set_title(title, size=14)
@@ -219,7 +227,7 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
 
 def minority_diff_heatmap(df, strategy= 'signaling', savefig_path=None,
-                          figsize=(6.35, 4.75), vmin=None, vmax=None,
+                          figsize=(7.45, 5.25), vmin=None, vmax=None,
                           title=None, annot=True, cmap=None):
 
     if strategy == 'signaling':
@@ -236,10 +244,10 @@ def minority_diff_heatmap(df, strategy= 'signaling', savefig_path=None,
 
     pre = df[df.timestep == df.timestep.max()]
 
-    gb_minority_mean = pre.groupby(['disliking', 'homophily', 'timestep'])[data_col_min].mean()
+    gb_minority_mean = pre.groupby(['homophily', 'disliking', 'timestep'])[data_col_min].mean()
     minority_means = gb_minority_mean.unstack(level=(0, 1))
 
-    gb_majority_mean = pre.groupby(['disliking', 'homophily', 'timestep'])[data_col_maj].mean()
+    gb_majority_mean = pre.groupby(['homophily', 'disliking', 'timestep'])[data_col_maj].mean()
     majority_means = gb_majority_mean.unstack(level=(0, 1))
 
     final_min_means = minority_means[minority_means.index == minority_means.index[-1]]
@@ -272,20 +280,20 @@ def minority_diff_heatmap(df, strategy= 'signaling', savefig_path=None,
     # Set size of colorbar tick labels.
     ax.collections[0].colorbar.ax.tick_params(labelsize=12)
 
-    ax.set_xlabel('Cost of disliking, $d=\delta$', size=15)
+    ax.set_ylabel('Cost of disliking, $d$', size=15)
 
     # Clean up some other things.
     ax.invert_yaxis()
     # ax.set_yticklabels(['0.1', '0.25', '0.4'])
-    ax.set_ylabel('Homophily, $w$', size=15)
+    ax.set_xlabel('Homophily, $w$', size=15)
     # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0, 0.46, 0.05)]);
     # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
 
-    xvals = np.sort(pre.disliking.unique())
-    yvals = np.sort(pre.homophily.unique())
+    xvals = np.sort(pre.homophily.unique())
+    yvals = np.sort(pre.disliking.unique())
 
-    ax.set_xticklabels([f'{x:.1f}' for x in xvals], rotation=0)
-    ax.set_yticklabels([f'{y:.2f}' for y in yvals])
+    ax.set_xticklabels([f'{x:.2f}' for x in xvals], rotation=0)
+    ax.set_yticklabels([f'{y:.1f}' for y in yvals])
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
