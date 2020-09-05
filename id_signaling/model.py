@@ -660,11 +660,3 @@ class Agent:
 
         else:
             self.next_strategy = None
-
-#     @property
-#     def payoff(self):
-#         # Avoid divide by zero. If agent has not interacted, no payoffs yet.
-#         if self.n_interactions > 0:
-#             return self.gross_payoff / self.n_interactions
-#         else:
-#             return 0
