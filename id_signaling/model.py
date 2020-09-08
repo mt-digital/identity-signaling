@@ -19,7 +19,7 @@ SIGNALING_STRATEGIES = ['Overt', 'Covert']
 
 class Model:
 
-    def __init__(self, N=100, n_rounds=100, K=3, prob_overt_receiving=1.0,
+    def __init__(self, N=100, n_rounds=100, K=9, prob_overt_receiving=1.0,
                  prob_covert_receiving=0.5, similarity_benefit=0.25,
                  one_dislike_penalty=0.25, two_dislike_penalty=0.25,
                  homophily=0.25, random_seed=None, similarity_threshold=0.5,
