@@ -62,10 +62,16 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
 
     # Initialize model for trial.
     if experiment == 'disliking':
-        experiment_kwargs = dict(
-            one_dislike_penalty=exp_param,
-            two_dislike_penalty=exp_param
-        )
+        if 'two_dislike_penalty' not in model_kwargs:
+            experiment_kwargs = dict(
+                one_dislike_penalty=exp_param,
+                two_dislike_penalty=exp_param
+            )
+        else:
+            experiment_kwargs = dict(
+                one_dislike_penalty=exp_param
+            )
+
     elif experiment == 'receptivity':
         experiment_kwargs = dict(prob_covert_receiving=exp_param)
 
@@ -136,4 +142,3 @@ def _one_minority_trial(seed, n_iter, minority_trait_frac,
         'prop_covert_majority': model.prop_covert_series_majority,
         'prop_churlish_majority': model.prop_churlish_series_majority,
     }
-
