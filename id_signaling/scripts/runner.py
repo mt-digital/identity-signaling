@@ -109,7 +109,6 @@ f'''#! /bin/bash
 #SBATCH -n 1
 #SBATCH -c {ncpu}
 #SBATCH -t {wall_time}
-#SBATCH --exclude=mrcd[89-102]
 
 printf "******************\\nStarting {job_name} at `uptime`\\n"
 
