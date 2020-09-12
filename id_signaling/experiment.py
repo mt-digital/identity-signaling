@@ -66,6 +66,16 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
             one_dislike_penalty=exp_param,
             two_dislike_penalty=exp_param
         )
+        if 'two_dislike_penalty' not in model_kwargs:
+            experiment_kwargs = dict(
+                one_dislike_penalty=exp_param,
+                two_dislike_penalty=exp_param
+            )
+        else:
+            experiment_kwargs = dict(
+                one_dislike_penalty=exp_param
+            )
+
     elif experiment == 'receptivity':
         experiment_kwargs = dict(prob_covert_receiving=exp_param)
 
