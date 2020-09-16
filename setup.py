@@ -15,7 +15,8 @@ setup(
     entry_points={
         'console_scripts': [
             'runexp=id_signaling.scripts.runner:run',
-            'subexp=id_signaling.scripts.runner:sub'
+            'subexp=id_signaling.scripts.runner:sub',
+            'run_analysis=id_signaling.scripts.runner:run_analysis'
         ]
     }
 )

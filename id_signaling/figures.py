@@ -122,7 +122,7 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
 
     plt.title('Coevolution of sending\nand receiving strategies')
 
-    plt.ylabel(r'$<\rho_{cov}>$ (solid)' '\n' r'$<\rho_{ch}>$ (dashed)',
+    plt.ylabel(r'$\langle \rho_{cov} \rangle$ (solid)' '\n' r'$\langle \rho_{ch} \rangle$ (dashed)',
                rotation=0, ha='right', size=14)
 
     plt.yticks(np.arange(0, 1.01, 0.25));
@@ -698,7 +698,7 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
     else:
         if chur_cov_idx == 0:
             ax.set_yticklabels(
-                [f'{y:.1f}' for y in np.sort(df_lim[colname].unique()) / 0.5],
+                [f'{y:.1f}' for y in np.sort(df_lim[colname].unique())],
                 rotation=0
             )
         else:
@@ -786,4 +786,43 @@ def _summary(df, disliking=0.5, timesteps=100, summ_func=np.mean):
 
     return summ_df[['prop_covert_minority', 'prop_covert_majority']]
 
+def plot_correlation(df, n_timesteps=100):
+    '''
+    Calculates the mean over trials for different parameter combinations
+    at the final time step and
+    '''
+    try:
+        gb = df[df.timestep == n_timesteps].groupby(['homophily', 'disliking'])
+    except:
+        gb = df[df.timestep == n_timesteps].groupby(['homophily', 'receptivity'])
 
+    prop_churlish = np.array(gb['prop_churlish'].mean())
+    plot_df = pd.DataFrame(dict(
+        prop_churlish=prop_churlish,
+        prop_generous=1 - prop_churlish,
+        prop_covert=np.array(gb['prop_covert'].mean())
+    ))
+
+    # g = sns.jointplot(x=prop_churlish, y=prop_covert, kind='hex')
+    # plt.plot(prop_churlish, prop_covert, 'o')
+    # plt.title('')
+
+    from scipy import stats
+    x = plot_df.prop_churlish
+    y = plot_df.prop_covert
+    pearson_coef, p_val = stats.pearsonr(x, y)
+
+
+    g = sns.jointplot(x, y, alpha=0.525, marginal_kws=dict(bins=20, rug=True))
+    ax = g.ax_joint
+    sns.regplot(x, y, line_kws=dict(color='r'), ax=ax, scatter=False)
+    #                 scatter_kws=dict(lw=0, s=45, alpha=0.525))
+    ax.set_ylabel('Covert signaling prevalence', size=14)
+    ax.set_xlabel('Churlish receiving prevalence', size=14)
+
+    pearson_coef, p_value = stats.pearsonr(x, y) #define the columns to perform calculations on
+
+    ax.text(s=f'r={pearson_coef:.2f}', x=0.6, y=0.8, size=16)
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
