@@ -39,10 +39,10 @@ def basic_decorator():
             click.option('--minority_trait_frac', '-m'),
             click.option('--initial_prop_covert', type=float, default=0.5),
             click.option('--initial_prop_churlish', type=float, default=0.5),
-            click.option('--num_traits', '-K', type=int, default=3),
+            click.option('--num_traits', '-K', type=int, default=9),
             click.option('--similarity_threshold', '-S', type=float,
                          default=0.5),
-            click.option('--learning_beta', type=float, default=1.0),
+            click.option('--learning_beta', type=float, default=10.0),
             click.option('--n_agents', '-N', type=int, default=100),
             click.option('--n_rounds', type=int, default=100),
             click.option('--two_dislike_penalty', type=float, default=0.25)

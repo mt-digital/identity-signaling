@@ -507,7 +507,6 @@ class Model:
                 "The attitude sum was not bounded between -2 and 2"
             )
 
-
 def _logistic(x, loc=0, scale=1):
     '''
     Private method to make a logistic function with loc and scale out of the
