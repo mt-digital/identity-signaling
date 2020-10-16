@@ -106,7 +106,8 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
             'prop_covert_majority': model.prop_covert_series_majority,
             'prop_churlish_majority': model.prop_churlish_series_majority,
             'homophily': [homophily] * n_tstep,
-            'minority_trait_frac': [minority_trait_frac] * n_tstep
+            'minority_trait_frac': [minority_trait_frac] * n_tstep,
+            'two_dislike_penalty': [two_dislike_penalty] * n_tstep
         })
 
     if experiment == 'disliking':
