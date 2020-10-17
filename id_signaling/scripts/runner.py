@@ -45,7 +45,8 @@ def basic_decorator():
             click.option('--learning_beta', type=float, default=10.0),
             click.option('--n_agents', '-N', type=int, default=100),
             click.option('--n_rounds', type=int, default=100),
-            click.option('--two_dislike_penalty', type=float, default=0.25)
+            click.option('--two_dislike_penalty', type=float)
+            # click.option('--two_dislike_penalty', type=float, default=0.25)
        )
 
 
@@ -68,6 +69,9 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
 
     param_vals = np.arange(*[float(val) for val in param_vals.split(':')])
     homophily_vals = np.arange(*[float(val) for val in homophily_vals.split(':')])
+
+    if two_dislike_penalty == 'None':
+        two_dislike_penalty = None
 
     out_df = run_experiments(param_vals, homophily_vals, experiment, n_trials,
                              n_iter, prob_overt_receiving=prob_overt_receiving,
@@ -127,11 +131,28 @@ runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     --initial_prop_churlish={initial_prop_churlish} \\
     --learning_beta={learning_beta} \\
     --n_rounds={n_rounds} \\
+'''
+    subscript_end = ''
+    # Build end of submission script either with or without the two
+    # disliking penalty.
+    if two_dislike_penalty is None:
+
+        subsciprt_end = \
+'''
+
+printf "******************\\nFinished at `uptime`"
+'''
+    else:
+
+        subscript_end = \
+'''
     --two_dislike_penalty={two_dislike_penalty}
 
 
 printf "******************\\nFinished at `uptime`"
 '''
+
+    subscript += subscript_end
 
     if dry_run:
         print(subscript)
