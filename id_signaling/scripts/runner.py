@@ -196,10 +196,12 @@ def basic(data_dir, figure_dir):
     print('Making signaling-receiving correlation plots, '
           f'saving to {figure_dir}')
 
-    plot_correlation(disliking)
+    print(receptivity.receptivity.unique())
+
+    plot_correlation(disliking, kind='disliking')
     plt.savefig(os.path.join(figure_dir, 'basic_disliking_correlation.pdf'))
 
-    plot_correlation(receptivity)
+    plot_correlation(receptivity, kind='receptivity')
     plt.savefig(os.path.join(figure_dir, 'basic_receptivity_correlation.pdf'))
 
     print('Making time series evolution plots for supplement, '

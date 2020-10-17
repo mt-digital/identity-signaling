@@ -147,7 +147,9 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
 
 def heatmap(df, experiment='disliking', strategy='signaling',
             figsize=(6, 4.75), minority_subset=None, savefig_path=None,
-            title=None, cmap='YlGnBu_r', overt_signaling_reach=1.0,
+            title=None,
+            cmap=sns.cubehelix_palette(dark=0, light=1, as_cmap=True),  # cmap='YlGnBu_r',
+            overt_signaling_reach=1.0,
             **heatmap_kwargs):
 
     if experiment == 'disliking':
@@ -190,6 +192,9 @@ def heatmap(df, experiment='disliking', strategy='signaling',
                      vmin=0.0, vmax=1.0,
                      **heatmap_kwargs
                      )
+
+    for _, spine in ax.spines.items():
+        spine.set_visible(True)
 
     # Set size of colorbar title.
     ax.figure.axes[-1].yaxis.label.set_size(14)
@@ -786,18 +791,19 @@ def _summary(df, disliking=0.5, timesteps=100, summ_func=np.mean):
 
     return summ_df[['prop_covert_minority', 'prop_covert_majority']]
 
-def plot_correlation(df, n_timesteps=100):
+def plot_correlation(df, kind, n_timesteps=100):
     '''
     Calculates the mean over trials for different parameter combinations
     at the final time step and
     '''
-    try:
+    if kind == 'disliking':
         gb = df[df.timestep == n_timesteps].groupby(['homophily', 'disliking'])
         print(df.disliking.unique())
-    except:
+    elif kind == 'receptivity':
         gb = df[df.timestep == n_timesteps].groupby(['homophily', 'receptivity'])
         print(df.receptivity.unique())
-
+    else:
+        raise RuntimeError(f'data frame type not recognized')
 
     prop_churlish = np.array(gb['prop_churlish'].mean())
     plot_df = pd.DataFrame(dict(
