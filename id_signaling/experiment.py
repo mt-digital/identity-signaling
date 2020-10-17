@@ -68,8 +68,6 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
         )
         # Set the model kwarg to be the experimental parameter, the
         # one-agent disliking penalty, d.
-        if model_kwargs['two_dislike_penalty'] is None:  # not in model_kwargs:
-            model_kwargs['two_dislike_penalty'] = exp_param
         # else:
         #     experiment_kwargs = dict(
         #         one_dislike_penalty=exp_param
@@ -77,6 +75,9 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
 
     elif experiment == 'receptivity':
         experiment_kwargs = dict(prob_covert_receiving=exp_param)
+
+    if model_kwargs['two_dislike_penalty'] is None:  # not in model_kwargs:
+        model_kwargs['two_dislike_penalty'] = exp_param
 
     model = Model(homophily=homophily, **experiment_kwargs, **model_kwargs)
 
