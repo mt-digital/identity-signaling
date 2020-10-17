@@ -62,15 +62,18 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
 
     # Initialize model for trial.
     if experiment == 'disliking':
-        if 'two_dislike_penalty' not in model_kwargs:
-            experiment_kwargs = dict(
-                one_dislike_penalty=exp_param,
-                two_dislike_penalty=exp_param
-            )
-        else:
-            experiment_kwargs = dict(
-                one_dislike_penalty=exp_param
-            )
+        # XXX Not sure what the point of "experiment" and "model" kwargs are...
+        experiment_kwargs = dict(
+            one_dislike_penalty=exp_param
+        )
+        # Set the model kwarg to be the experimental parameter, the
+        # one-agent disliking penalty, d.
+        if model_kwargs['two_dislike_penalty'] is None:  # not in model_kwargs:
+            model_kwargs['two_dislike_penalty'] = exp_param
+        # else:
+        #     experiment_kwargs = dict(
+        #         one_dislike_penalty=exp_param
+        #     )
 
     elif experiment == 'receptivity':
         experiment_kwargs = dict(prob_covert_receiving=exp_param)
@@ -79,6 +82,9 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
 
     # Run model for desired number of iterations.
     model.run(n_iter)
+
+    one_dislike_penalty = model.one_dislike_penalty
+    two_dislike_penalty = model.two_dislike_penalty
 
     # Models have an attribute representing proportion of
     # covert and churlish signalers.  If minority trait frac is given we need
@@ -95,7 +101,9 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
         homophily=[homophily] * n_tstep,
         K=[model.K] * n_tstep,
         S=[model.similarity_threshold] * n_tstep,
-        M=[model.n_minmaj_traits] * n_tstep
+        M=[model.n_minmaj_traits] * n_tstep,
+        disliking=model.one_dislike_penalty,
+        two_dislike_penalty=model.two_dislike_penalty
     )
 
     minority_trait_frac = model_kwargs['minority_trait_frac']
@@ -107,11 +115,13 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
             'prop_churlish_majority': model.prop_churlish_series_majority,
             'homophily': [homophily] * n_tstep,
             'minority_trait_frac': [minority_trait_frac] * n_tstep,
-            'two_dislike_penalty': [two_dislike_penalty] * n_tstep
         })
 
     if experiment == 'disliking':
-        ret.update(dict(disliking=[exp_param]*n_tstep))
+        ret.update(dict(
+            disliking=[exp_param] * n_tstep,
+            two_dislike_penalty=[model.two_dislike_penalty] * n_tstep
+        ))
 
     if experiment == 'receptivity':
         ret.update(dict(receptivity=[exp_param]*n_tstep))
