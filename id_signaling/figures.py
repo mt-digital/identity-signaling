@@ -793,8 +793,11 @@ def plot_correlation(df, n_timesteps=100):
     '''
     try:
         gb = df[df.timestep == n_timesteps].groupby(['homophily', 'disliking'])
+        print(df.disliking.unique())
     except:
         gb = df[df.timestep == n_timesteps].groupby(['homophily', 'receptivity'])
+        print(df.receptivity.unique())
+
 
     prop_churlish = np.array(gb['prop_churlish'].mean())
     plot_df = pd.DataFrame(dict(
