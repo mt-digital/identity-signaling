@@ -130,12 +130,12 @@ runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     --initial_prop_covert={initial_prop_covert} \\
     --initial_prop_churlish={initial_prop_churlish} \\
     --learning_beta={learning_beta} \\
-    --n_rounds={n_rounds} \\
-'''
+    --n_rounds={n_rounds} \\'''
     subscript_end = ''
     # Build end of submission script either with or without the two
     # disliking penalty.
-    if two_dislike_penalty is None:
+    # if two_dislike_penalty is None:
+    if two_dislike_penalty == 'None':
 
         subsciprt_end = \
 '''
@@ -145,7 +145,7 @@ printf "******************\\nFinished at `uptime`"
     else:
 
         subscript_end = \
-'''
+f'''
     --two_dislike_penalty={two_dislike_penalty}
 
 
