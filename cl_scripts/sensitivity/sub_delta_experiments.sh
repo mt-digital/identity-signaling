@@ -6,8 +6,8 @@
 # experiment.
 for delta in 0.05 0.45 0.65 0.85; do
 
-    # Submit 100 trials for each setting by splitting into four sets of 
-    # 25 trials.
+    # Submit 50 trials for each setting by splitting into five sets of 
+    # 10 trials.
     for _ in {1..5}; do
         printf "\nSubmitting basic disliking experiment part 1\n"
         fname=data/delta_static/delta\=$delta/part-`uuidgen`
@@ -23,8 +23,8 @@ done
 # penalty.
 for delta in `seq 0.0 0.1 1.0`; do
 
-    # Submit 100 trials for each setting by splitting into four sets of 
-    # 25 trials.
+    # Submit 50 trials for each setting by splitting into five sets of 
+    # 10 trials.
     for _ in {1..5}; do
         printf "\nSubmitting basic disliking experiment part 1\n"
         fname=data/delta_varies/delta\=$delta/part-`uuidgen`
