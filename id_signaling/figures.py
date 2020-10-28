@@ -222,7 +222,10 @@ def heatmap(df, experiment='disliking', strategy='signaling',
                            for y in np.sort(df.disliking.unique())],
                            rotation=0)
 
-    ax.set_xticklabels([f'{x:.2f}' for x in np.sort(df['homophily'].unique())],
+    # Factor of 2 in template for remap of homophily from (0.0, 0.5)
+    # to (0.0, 1.0).
+    ax.set_xticklabels([f'{2*x:.1f}'
+                        for x in np.sort(df['homophily'].unique())],
                        rotation=0)
 
     if title is not None:
@@ -396,43 +399,15 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
             pre['min_maj_cov_diff'] = \
                 pre.prop_covert_minority - pre.prop_covert_majority
-            # print(pre['min_maj_cov_ratio'])
-            # print(pre.min_maj_cov_ratio.mean())
+
             minmaj_covert_mean_diff.append(pre.min_maj_cov_diff.mean())
 
             std_final_cov_prop = pre.min_maj_cov_diff.std()
             minmaj_covert_std_diff.append(std_final_cov_prop)
 
-            # minmaj_covert_std_diff = pre.prop_covert_minority.std()
-
-            # means_over_minority_frac.append(mean_min_cov_prop)
-            # means_over_majority_frac.append(mean_maj_cov_prop)
-            # std_over_minority_frac.append(std_final_cov_prop)
-
-        # majmin_covert_ratio = [min_ / maj_ for min_, maj_ in
-        #                        zip(means_over_minority_frac, means_over_majority_frac)]
-        # majmin_covert_ratio = [min_ / maj_ for min_, maj_ in
-        #                        zip(means_over_minority_frac, means_over_majority_frac)]
-        # majmin_covert_diff = [maj_ - min_ for min_, maj_ in
-        #                        zip(means_over_minority_frac, means_over_majority_frac)]
-        # ax.plot(means_over_minority_frac, color='black', ls=styles[d_idx],
-        #         label=f'$d=\\delta={disliking:.2f}$')
-
-        # ax.plot(majmin_covert_ratio, color='black', ls=styles[d_idx],
-        #         label=f'$d=\\delta={disliking:.2f}$')
-        # ax.plot(minmaj_covert_mean_ratio, color='black', ls=line_styles[d_idx],
-        #         label=f'$d=\\delta={disliking:.2f}$')
-
         ax.plot(minmaj_covert_mean_diff, color='black', ls=line_styles[d_idx],
                 marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
                 label=f'$d=\\delta={disliking:.2f}$')
-        # print(std_over_minority_frac)
-        # ax.errorbar(range(len(minmaj_covert_mean_diff)),
-        #             # means_over_minority_frac, yerr=std_over_minority_frac,
-        #             minmaj_covert_mean_diff, yerr=minmaj_covert_std_diff,
-        #             color='black',
-        #             ls=line_styles[d_idx],
-        #             label=f'$d=\\delta={disliking:.2f}$')
 
         ax.set_xticks(range(len(minority_frac_strs)))
 
@@ -444,7 +419,6 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
         yticks = np.arange(ylow, yhigh+0.01, 0.1)
         ax.set_yticks(yticks)
-        # ax.set_yticklabels(labels=[f'{y:.2f}' for y in yticks], size=14)
         ax.tick_params('y', labelsize=14)
         ax.set_ylabel(r'$\rho^{minor}_{cov,T} - \rho^{major}_{cov,T}$',
                       size=15)
@@ -796,12 +770,17 @@ def plot_correlation(df, kind, n_timesteps=100):
     Calculates the mean over trials for different parameter combinations
     at the final time step and
     '''
+
     if kind == 'disliking':
-        gb = df[df.timestep == n_timesteps].groupby(['homophily', 'disliking'])
-        print(df.disliking.unique())
+        gb = df[
+            df.timestep == n_timesteps
+        ].groupby(['homophily', 'disliking'])
+
     elif kind == 'receptivity':
-        gb = df[df.timestep == n_timesteps].groupby(['homophily', 'receptivity'])
-        print(df.receptivity.unique())
+        gb = df[
+            df.timestep == n_timesteps
+        ].groupby(['homophily', 'receptivity'])
+
     else:
         raise RuntimeError(f'data frame type not recognized')
 
@@ -812,15 +791,10 @@ def plot_correlation(df, kind, n_timesteps=100):
         prop_covert=np.array(gb['prop_covert'].mean())
     ))
 
-    # g = sns.jointplot(x=prop_churlish, y=prop_covert, kind='hex')
-    # plt.plot(prop_churlish, prop_covert, 'o')
-    # plt.title('')
-
     from scipy import stats
     x = plot_df.prop_churlish
     y = plot_df.prop_covert
     pearson_coef, p_val = stats.pearsonr(x, y)
-
 
     g = sns.jointplot(x, y, alpha=0.525, marginal_kws=dict(bins=20, rug=True))
     ax = g.ax_joint
@@ -829,7 +803,7 @@ def plot_correlation(df, kind, n_timesteps=100):
     ax.set_ylabel('Covert signaling prevalence', size=14)
     ax.set_xlabel('Churlish receiving prevalence', size=14)
 
-    pearson_coef, p_value = stats.pearsonr(x, y) #define the columns to perform calculations on
+    pearson_coef, p_value = stats.pearsonr(x, y)
 
     ax.text(s=f'r={pearson_coef:.2f}', x=0.6, y=0.8, size=16)
 

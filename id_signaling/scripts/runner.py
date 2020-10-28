@@ -170,6 +170,15 @@ def run_analysis():
     pass
 
 
+def analysis_decorator():
+    return composed(
+        run_analysis.command(),
+        click.option('--data_dir', default='data/basic',
+                      help='Location of data'),
+        click.option('--figure_dir', default='data/basic/Figures',
+                      help='Location to store figures')
+    )
+
 @run_analysis.command()
 @click.option('--data_dir', default='data/basic',
               help='Location of data')
@@ -206,7 +215,36 @@ def basic(data_dir, figure_dir):
 
     print('Making time series evolution plots for supplement, '
           f'saving to {figure_dir}')
-    _make_correlation_plots(disliking, receptivity, figure_dir)
+    _make_timeseries_plots(disliking, receptivity, figure_dir)
+
+
+@analysis_decorator()
+def mutual_dislike_sens(data_dir, figure_dir,
+                        deltas=[0.05, 0.25, 0.45, 0.65, 0.85]):
+
+    for delta in deltas:
+
+        delta_dir = f'delta={delta:0.2f}'
+
+        full_dir = os.path.join(data_dir, delta_dir)
+
+        _create_basic_invasion_full_csv(full_dir)
+
+        disliking = pd.read_csv(os.path.join(full_dir, 'full.csv'))
+
+        delta_figure_dir = os.path.join(figure_dir, delta_dir)
+
+        _make_basic_prevalence_heatmaps(disliking,
+                                        figure_dir=delta_figure_dir)
+
+        plot_correlation(disliking, kind='disliking')
+
+        plt.savefig(
+            os.path.join(delta_figure_dir, 'basic_disliking_correlation.pdf')
+        )
+
+    # Not sure if there's enough data for this, something seems off.
+    # _make_timeseries_plots(disliking, figure_dir=figure_dir)
 
 
 @run_analysis.command()
@@ -244,67 +282,75 @@ def _create_basic_invasion_full_csv(directory):
         print(f'Found existing {full_file}')
 
 
-def _make_basic_prevalence_heatmaps(disliking, receptivity, figure_dir):
+def _make_basic_prevalence_heatmaps(disliking=None, receptivity=None,
+                                    figure_dir='scratch_figures'):
 
-    heatmap(disliking, experiment='disliking')
-    plt.title(f'Proportion covert signalers', size=14)
-    plt.savefig(os.path.join(figure_dir, 'basic_disliking_signaling.pdf'))
+    if not os.path.isdir(figure_dir):
+        os.mkdir(figure_dir)
 
-    heatmap(disliking, experiment='disliking', strategy='receiving')
-    plt.title(f'Proportion churlish receivers', size=14)
-    plt.savefig(os.path.join(figure_dir, 'basic_disliking_receiving.pdf'))
+    if disliking is not None:
+        heatmap(disliking, experiment='disliking')
+        plt.title(f'Proportion covert signalers', size=14)
+        plt.savefig(os.path.join(figure_dir, 'basic_disliking_signaling.pdf'))
 
-    heatmap(receptivity, experiment='receptivity')
-    plt.title(f'Proportion covert signalers', size=14)
-    plt.savefig(os.path.join(figure_dir, 'basic_receptivity_signaling.pdf'))
+        heatmap(disliking, experiment='disliking', strategy='receiving')
+        plt.title(f'Proportion churlish receivers', size=14)
+        plt.savefig(os.path.join(figure_dir, 'basic_disliking_receiving.pdf'))
 
-    heatmap(receptivity, experiment='receptivity', strategy='receiving')
-    plt.title(f'Proportion churlish receivers', size=14)
-    plt.savefig(os.path.join(figure_dir, 'basic_receptivity_receiving.pdf'))
+    if receptivity is not None:
+        heatmap(receptivity, experiment='receptivity')
+        plt.title(f'Proportion covert signalers', size=14)
+        plt.savefig(os.path.join(figure_dir, 'basic_receptivity_signaling.pdf'))
+
+        heatmap(receptivity, experiment='receptivity', strategy='receiving')
+        plt.title(f'Proportion churlish receivers', size=14)
+        plt.savefig(os.path.join(figure_dir, 'basic_receptivity_receiving.pdf'))
 
 
-def _make_correlation_plots(disliking, receptivity, figure_dir):
+def _make_timeseries_plots(disliking=None, receptivity=None, figure_dir=None):
 
     def make_path(f): return os.path.join(figure_dir, f)
 
-    param_vals = [0.1, 0.5, 0.9]
-    hvals = [0.1]
-    plot_coevolution(disliking, 'disliking', param_vals, hvals,
-                     savefig_path=make_path('disliking_evo_w=0p1.pdf'))
+    if disliking is not None:
+        param_vals = [0.1, 0.5, 0.9]
+        hvals = [0.1]
+        plot_coevolution(disliking, 'disliking', param_vals, hvals,
+                         savefig_path=make_path('disliking_evo_w=0p1.pdf'))
 
-    param_vals = [0.1, 0.5, 0.9]
-    hvals = [0.4]
-    plot_coevolution(disliking, 'disliking', param_vals, hvals,
-                     savefig_path=make_path('disliking_evo_w=0p4.pdf'))
+        param_vals = [0.1, 0.5, 0.9]
+        hvals = [0.4]
+        plot_coevolution(disliking, 'disliking', param_vals, hvals,
+                         savefig_path=make_path('disliking_evo_w=0p4.pdf'))
 
-    hvals = [0.1, 0.5, 0.9]
-    param_vals = [0.1]
-    plot_coevolution(disliking, 'disliking', param_vals, hvals,
-                     savefig_path=make_path('disliking_evo_d=0p1.pdf'))
+        hvals = [0.1, 0.5, 0.9]
+        param_vals = [0.1]
+        plot_coevolution(disliking, 'disliking', param_vals, hvals,
+                         savefig_path=make_path('disliking_evo_d=0p1.pdf'))
 
-    hvals = [0.1, 0.5, 0.9]
-    param_vals = [0.4]
-    plot_coevolution(disliking, 'disliking', param_vals, hvals,
-                     savefig_path=make_path('disliking_evo_d=0p4.pdf'))
+        hvals = [0.1, 0.5, 0.9]
+        param_vals = [0.4]
+        plot_coevolution(disliking, 'disliking', param_vals, hvals,
+                         savefig_path=make_path('disliking_evo_d=0p4.pdf'))
 
-    param_vals = [0.1, 0.5, 0.9]
-    hvals = [0.1]
-    plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
-                     savefig_path=make_path('receptivity_evo_w=0p1.pdf'))
+    if receptivity is not None:
+        param_vals = [0.1, 0.5, 0.9]
+        hvals = [0.1]
+        plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
+                         savefig_path=make_path('receptivity_evo_w=0p1.pdf'))
 
-    param_vals = [0.1, 0.5, 0.9]
-    hvals = [0.4]
-    plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
-                     savefig_path=make_path('receptivity_evo_w=0p4.pdf'))
+        param_vals = [0.1, 0.5, 0.9]
+        hvals = [0.4]
+        plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
+                         savefig_path=make_path('receptivity_evo_w=0p4.pdf'))
 
-    hvals = [0.1, 0.5, 0.9]
-    param_vals = [0.1]
-    plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
-                     savefig_path=make_path('receptivity_evo_r=0p1.pdf'))
+        hvals = [0.1, 0.5, 0.9]
+        param_vals = [0.1]
+        plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
+                         savefig_path=make_path('receptivity_evo_r=0p1.pdf'))
 
-    hvals = [0.1, 0.5, 0.9]
-    plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
-                     savefig_path=make_path('receptivity_evo_r=0p4.pdf'))
+        hvals = [0.1, 0.5, 0.9]
+        plot_coevolution(receptivity, 'receptivity', param_vals, hvals,
+                         savefig_path=make_path('receptivity_evo_r=0p4.pdf'))
 
 
 def _make_invasion_success_heatmaps(disliking, receptivity, figure_dir):

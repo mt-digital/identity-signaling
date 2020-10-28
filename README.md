@@ -10,6 +10,16 @@ experiment, but sets a minority of the population to have one trait (1 in code)
 and a majority of the population to have the opposite trait (-1 in code). In the
 minority experiment, the fraction of the population in the minority is varied.
 
+
+## Analyze data 
+
+```sh
+run_analysis basic --figure_dir=../Papers/id-sig/Figures 
+
+run_analysis invasion --figure_dir=../Papers/id-sig/Figures 
+```
+
+
 ## Quickstart
 
 Clone this repository and change into its directory. Start a virtualenv
@@ -56,6 +66,7 @@ printf "******************\nFinished at `uptime`"
 
 This will be submitted to the cluster using the `squeue` command when the
 `-d` flag is not passed to `subexp`. -d indicates "development".
+
 
 ### Scripts to submit multiple versions
 
@@ -160,6 +171,7 @@ plot_evolution(trials_df, experiment='disliking')
 heatmap(df_r, experiment='disliking')
 ```
 
+
 ## Minority experiment
 
 For this experiment we have only looked at how disliking influence the 
@@ -189,6 +201,7 @@ minority_diff_heatmap(
 )
 ```
 
+
 ### Setting M based on K
 
 For our experiments we are only setting K odd, and setting `M=K - (K+1)/2`. 
@@ -209,6 +222,7 @@ to them. In order for majority/minority agents to be similar to their outgroup,
 they must have all `K - (K-1/2)` non-assigned traits in common. The chance of
 this happening is `1/2^((K-1)/2)`. 
 
+
 ## Cluster scripts
 
 See `run_disliking_homophily.py`, `run_receptivity_homophily.py`, and
@@ -221,6 +235,7 @@ given by a command like `--homophily=0.0:1.01:0.025`, which would set
 five homophily parameters, 0, 0.25, 0.5, 0.75, 1.0. These values are used in
 a call to `np.arange` which is why the max is set to 1.01 to pick up the 1.0
 value.
+
 
 ### Create cluster directory structure
 
