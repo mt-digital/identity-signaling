@@ -4,6 +4,8 @@ import os
 import pandas as pd
 import seaborn as sns
 
+from glob import glob
+
 
 def plot_evolution(df, experiment='receptivity',
                    strategy='signaling',
@@ -234,7 +236,78 @@ def heatmap(df, experiment='disliking', strategy='signaling',
         plt.savefig(savefig_path)
 
 
-def minority_diff_heatmap(df, strategy= 'signaling', savefig_path=None,
+def delta_varies_heatmaps(data_loc='data/delta_varies',
+                          figures_loc='scratch_figures',
+                          cmap=sns.cubehelix_palette(
+                              dark=0, light=1, as_cmap=True
+                          ),
+                          title=None,
+                          figsize=(6, 4.75),
+                          **heatmap_kwargs):
+
+    if not os.path.isdir(figures_loc):
+        os.mkdir(figures_loc)
+
+    print('Loading data...')
+    all_parts = glob(os.path.join(data_loc, '*/*.csv'))
+    df = pd.concat([pd.read_csv(part) for part in all_parts])
+
+    # Create a heatmap for each disliking penalty with homophily on x-axis
+    # and mutual disliking penalty on y-axis.
+    disliking_penalties = df.disliking.unique()
+    for d in disliking_penalties:
+        for strategy, data_col, label in [('signaling', 'prop_covert', 'Covert signaler prevalence'),
+                                   ('receiving', 'prop_churlish', 'Churlish receiver prevalence')]:
+            print(f'Creating and saving d={d:0.2f} and strategy={strategy}')
+            # Taking means over all trials, retaining the following columns.
+            gb_mean = df[df.disliking == d].groupby(
+                ['homophily', 'two_dislike_penalty', 'timestep']
+            )[data_col].mean()
+            # Index by timestep only in order to select only the final step.
+            means = gb_mean.unstack(level=(0, 1))
+            final_means = means[means.index == means.index[-1]]
+
+            # Create the figure.
+            plt.figure(figsize=figsize)
+            ax = sns.heatmap(final_means.stack(), cmap=cmap, square=True,
+                             vmin=0.0, vmax=1.0,
+                             **heatmap_kwargs)
+
+            for _, spine in ax.spines.items():
+                spine.set_visible(True)
+
+            # Set size of colorbar title.
+            ax.figure.axes[-1].yaxis.label.set_size(14)
+
+            # Set size of colorbar tick labels.
+            ax.collections[0].colorbar.ax.tick_params(labelsize=12)
+
+            # Clean up some other things.
+            ax.invert_yaxis()
+
+            ax.set_xlabel('Homophily, $w$', size=15)
+            ax.set_xticklabels([f'{2*x:.1f}'
+                                for x in np.sort(df['homophily'].unique())],
+                               rotation=0)
+
+            ax.set_ylabel('Mutual disliking penalty, $\delta$')
+            ax.set_yticklabels(
+                [f'{y:.1f}'
+                 for y in np.sort(df.two_dislike_penalty.unique())],
+                rotation=0)
+
+            ax.set_title(f'{label}, d={d:0.2f}', size=14)
+
+            savefig_path = os.path.join(
+                figures_loc, f'delta_varies_d={d:0.2f}_{strategy}.pdf'
+            )
+
+            plt.savefig(savefig_path)
+
+            plt.close()
+
+
+def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
                           figsize=(7.45, 5.25), vmin=None, vmax=None,
                           title=None, annot=True, cmap=None):
 
