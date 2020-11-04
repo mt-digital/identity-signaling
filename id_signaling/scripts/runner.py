@@ -45,8 +45,8 @@ def basic_decorator():
             click.option('--learning_beta', type=float, default=10.0),
             click.option('--n_agents', '-N', type=int, default=100),
             click.option('--n_rounds', type=int, default=100),
-            click.option('--two_dislike_penalty', type=float)
-            # click.option('--two_dislike_penalty', type=float, default=0.25)
+            click.option('--two_dislike_penalty', type=float),
+            click.option('--similarity_benefit', type=float, default=0.25)
        )
 
 
@@ -56,7 +56,7 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
         output_file, prob_overt_receiving, minority_trait_frac,
         initial_prop_covert, initial_prop_churlish, num_traits,
         similarity_threshold, learning_beta, n_agents, n_rounds,
-        two_dislike_penalty):
+        two_dislike_penalty, similarity_benefit):
 
     # XXX Hack to deal with subexp throwing error I don't understand that
     # minority_trait_frac can't be None (the default) because it's not a
@@ -81,7 +81,8 @@ def run(experiment, param_vals, homophily_vals, n_iter, n_trials,
                              K=num_traits,
                              similarity_threshold=similarity_threshold,
                              learning_beta=learning_beta, N=n_agents,
-                             two_dislike_penalty=two_dislike_penalty
+                             two_dislike_penalty=two_dislike_penalty,
+                             similarity_benefit=similarity_benefit
                              )
 
     out_df.to_csv(output_file, index=False)
@@ -99,7 +100,7 @@ def sub(
             output_file, prob_overt_receiving, minority_trait_frac,
             initial_prop_covert, initial_prop_churlish, num_traits,
             similarity_threshold, learning_beta, n_agents, n_rounds,
-            two_dislike_penalty,  # END MODEL OPTS
+            two_dislike_penalty, similarity_benefit,  # END MODEL OPTS
             queue, ncpu, wall_time, dry_run, job_name  # SLURM OPTS
         ):
     """
@@ -130,7 +131,7 @@ runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     --initial_prop_covert={initial_prop_covert} \\
     --initial_prop_churlish={initial_prop_churlish} \\
     --learning_beta={learning_beta} \\
-    --n_rounds={n_rounds} \\'''
+    --n_rounds={n_rounds} --similarity_benefit={similarity_benefit}\\ '''
     subscript_end = ''
     # Build end of submission script either with or without the two
     # disliking penalty.
