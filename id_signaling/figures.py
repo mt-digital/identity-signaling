@@ -365,15 +365,12 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
 
     # Clean up some other things.
     ax.invert_yaxis()
-    # ax.set_yticklabels(['0.1', '0.25', '0.4'])
     ax.set_xlabel('Homophily, $w$', size=15)
-    # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0, 0.46, 0.05)]);
-    # ax.set_yticklabels([f'{y:.2f}' for y in np.arange(0.1, 0.46, 0.05)] + ['0.49', '0.50']);
 
     xvals = np.sort(pre.homophily.unique())
     yvals = np.sort(pre.disliking.unique())
 
-    ax.set_xticklabels([f'{x:.2f}' for x in xvals], rotation=0)
+    ax.set_xticklabels([f'{2*x:1.1f}' for x in xvals], rotation=0)
     ax.set_yticklabels([f'{y:.1f}' for y in yvals])
 
     if savefig_path is not None:
@@ -508,11 +505,14 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
 
 def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
-                         dislikings=[0.05, 0.25, 0.45], homophily=0.2,
-                         ax=None, savefig_path=None, ylow=0.2, yhigh=1.0,
+                         dislikings=[0.45, 0.25, 0.05], homophily=0.2,
+                         ax=None, ylow=0.2, yhigh=1.0,
                          legend=False, xlabel=True, ylabel=True,
                          minority_majority=None, n_rounds=100):
     '''
+    Example:
+
+
 
     Arguments:
         minority_majority (str): Either 'minority' or 'majority', or None by
@@ -524,7 +524,9 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
 
     line_styles = ['-', '--', ':']
     marker_styles = ['^', 'o', 's']
+    zorders = [3, 2, 1]
 
+    dfs = sorted(dfs, key=lambda df: df.S[0])
     for d_idx, disliking in enumerate(dislikings):
 
         mean_covert_prevalence = []
@@ -542,13 +544,16 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
         ax.plot(thresholds, mean_covert_prevalence,
                 color='black', ls=line_styles[d_idx],
                 marker=marker_styles[d_idx], mfc='white',
-                mec='black', mew=1,
+                mec='black', mew=1, zorder=zorders[d_idx],
                 label=f'$d={disliking:.2f}$')
 
     if legend:
         ax.legend()
 
-    ax.set_title(f'$w={homophily:.1f}$')
+    # Changed homophily from max of 0.5 to 1.0 after many runs had already
+    # happened. In a perfect world we would change the value in the
+    # model code, but haven't done that yet.
+    ax.set_title(f'$w={2*homophily:.1f}$')
 
     ax.set_ylim(ylow, yhigh)
     ax.grid(axis='y')
@@ -556,7 +561,7 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
     if xlabel:
         ax.set_xlabel('Similarity threshold, $S$', size=14)
     if ylabel:
-        ax.set_ylabel('Covert prev., $\\rho_{cov,t=T}$', size=14)
+        ax.set_ylabel('Covert signaling prevalence', size=14)
 
     # Hack to get x labels correct.
     if len(thresholds) < 10:
@@ -815,7 +820,7 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
         plt.ylabel('Covert signaling prevalence', size=14)
 
         plt.xlabel('Homophily', size=14)
-        plt.xticks(hmeans.index)
+        plt.xticks(2*hmeans.index)
 
         if save_dir is not None:
             d = str(disliking).replace('.', 'p')

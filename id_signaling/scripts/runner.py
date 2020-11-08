@@ -13,6 +13,8 @@ from id_signaling.experiment import run_experiments
 from id_signaling.figures import (
     heatmap, plot_correlation, plot_coevolution, invasion_heatmaps,
 )
+from id_signaling.figures \
+    import similarity_threshold as plot_similarity_threshold
 
 
 def composed(*decs):
@@ -217,6 +219,93 @@ def basic(data_dir, figure_dir):
     print('Making time series evolution plots for supplement, '
           f'saving to {figure_dir}')
     _make_timeseries_plots(disliking, receptivity, figure_dir)
+
+
+@run_analysis.command()
+@click.option('--data_dir', default='data/similarity_threshold',
+              help='Location of data')
+@click.option('--figure_dir', default='scratch_figures/similarity_threshold/',
+              help='Location to store figures')
+def similarity_threshold(data_dir, figure_dir):
+    # Wrapper for similarity_threshold in id_signaling/figures.py. That
+    # one requires loading several dataframes, apparently with different
+    # disliking penalties (see ~l:532); each series appears to be for a
+    # different homophily (see function signature).
+    data_files = glob(os.path.join(data_dir, '*', '*', '*.csv'))
+
+    # Need to read all directories to find all Ks.
+    Ks = np.unique([int(data_file.split('=')[-1].split(os.sep)[0])
+                    for data_file in data_files])
+
+    # Then for each K need to get datasets for each similarity threshold
+    # tested for that value of K. They vary since not all tested K have the
+    # same number of possible meaningful similarity thresholds; e.g. K=3
+    # only has 0.3, 0.6, and 0.9, which each have two other equivalents,
+    # e.g. S=0.1, 0.2, 0.3 are the same since each requires one trait in
+    # common.
+    #
+    # Each K has its own figure, which will be saved to the figures dir.
+    # We'll make two figures, one of all homophily values and one with
+    # only a few.
+    homophilies = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    for K in Ks:
+
+        print(f'Making similarity threshold plots for K={K}')
+
+
+        K_files = [f for f in data_files if f'K={K}' in f]
+
+        dfs = [pd.read_csv(f) for f in K_files]
+        thresholds = np.sort([df.S[0] for df in dfs])
+
+        # Create figure with all six homophilies.
+        fig, axes = plt.subplots(2, 3, figsize=(10, 7))
+        axflat = axes.flatten()
+        for idx, homophily in enumerate(homophilies):
+
+            if homophily in [0.3, 0.4, 0.5]:
+                xlabel = True
+            else:
+                xlabel = False
+            if homophily in [0.0, 0.3]:
+                ylabel = True
+            else:
+                ylabel = False
+
+            if homophily == 0.5:
+                legend = True
+            else:
+                legend = False
+
+            ax = axflat[idx]
+
+            plot_similarity_threshold(dfs, ax=ax, homophily=homophily,
+                                      thresholds=thresholds,
+                                      xlabel=xlabel, ylabel=ylabel,
+                                      ylow=-0.05, yhigh=1.05,
+                                      legend=legend)
+
+            plt.savefig(
+                os.path.join(
+                    figure_dir, f'K={K}_allHomophilies.pdf'
+                )
+            )
+
+        # Now for the same K, make a single plot for the two homophilies.
+        for homophily in [0.1, 0.4]:
+
+            plot_similarity_threshold(dfs, homophily=homophily,
+                                      thresholds=thresholds,
+                                      xlabel=True, ylabel=True,
+                                      ylow=-0.05, yhigh=1.05,
+                                      legend=True)
+
+            plt.savefig(
+                os.path.join(
+                    figure_dir, f'K={K}_w={2*homophily}.pdf'
+                )
+            )
+
 
 
 @analysis_decorator()
