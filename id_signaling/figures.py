@@ -290,16 +290,20 @@ def delta_varies_heatmaps(data_loc='data/delta_varies',
                                 for x in np.sort(df['homophily'].unique())],
                                rotation=0)
 
-            ax.set_ylabel('Mutual disliking penalty, $\delta$')
+            ax.set_ylabel('Cost of mutual dislike, $\delta$', size=15)
             ax.set_yticklabels(
                 [f'{y:.1f}'
                  for y in np.sort(df.two_dislike_penalty.unique())],
                 rotation=0)
 
-            ax.set_title(f'{label}, d={d:0.2f}', size=14)
+            # ax.set_title(f'{label}, d={d:0.2f}', size=14)
+            ax.set_title(f'$d={d:0.2f}$', size=14)
 
             savefig_path = os.path.join(
-                figures_loc, f'delta_varies_d={d:0.2f}_{strategy}.pdf'
+                figures_loc,
+                f'delta_varies_d={d:0.2f}_{strategy}'.replace(
+                    '.', 'p'  # Remove decimal points for LaTeX.
+                ) + '.pdf'
             )
 
             plt.savefig(savefig_path)

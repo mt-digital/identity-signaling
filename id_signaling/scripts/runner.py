@@ -14,7 +14,7 @@ from subprocess import PIPE
 from id_signaling.experiment import run_experiments
 from id_signaling.figures import (
     heatmap, plot_correlation, plot_coevolution, invasion_heatmaps,
-    minority_line_plots
+    minority_line_plots, delta_varies_heatmaps
 )
 from id_signaling.figures \
     import similarity_threshold as plot_similarity_threshold
@@ -176,19 +176,10 @@ def run_analysis():
     pass
 
 
-def analysis_decorator():
-    return composed(
-        run_analysis.command(),
-        click.option('--data_dir', default='data/basic',
-                      help='Location of data'),
-        click.option('--figure_dir', default='data/basic/Figures',
-                      help='Location to store figures')
-    )
-
 @run_analysis.command()
 @click.option('--data_dir', default='data/basic',
               help='Location of data')
-@click.option('--figure_dir', default='data/basic/Figures',
+@click.option('--figure_dir', default='scratch_figures/basic',
               help='Location to store figures')
 def basic(data_dir, figure_dir):
 
@@ -206,6 +197,7 @@ def basic(data_dir, figure_dir):
 
     print('Making prevalence heatmaps for four signaling/receiving '
           f'strategies saving to {figure_dir}')
+
     _make_basic_prevalence_heatmaps(disliking, receptivity, figure_dir)
 
     print('Making signaling-receiving correlation plots, '
@@ -221,6 +213,7 @@ def basic(data_dir, figure_dir):
 
     print('Making time series evolution plots for supplement, '
           f'saving to {figure_dir}')
+
     _make_timeseries_plots(disliking, receptivity, figure_dir)
 
 
@@ -380,24 +373,44 @@ def minority(data_dir, figure_dir):
         minority_line_plots(df_blobs, K=K, save_dir=figure_dir)
 
 
-@analysis_decorator()
-def mutual_dislike_sens(data_dir, figure_dir,
+@run_analysis.command()
+@click.option('--data_dir', default='data/',
+              help='Location of data')
+@click.option('--figure_dir', default='scratch_figures/delta_sensitivity/',
+              help='Location to store figures')
+def delta_sensitivity(data_dir, figure_dir,
                         deltas=[0.05, 0.25, 0.45, 0.65, 0.85]):
+    '''
+    Runs the two synergistic disliking penalty (delta) sensitivity analyses.
+    The first analysis is for when delta is set to one of the above values
+    and d varies as d=delta was varied in the basic experiment.
+    The second analysis sets d and varies delta as d=delta was varied in the
+    basic experiment.
+    '''
 
+    # Run analysis for experiments where delta is set to one static value
+    # and the basic model is run (no minority populations, invasion, etc.).
     for delta in deltas:
 
         delta_dir = f'delta={delta:0.2f}'
 
-        full_dir = os.path.join(data_dir, delta_dir)
+        full_dir = os.path.join(data_dir, 'delta_static', delta_dir)
 
         _create_basic_invasion_full_csv(full_dir)
 
         disliking = pd.read_csv(os.path.join(full_dir, 'full.csv'))
 
-        delta_figure_dir = os.path.join(figure_dir, delta_dir)
+        delta_figure_dir = os.path.join(
+            figure_dir, delta_dir.replace('.', 'p')
+        )
 
-        _make_basic_prevalence_heatmaps(disliking,
-                                        figure_dir=delta_figure_dir)
+        if not os.path.isdir(delta_figure_dir):
+            os.mkdir(delta_figure_dir)
+
+        _make_basic_prevalence_heatmaps(
+            disliking, title=f'$\delta={delta:1.2f}$',
+            figure_dir=delta_figure_dir
+        )
 
         plot_correlation(disliking, kind='disliking')
 
@@ -405,8 +418,10 @@ def mutual_dislike_sens(data_dir, figure_dir,
             os.path.join(delta_figure_dir, 'basic_disliking_correlation.pdf')
         )
 
-    # Not sure if there's enough data for this, something seems off.
-    # _make_timeseries_plots(disliking, figure_dir=figure_dir)
+    # Run analysis where d is set to one value and the basic model is run
+    # with delta varying as d=delta did in the basic experiments.
+    data_loc = os.path.join(data_dir, 'delta_varies')
+    delta_varies_heatmaps(data_loc, figures_loc=figure_dir)
 
 
 @run_analysis.command()
@@ -445,27 +460,31 @@ def _create_basic_invasion_full_csv(directory):
 
 
 def _make_basic_prevalence_heatmaps(disliking=None, receptivity=None,
-                                    figure_dir='scratch_figures'):
+                                    title=None, figure_dir='scratch_figures'):
 
     if not os.path.isdir(figure_dir):
         os.mkdir(figure_dir)
 
     if disliking is not None:
         heatmap(disliking, experiment='disliking')
-        plt.title(f'Proportion covert signalers', size=14)
+        if title:
+            plt.title(title, size=14)
         plt.savefig(os.path.join(figure_dir, 'basic_disliking_signaling.pdf'))
 
         heatmap(disliking, experiment='disliking', strategy='receiving')
-        plt.title(f'Proportion churlish receivers', size=14)
+        if title:
+            plt.title(title, size=14)
         plt.savefig(os.path.join(figure_dir, 'basic_disliking_receiving.pdf'))
 
     if receptivity is not None:
         heatmap(receptivity, experiment='receptivity')
-        plt.title(f'Proportion covert signalers', size=14)
+        if title:
+            plt.title(title, size=14)
         plt.savefig(os.path.join(figure_dir, 'basic_receptivity_signaling.pdf'))
 
         heatmap(receptivity, experiment='receptivity', strategy='receiving')
-        plt.title(f'Proportion churlish receivers', size=14)
+        if title:
+            plt.title(title, size=14)
         plt.savefig(os.path.join(figure_dir, 'basic_receptivity_receiving.pdf'))
 
 
