@@ -520,7 +520,7 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
     '''
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(5, 4))
+        fig, ax = plt.subplots(figsize=(5, 3.5))
 
     line_styles = ['-', '--', ':']
     marker_styles = ['^', 'o', 's']
@@ -561,7 +561,7 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
     if xlabel:
         ax.set_xlabel('Similarity threshold, $S$', size=14)
     if ylabel:
-        ax.set_ylabel('Covert signaling prevalence', size=14)
+        ax.set_ylabel('Covert prevalence', size=14)
 
     # Hack to get x labels correct.
     if len(thresholds) < 10:
@@ -791,6 +791,7 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
 
 def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
                         disliking=0.5, timesteps=100, K='3',
+                        figsize=(6,5),
                         save_dir='/Users/mt/workspace/papers/id-sig/Figures/minority_tolerance'
                         ):
     '''
@@ -806,21 +807,23 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
 
         hmeans = _summary(df, disliking, timesteps, summ_func=np.mean)
 
-        plt.figure()
+        plt.figure(figsize=figsize)
 
         ms = 4
-        hmeans.prop_covert_minority.plot(label='Minority', color='black',
-                                         style='--', marker='s', ms=ms)
         hmeans.prop_covert_majority.plot(label='Majority', color='black',
                                          marker='s', ms=ms)
+        hmeans.prop_covert_minority.plot(label='Minority', color='black',
+                                         style='--', marker='s', ms=ms)
 
         plt.legend(fontsize=14)
 
         plt.title(f'$S={S}$', size=15)
-        plt.ylabel('Covert signaling prevalence', size=14)
 
-        plt.xlabel('Homophily', size=14)
-        plt.xticks(2*hmeans.index)
+        plt.xlabel('Homophily', size=16)
+        plt.xticks(hmeans.index, [f'{2*w:1.1f}' for w in hmeans.index])
+
+        plt.ylabel('Covert prevalence', size=16)
+        plt.yticks(np.arange(0.0, 1.01, 0.2))
 
         if save_dir is not None:
             d = str(disliking).replace('.', 'p')

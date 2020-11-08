@@ -1,9 +1,11 @@
 import click
 import concurrent
+import csv
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import re
 import subprocess
 
 from glob import glob
@@ -12,6 +14,7 @@ from subprocess import PIPE
 from id_signaling.experiment import run_experiments
 from id_signaling.figures import (
     heatmap, plot_correlation, plot_coevolution, invasion_heatmaps,
+    minority_line_plots
 )
 from id_signaling.figures \
     import similarity_threshold as plot_similarity_threshold
@@ -259,7 +262,7 @@ def similarity_threshold(data_dir, figure_dir):
         thresholds = np.sort([df.S[0] for df in dfs])
 
         # Create figure with all six homophilies.
-        fig, axes = plt.subplots(2, 3, figsize=(10, 7))
+        fig, axes = plt.subplots(2, 3, figsize=(10, 6))
         axflat = axes.flatten()
         for idx, homophily in enumerate(homophilies):
 
@@ -306,6 +309,75 @@ def similarity_threshold(data_dir, figure_dir):
                 )
             )
 
+
+@run_analysis.command()
+@click.option('--data_dir', default='data/minority',
+              help='Location of data')
+@click.option('--figure_dir', default='scratch_figures/minority/',
+              help='Location to store figures')
+def minority(data_dir, figure_dir):
+    '''
+    Create line plots of how the mean
+    final covert signaling prevalence varies with homophily, similarity
+    threshold, and homophily.
+
+    TODO add code for heatmaps for supplement.
+    '''
+
+    # First collect all part files containing experimental trials.
+    gs = glob(os.path.join(data_dir, '*', '*.csv'))
+
+    # Initialize a list to hold all collected blobs.
+    blobs = []
+    for g in gs:
+        data = csv.reader(open(g, 'r'))
+        header = next(data)
+        first = next(data)
+        blob = dict(list(zip(header, first))[:3])
+        blob.update({'file': g})
+        blob.update(
+            dict(minority_frac=re.search(string=g, pattern='\d\.\d\d').group())
+        )
+        blobs.append(blob)
+
+    # Load dataframes for parameter combinations of interest.
+    # Parameters are strings because that's how they were read
+    # in the previous step.
+    Ks = ['3', '9']
+    # Ks = ['3']
+
+    # minority_fracs = ['0.10', '0.20']
+    minority_fracs = ['0.10']
+
+    # I oversampled for K=3 and had S=0.5 fail for both minority fracs
+    # in K=3. For K=3, S=0.5 is equivalent to S=0.6 since both will be
+    # surpassed when dyads share 2/3 traits.
+    Ss = {'3': ['0.3', '0.5', '0.8'],
+          '9': ['0.3', '0.5', '0.8']}
+
+    # Iterate through all blobs and select out parameters of interest.
+    df_blobs = []
+    for K in Ks:
+        for S in Ss[K]:
+            for minority_frac in minority_fracs:
+                matching_blobs = [
+                    b for b in blobs if
+                    b['K'] == K and
+                    b['S'] == S and
+                    b['minority_frac'] == minority_frac
+                ]
+
+                df_parts = [pd.read_csv(b['file']) for b in matching_blobs]
+
+                df_blobs.append({
+                    'K': K,
+                    'S': S,
+                    'minority_frac': minority_frac,
+                    'df': pd.concat(df_parts)
+                })
+
+    for K in ['3', '9']:  # don't know why these are strings...
+        minority_line_plots(df_blobs, K=K, save_dir=figure_dir)
 
 
 @analysis_decorator()
