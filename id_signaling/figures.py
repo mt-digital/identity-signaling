@@ -795,7 +795,8 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
 
 def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
                         disliking=0.5, timesteps=100, K='3',
-                        figsize=(6,5),
+                        figsize=(4.5,3.5),
+                        legend=True,
                         save_dir='/Users/mt/workspace/papers/id-sig/Figures/minority_tolerance'
                         ):
     '''
@@ -803,7 +804,9 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
     penalty value along homophily. Uses strings for some specifications
     because those are used in building path to part files.
     '''
-    for S in thresholds:
+    for S_idx, S in enumerate(thresholds):
+
+        print(f'Running for S={S}')
 
         df = [b for b in df_blobs if
               (b['K'] == K and b['minority_frac'] == '0.10' and b['S'] == S)
@@ -819,15 +822,22 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
         hmeans.prop_covert_minority.plot(label='Minority', color='black',
                                          style='--', marker='s', ms=ms)
 
-        plt.legend(fontsize=14)
+        # Only put legend in S=0.8 figure.
+        if S_idx == 1:
+            plt.legend(fontsize=14)
 
         plt.title(f'$S={S}$', size=15)
 
         plt.xlabel('Homophily', size=16)
-        plt.xticks(hmeans.index, [f'{2*w:1.1f}' for w in hmeans.index])
+        plt.xticks(
+            hmeans.index[::2],
+            [f'{2*w:1.1f}' #else ''
+             for ii, w in enumerate(hmeans.index) if ii % 2 == 0],
+            size=11.5
+        )
 
         plt.ylabel('Covert prevalence', size=16)
-        plt.yticks(np.arange(0.0, 1.01, 0.2))
+        plt.yticks(np.arange(0.0, 1.01, 0.2), size=11.5)
 
         if save_dir is not None:
             d = str(disliking).replace('.', 'p')
