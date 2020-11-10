@@ -40,7 +40,7 @@ def basic_decorator():
             click.argument('n_trials', type=int),
             click.argument('output_file'),
             click.option('--prob_overt_receiving', '-R',
-                         type=float, default=0.5),
+                         type=float, default=1.0),
             click.option('--minority_trait_frac', '-m'),
             click.option('--initial_prop_covert', type=float, default=0.5),
             click.option('--initial_prop_churlish', type=float, default=0.5),
