@@ -1,5 +1,7 @@
 .cache
 data
 *.csv
-*/__pycache__/*
 scratch_figures/
+.pytest_chache/*
+*__pycache__
+id_signaling.egg-info
