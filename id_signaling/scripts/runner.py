@@ -198,12 +198,11 @@ def basic(data_dir, figure_dir):
     print('Making prevalence heatmaps for four signaling/receiving '
           f'strategies saving to {figure_dir}')
 
-    _make_basic_prevalence_heatmaps(disliking, receptivity, figure_dir)
+    _make_basic_prevalence_heatmaps(disliking, receptivity,
+                                    figure_dir=figure_dir)
 
     print('Making signaling-receiving correlation plots, '
           f'saving to {figure_dir}')
-
-    print(receptivity.receptivity.unique())
 
     plot_correlation(disliking, kind='disliking')
     plt.savefig(os.path.join(figure_dir, 'basic_disliking_correlation.pdf'))
@@ -211,10 +210,10 @@ def basic(data_dir, figure_dir):
     plot_correlation(receptivity, kind='receptivity')
     plt.savefig(os.path.join(figure_dir, 'basic_receptivity_correlation.pdf'))
 
-    print('Making time series evolution plots for supplement, '
-          f'saving to {figure_dir}')
+    # print('Making time series evolution plots for supplement, '
+    #       f'saving to {figure_dir}')
 
-    _make_timeseries_plots(disliking, receptivity, figure_dir)
+    # _make_timeseries_plots(disliking, receptivity, figure_dir)
 
 
 @run_analysis.command()
@@ -374,6 +373,28 @@ def minority(data_dir, figure_dir):
 
 
 @run_analysis.command()
+@click.option('--data_dir', default='data/invasion',
+              help='Location of data')
+@click.option('--figure_dir', default='scratch_figures/invasion',
+              help='Location to store figures')
+def invasion(data_dir, figure_dir):
+
+    dirs = [os.path.join(data_dir, exp_type)
+            for exp_type in ('disliking', 'receptivity')]
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        executor.map(_create_basic_invasion_full_csv, dirs)
+
+    disliking = pd.read_csv(os.path.join(dirs[0], 'full.csv'))
+    receptivity = pd.read_csv(os.path.join(dirs[1], 'full.csv'))
+
+    if not os.path.isdir(figure_dir):
+        os.mkdir(figure_dir)
+
+    _make_invasion_success_heatmaps(disliking, receptivity, figure_dir)
+
+
+@run_analysis.command()
 @click.option('--data_dir', default='data/',
               help='Location of data')
 @click.option('--figure_dir', default='scratch_figures/delta_sensitivity/',
@@ -425,25 +446,62 @@ def delta_sensitivity(data_dir, figure_dir,
 
 
 @run_analysis.command()
-@click.option('--data_dir', default='data/invasion',
+@click.option('--data_dir', default='data/basic-R-K-s-sensitivity/',
               help='Location of data')
-@click.option('--figure_dir', default='data/invasion/Figures',
+@click.option('--figure_dir', default='scratch_figures',
               help='Location to store figures')
-def invasion(data_dir, figure_dir):
+def R_K_s_sensitivity(data_dir, figure_dir):
+    '''
+    Create basic heatmaps for different values of R, K, and s.
+    Iterates over source data directories found in data_dir,
+    creates a figure subdirectory under the figure_dir for each one,
+    and makes and saves "basic_receptivity_{signaling,receiving}.pdf" files
+    there; same process as in the basic() function above, but for the several
+    alternative R, K, and s parameter values we tested.
+    '''
+    all_dirs = glob(os.path.join(data_dir, 'basic-*=*'))
+    for _dir in all_dirs:
+        # Each dir has a tag to indicate parameter sensitivity setting, e.g.
+        # basic-s=1.0 in the full directory path
+        # basic-R-K-s-sensitivity/basic-s=1.0/disliking.
+        print(_dir)
+        experiment_tag = re.search('basic-.*=.*\d', _dir)[0]
+        this_figure_dir = os.path.join(figure_dir, experiment_tag)
+        if not os.path.isdir(this_figure_dir):
+            os.makedirs(this_figure_dir)
 
-    dirs = [os.path.join(data_dir, exp_type)
-            for exp_type in ('disliking', 'receptivity')]
+        dirs = [os.path.join(_dir, exp_type)
+                for exp_type in ('disliking', 'receptivity')]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        executor.map(_create_basic_invasion_full_csv, dirs)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            executor.map(_create_basic_invasion_full_csv, dirs)
 
-    disliking = pd.read_csv(os.path.join(dirs[0], 'full.csv'))
-    receptivity = pd.read_csv(os.path.join(dirs[1], 'full.csv'))
+        # Each parameter sensitivity experiment has its own data frames for
+        # the disliking and receptivity conditions.
+        disliking = pd.read_csv(os.path.join(dirs[0], 'full.csv'))
+        receptivity = pd.read_csv(os.path.join(dirs[1], 'full.csv'))
 
-    if not os.path.isdir(figure_dir):
-        os.mkdir(figure_dir)
+        print('Making prevalence heatmaps for four signaling/receiving '
+              f'strategies saving to {this_figure_dir}')
 
-    _make_invasion_success_heatmaps(disliking, receptivity, figure_dir)
+        _make_basic_prevalence_heatmaps(disliking, receptivity,
+                                        figure_dir=this_figure_dir)
+
+        print('Making signaling-receiving correlation plots, '
+              f'saving to {this_figure_dir}')
+
+        print(receptivity.receptivity.unique())
+
+        plot_correlation(disliking, kind='disliking')
+        plt.savefig(os.path.join(this_figure_dir, 'basic_disliking_correlation.pdf'))
+
+        plot_correlation(receptivity, kind='receptivity')
+        plt.savefig(os.path.join(this_figure_dir, 'basic_receptivity_correlation.pdf'))
+
+        print('Making time series evolution plots for supplement, '
+              f'saving to {this_figure_dir}')
+
+        _make_timeseries_plots(disliking, receptivity, this_figure_dir)
 
 
 def _create_basic_invasion_full_csv(directory):
@@ -476,6 +534,8 @@ def _make_basic_prevalence_heatmaps(disliking=None, receptivity=None,
             plt.title(title, size=14)
         plt.savefig(os.path.join(figure_dir, 'basic_disliking_receiving.pdf'))
 
+        plt.close('all')
+
     if receptivity is not None:
         heatmap(receptivity, experiment='receptivity')
         if title:
@@ -486,6 +546,8 @@ def _make_basic_prevalence_heatmaps(disliking=None, receptivity=None,
         if title:
             plt.title(title, size=14)
         plt.savefig(os.path.join(figure_dir, 'basic_receptivity_receiving.pdf'))
+
+        plt.close('all')
 
 
 def _make_timeseries_plots(disliking=None, receptivity=None, figure_dir=None):

@@ -1,3 +1,4 @@
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -6,8 +7,26 @@ import seaborn as sns
 
 from glob import glob
 
+# sns.set_palette('Blues_r')
+# sns.set_palette('PiYG_r')
+# sns.set_palette('Set1')
+sns.set_palette('Set2')
+# sns.set_palette('winter')
 
-def plot_evolution(df, experiment='receptivity',
+mpl.rcParams.update({
+    'lines.linewidth': 2,
+    'lines.markersize': 6,
+    'lines.markeredgewidth': 2,
+    'xtick.labelsize': 13,
+    'ytick.labelsize': 13,
+    'axes.labelsize': 14,
+    'axes.titlesize': 14,
+    'legend.fontsize': 11.5
+})
+
+
+def plot_evolution(df,
+                   experiment='receptivity',
                    strategy='signaling',
                    exp_param_vals=[0.1, 0.25, 0.4],
                    homophily_vals=[0.1, 0.25, 0.4],
@@ -96,6 +115,7 @@ def plot_evolution(df, experiment='receptivity',
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
+        plt.close('all')
 
     return ax
 
@@ -145,12 +165,17 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
+        plt.close('all')
 
 
 def heatmap(df, experiment='disliking', strategy='signaling',
-            figsize=(6, 4.75), minority_subset=None, savefig_path=None,
+            figsize=(4.5, 3.5), minority_subset=None, savefig_path=None,
             title=None,
-            cmap=sns.cubehelix_palette(dark=0, light=1, as_cmap=True),  # cmap='YlGnBu_r',
+            # cmap='Set2',
+            cmap='Blues',
+            # cmap='YlGnBu_r',
+            # cmap='BuGn',
+            # cmap=sns.cubehelix_palette(dark=0, light=1, as_cmap=True),  # cmap='YlGnBu_r',
             overt_signaling_reach=1.0,
             **heatmap_kwargs):
 
@@ -190,7 +215,9 @@ def heatmap(df, experiment='disliking', strategy='signaling',
 
     plt.figure(figsize=figsize)
 
-    ax = sns.heatmap(final_means.stack(), cmap=cmap, square=True,
+    ax = sns.heatmap(final_means.stack(),
+            cmap=cmap,
+            square=True,
                      vmin=0.0, vmax=1.0,
                      **heatmap_kwargs
                      )
@@ -209,9 +236,9 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     # ax.set_yticklabels(['0.1', '0.25', '0.4'])
     ax.set_xlabel('Homophily, $w$', size=15)
     if experiment == 'receptivity':
-        ax.set_ylabel('Fraction receiving covert signal, $r$', size=15)
+        ax.set_ylabel('Covert signaling efficiency, $r$', size=15)
     elif experiment == 'disliking':
-        ax.set_ylabel('Cost of disliking, $d$', size=15)
+        ax.set_ylabel('Disliking cost, $d$', size=15)
 
     if experiment == 'receptivity':
         relative_receptivity = np.sort(
@@ -222,25 +249,28 @@ def heatmap(df, experiment='disliking', strategy='signaling',
     else:
         ax.set_yticklabels([f'{y:.1f}'
                            for y in np.sort(df.disliking.unique())],
-                           rotation=0)
+                           rotation=0,
+                           size=12)
 
     # Factor of 2 in template for remap of homophily from (0.0, 0.5)
     # to (0.0, 1.0).
     ax.set_xticklabels([f'{2*x:.1f}'
                         for x in np.sort(df['homophily'].unique())],
-                       rotation=0)
+                       rotation=60, size=12)
 
     if title is not None:
         ax.set_title(title, size=14)
     if savefig_path is not None:
         plt.savefig(savefig_path)
+        plt.close('all')
 
 
 def delta_varies_heatmaps(data_loc='data/delta_varies',
                           figures_loc='scratch_figures',
-                          cmap=sns.cubehelix_palette(
-                              dark=0, light=1, as_cmap=True
-                          ),
+                          # cmap=sns.cubehelix_palette(
+                          #     dark=0, light=1, as_cmap=True
+                          # ),
+                          cmap='Blues',
                           title=None,
                           figsize=(6, 4.75),
                           **heatmap_kwargs):
@@ -307,13 +337,14 @@ def delta_varies_heatmaps(data_loc='data/delta_varies',
             )
 
             plt.savefig(savefig_path)
+            plt.close('all')
 
             plt.close()
 
 
 def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
                           figsize=(7.45, 5.25), vmin=None, vmax=None,
-                          title=None, annot=True, cmap=None):
+                          title=None, annot=True, cmap='Blues'):
 
     if strategy == 'signaling':
         strategy_inset = 'Covert signalers'
@@ -379,6 +410,7 @@ def minority_diff_heatmap(df, strategy='signaling', savefig_path=None,
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
+        plt.close('all')
 
 def covert_churlish_regression(df, # exp_param_vals, homophily_vals,
                                experiment='receptivity',
@@ -414,7 +446,8 @@ def covert_churlish_regression(df, # exp_param_vals, homophily_vals,
 
     from scipy import stats
 
-    sns.regplot(x, y, line_kws=dict(color='r'),
+    sns.regplot(x, y,
+            # line_kws=dict(color='r'),
                 scatter_kws=dict(lw=0, s=45, alpha=0.125))
     plt.ylabel('Covert signaler proportion', size=16)
     plt.xlabel('Churlish receiver proportion', size=16)
@@ -425,6 +458,7 @@ def covert_churlish_regression(df, # exp_param_vals, homophily_vals,
 
     if savefig_path is not None:
         plt.savefig(savefig_path)
+        plt.close('all')
 
 
 def load_minority_dfs(directory='data/minority',
@@ -479,8 +513,14 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
             std_final_cov_prop = pre.min_maj_cov_diff.std()
             minmaj_covert_std_diff.append(std_final_cov_prop)
 
-        ax.plot(minmaj_covert_mean_diff, color='black', ls=line_styles[d_idx],
-                marker=marker_styles[d_idx], mfc='white', mec='black', mew=1,
+        ax.plot(minmaj_covert_mean_diff,
+                # color='black',
+                ls=line_styles[d_idx],
+                marker=marker_styles[d_idx], mfc='white',
+                ms=6,
+                lw=2,
+                # mec='black',
+                mew=1,
                 label=f'$d=\\delta={disliking:.2f}$')
 
         ax.set_xticks(range(len(minority_frac_strs)))
@@ -506,6 +546,7 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
         if savefig_path is not None:
             plt.savefig(savefig_path)
+            plt.close('all')
 
 
 def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
@@ -523,8 +564,9 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
             default if this is not a majority/minority test.
     '''
 
+
     if ax is None:
-        fig, ax = plt.subplots(figsize=(5, 3.5))
+        fig, ax = plt.subplots(figsize=(4.5, 3.5))
 
     line_styles = ['-', '--', ':']
     marker_styles = ['^', 'o', 's']
@@ -546,9 +588,13 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
             )
 
         ax.plot(thresholds, mean_covert_prevalence,
-                color='black', ls=line_styles[d_idx],
+                # color='black',
+                ls=line_styles[d_idx],
+                # lw=2,
+                # ms=6,
                 marker=marker_styles[d_idx], mfc='white',
-                mec='black', mew=1, zorder=zorders[d_idx],
+                # mew=1,
+                zorder=zorders[d_idx],
                 label=f'$d={disliking:.2f}$')
 
     if legend:
@@ -580,10 +626,11 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
 
 
 def invasion_heatmaps(disliking_df, recept_df,
-                      cmap=sns.cubehelix_palette(
-                          50, hue=0.05, rot=0, light=0.0,
-                          dark=0.9, as_cmap=True
-                      ),
+                      cmap='Blues',
+                      # cmap=sns.cubehelix_palette(
+                      #     50, hue=0.05, rot=0, light=0.0,
+                      #     dark=0.9, as_cmap=True
+                      # ),
                       invading='covert',
                       vmin=-0.05, vmax=0.05,
                       annot=False,
@@ -681,6 +728,7 @@ def invasion_heatmaps(disliking_df, recept_df,
 
     if save_path is not None:
         plt.savefig(save_path)
+        plt.close('all')
 
     return rate_dfs
 
@@ -736,7 +784,8 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
 
     sns.heatmap(
         rate['success'].unstack(),
-        cmap=cmap, square=True, vmin=0, vmax=1,
+        cmap=cmap,
+        square=True, vmin=0, vmax=1,
         ax=ax, cbar=True, cbar_kws=cbar_kws,
         annot=annot, fmt='0.2f'
     )
@@ -816,28 +865,30 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
 
         plt.figure(figsize=figsize)
 
-        ms = 4
-        hmeans.prop_covert_majority.plot(label='Majority', color='black',
-                                         marker='s', ms=ms)
-        hmeans.prop_covert_minority.plot(label='Minority', color='black',
-                                         style='--', marker='s', ms=ms)
+        # ms = 4
+        hmeans.prop_covert_majority.plot(label='Majority',
+                # color='black',
+                                         marker='s')  # , ms=ms)
+        hmeans.prop_covert_minority.plot(label='Minority',
+                # color='black',
+                                         style='--', marker='s')  # ms=ms)
 
         # Only put legend in S=0.8 figure.
         if S_idx == 1:
             plt.legend(fontsize=14)
 
-        plt.title(f'$S={S}$', size=15)
+        plt.title(f'$S={S}$')  # , size=15)
 
-        plt.xlabel('Homophily', size=16)
+        plt.xlabel('Homophily')  # , size=16)
         plt.xticks(
             hmeans.index[::2],
             [f'{2*w:1.1f}' #else ''
              for ii, w in enumerate(hmeans.index) if ii % 2 == 0],
-            size=11.5
+            # size=12
         )
 
-        plt.ylabel('Covert prevalence', size=16)
-        plt.yticks(np.arange(0.0, 1.01, 0.2), size=11.5)
+        plt.ylabel('Covert prevalence')  # size=16)
+        plt.yticks(np.arange(0.0, 1.01, 0.2))  # , size=11.5)
 
         if save_dir is not None:
             d = str(disliking).replace('.', 'p')
@@ -845,6 +896,7 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
             save_path = os.path.join(save_dir,
                                      f'line_K={K}_S={S}_d={d}.pdf')
             plt.savefig(save_path)
+            plt.close('all')
 
 
 def _summary(df, disliking=0.5, timesteps=100, summ_func=np.mean):
@@ -893,7 +945,9 @@ def plot_correlation(df, kind, n_timesteps=100):
 
     g = sns.jointplot(x, y, alpha=0.525, marginal_kws=dict(bins=20, rug=True))
     ax = g.ax_joint
-    sns.regplot(x, y, line_kws=dict(color='r'), ax=ax, scatter=False)
+    sns.regplot(x, y,
+            # line_kws=dict(color='darkblue'),
+            ax=ax, scatter=False)
     #                 scatter_kws=dict(lw=0, s=45, alpha=0.525))
     ax.set_ylabel('Covert signaling prevalence', size=14)
     ax.set_xlabel('Churlish receiving prevalence', size=14)
