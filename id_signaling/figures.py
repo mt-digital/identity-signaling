@@ -14,9 +14,9 @@ sns.set_palette('Set2')
 # sns.set_palette('winter')
 
 mpl.rcParams.update({
-    'lines.linewidth': 2,
-    'lines.markersize': 6,
-    'lines.markeredgewidth': 2,
+    'lines.linewidth': 2.5,
+    'lines.markersize': 6.5,
+    'lines.markeredgewidth': 2.5,
     'xtick.labelsize': 13,
     'ytick.labelsize': 13,
     'axes.labelsize': 14,
@@ -169,7 +169,7 @@ def plot_coevolution(df, experiment, exp_param_vals, homophily_vals,
 
 
 def heatmap(df, experiment='disliking', strategy='signaling',
-            figsize=(4.5, 3.5), minority_subset=None, savefig_path=None,
+            figsize=(5.5, 4.5), minority_subset=None, savefig_path=None,
             title=None,
             # cmap='Set2',
             cmap='Blues',
@@ -525,7 +525,7 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
 
         ax.set_xticks(range(len(minority_frac_strs)))
 
-        ax.set_xticklabels(minority_frac_strs, size=14, rotation=35)
+        ax.set_xticklabels(minority_frac_strs[::4], size=14, rotation=35)
 
         ylow = -0.3
         yhigh = 0.4
@@ -538,7 +538,7 @@ def covert_vs_minority_frac(minority_dfs, dislikings, homophily,
                       size=15)
         ax.set_xlabel(r'$\rho^{minor}$', size=15)
 
-        ax.grid(axis='y')
+        # ax.grid(axis='y')
 
         ax.legend()
 
@@ -606,7 +606,7 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
     ax.set_title(f'$w={2*homophily:.1f}$')
 
     ax.set_ylim(ylow, yhigh)
-    ax.grid(axis='y')
+    # ax.grid(axis='y')
 
     if xlabel:
         ax.set_xlabel('Similarity threshold, $S$', size=14)
@@ -615,8 +615,12 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
 
     # Hack to get x labels correct.
     if len(thresholds) < 10:
-        ax.set_xticks(thresholds)
-        ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds])
+        if len(thresholds) == 9:
+            ax.set_xticks(thresholds[::4])
+            ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds[::4]])
+        else:
+            ax.set_xticks(thresholds)
+            ax.set_xticklabels([f'{threshold:1.1f}' for threshold in thresholds])
     else:
         ax.set_xticks(thresholds[1::2])
         ax.set_xticklabels([f'{threshold:1.1f}'
@@ -626,11 +630,12 @@ def similarity_threshold(dfs, thresholds=np.arange(0.1, 1.1, 0.1),
 
 
 def invasion_heatmaps(disliking_df, recept_df,
-                      cmap='Blues',
+                      # cmap='BuGn',
                       # cmap=sns.cubehelix_palette(
                       #     50, hue=0.05, rot=0, light=0.0,
                       #     dark=0.9, as_cmap=True
                       # ),
+                      cmap='Blues',
                       invading='covert',
                       vmin=-0.05, vmax=0.05,
                       annot=False,
@@ -792,7 +797,7 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
     ax.figure.axes[-1].yaxis.label.set_size(cbar_label_size)
 
     ax.set_xticklabels(
-        [f'{x:.1f}' for x in np.sort(df_lim.homophily.unique())],
+        [f'{2*x:.1f}' for x in np.sort(df_lim.homophily.unique())],
         rotation=0
     )
 
@@ -844,7 +849,7 @@ def _one_invasion_heatmap(axes, df_lim, invading, init_cov,
 
 def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
                         disliking=0.5, timesteps=100, K='3',
-                        figsize=(4.5,3.5),
+                        figsize=(3.75,3.25),
                         legend=True,
                         save_dir='/Users/mt/workspace/papers/id-sig/Figures/minority_tolerance'
                         ):
@@ -868,27 +873,29 @@ def minority_line_plots(df_blobs, thresholds=['0.3', '0.5', '0.8'],
         # ms = 4
         hmeans.prop_covert_majority.plot(label='Majority',
                 # color='black',
-                                         marker='s')  # , ms=ms)
+                                         marker='^', mfc='white')  # , ms=ms)
         hmeans.prop_covert_minority.plot(label='Minority',
                 # color='black',
-                                         style='--', marker='s')  # ms=ms)
+
+                                         style='--', marker='o', mfc='white')  # ms=ms)
 
         # Only put legend in S=0.8 figure.
         if S_idx == 1:
-            plt.legend(fontsize=14)
+            plt.legend()
+            # plt.legend(fontsize=14)
 
-        plt.title(f'$S={S}$')  # , size=15)
+        plt.title(f'$S={S}$'   , size=15)
 
-        plt.xlabel('Homophily')  # , size=16)
+        plt.xlabel('Homophily'  , size=16)
         plt.xticks(
             hmeans.index[::2],
             [f'{2*w:1.1f}' #else ''
              for ii, w in enumerate(hmeans.index) if ii % 2 == 0],
-            # size=12
+            size=15
         )
 
-        plt.ylabel('Covert prevalence')  # size=16)
-        plt.yticks(np.arange(0.0, 1.01, 0.2))  # , size=11.5)
+        plt.ylabel('Covert prevalence', size=16)
+        plt.yticks(np.arange(0.0, 1.01, 0.2),  size=15)
 
         if save_dir is not None:
             d = str(disliking).replace('.', 'p')
@@ -949,12 +956,13 @@ def plot_correlation(df, kind, n_timesteps=100):
             # line_kws=dict(color='darkblue'),
             ax=ax, scatter=False)
     #                 scatter_kws=dict(lw=0, s=45, alpha=0.525))
-    ax.set_ylabel('Covert signaling prevalence', size=14)
-    ax.set_xlabel('Churlish receiving prevalence', size=14)
+    ax.set_ylabel('Covert signaling prevalence', size=18)
+    ax.set_xlabel('Churlish receiving prevalence', size=18)
+    ax.tick_params(labelsize=15)
 
     pearson_coef, p_value = stats.pearsonr(x, y)
 
-    ax.text(s=f'r={pearson_coef:.2f}', x=0.6, y=0.8, size=16)
+    ax.text(s=f'r={pearson_coef:.2f}', x=0.6, y=0.8, size=18)
 
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
