@@ -74,7 +74,13 @@ def _one_trial(trial_tup, experiment, n_iter, **model_kwargs):
         #     )
 
     elif experiment == 'receptivity':
-        experiment_kwargs = dict(prob_covert_receiving=exp_param)
+        experiment_kwargs = dict(
+            prob_covert_receiving=exp_param
+        )
+
+    else:
+        raise RuntimeError(f'Experiment {experiment} not recognized.')
+
 
     if model_kwargs['two_dislike_penalty'] is None:  # not in model_kwargs:
         model_kwargs['two_dislike_penalty'] = exp_param

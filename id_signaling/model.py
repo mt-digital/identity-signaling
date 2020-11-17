@@ -66,7 +66,12 @@ class Model:
         self.n_rounds = n_rounds
         self.K = K
         self.prob_overt_receiving = prob_overt_receiving
-        self.prob_covert_receiving = prob_covert_receiving
+        # XXX this is a hack due to mixing up the experimental parameter
+        # due to setting R=1 for the main anaylses. When time came for
+        # supplemental with R≠1 then I realized this parameter should not
+        # be the covert receiving probability, but the covert prob
+        # scaled by the overt prob so that r/R is always <= 1.
+        self.prob_covert_receiving = prob_covert_receiving * prob_overt_receiving
         self.similarity_benefit = similarity_benefit
         self.one_dislike_penalty = one_dislike_penalty
         self.two_dislike_penalty = two_dislike_penalty
