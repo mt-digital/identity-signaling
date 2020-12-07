@@ -10,9 +10,8 @@ Below are some notes on how to set up the code locally. For more information, pl
 ## Setup
 
 Clone this repository and change into its directory. Start a virtualenv
-and install the command-line scripts `subexp` and `runexp`. `subexp` will
-submit jobs to the slurm queue, where job scripts call the `runexp` command,
-both contained in `id_signaling/scripts/runner.py`.
+and run the `pip install` command given below, which will enable
+the command-line scripts.
 
 All together,
 ```
