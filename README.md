@@ -2,17 +2,12 @@
 
 This is the agent-based implementation of the model described in Smaldino & Turner (2020) "Covert signaling is an adaptive communication strategy in diverse populations".
 
+The code is in several parts: the model, experiments using the model, analyses of experimental output, a command-line interface (CLI) for running experiments and analyses, and unit tests. Furthermore, in the root directory of the repo there is the `cl_scripts` directory that contains bash scripts that automate the submission of several jobs (experiments) at once.
 
-## Analyze data 
-
-```sh
-run_analysis basic --figure_dir=../Papers/id-sig/Figures 
-
-run_analysis invasion --figure_dir=../Papers/id-sig/Figures 
-```
+Below are some notes on how to set up the code locally. For more information, please see function signatures, unit tests, and inline documentation, or [open an issue to ask a question](https://github.com/mt-digital/identity-signaling/issues). Thanks!
 
 
-## Quickstart
+## Setup
 
 Clone this repository and change into its directory. Start a virtualenv
 and install the command-line scripts `subexp` and `runexp`. `subexp` will
@@ -26,6 +21,31 @@ cd identity-signaling
 virtualenv venv
 pip install --editable .
 ```
+
+### Unit tests
+
+Running unit tests is a good way to check all is well and to get started running or editing the code. To do this, as well as display how much of the model code base is covered by the unit tests, run the following command:
+
+```sh
+pytest --cov-report term --cov=id_signaling.model test/
+```
+
+It should print the following report, with some other surrounding information
+
+```
+test/test_model.py ............                                                                                [100%]
+
+---------- coverage: platform darwin, python 3.7.6-final-0 -----------
+Name                    Stmts   Miss  Cover
+-------------------------------------------
+id_signaling/model.py     232     11    95%
+```
+
+Each dot indicates one test that passed and the printout shows 95% of the code pass one unit test or
+another. Of course the tests may be flawed, but these can be easily inspected for correctness in
+relatioship to the formal model presented in the paper.
+
+### Example of dry-run submit using the CLI 
 
 Then submit a disliking/homophily experiment where disliking and homophily are
 both varied over three values: 0.0, 0.25, and 0.5, using matlab-ish notation
@@ -60,33 +80,6 @@ This will be submitted to the cluster using the `squeue` command when the
 `-d` flag is not passed to `subexp`. -d indicates "development".
 
 
-### Scripts to submit multiple versions
-
-To spread a simulation across multiple runs, I wrote a number of scripts to 
-submit a number of jobs to the cluster that will run all parameter values and
-the right number of trials per parameter value. For example, here are the
-main contents of `sub_minority_K=9;M=4.sh`:
-
-```sh
-for i in {1..10}; do
-    fname=output_data/minority_K9M4/part-`uuidgen`
-    subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 10 $fname.csv -R0.5  \
-        --n_minmaj_traits=4 -K9 -m0.10 \
-        -qfast.q -j$fname -n24 -t"04:00:00"
-        # -qstd.q -j$fname -n20 -t"04:00:00" --n_minmaj_traits=4 -K10
-done
-```
-
-This writes all data to randomly-named files to the directory
-`output_data/minority_K9M4`. To create a single CSV, I have been running the
-following commands, using an example randomly-generated file name. The first
-line grabs the header and the second line takes all lines but the header from
-each file and puts the data in full.csv.
-
-```
-$ head -n1 part-a917cc22-14e9-4716-8b66-8a610028ed3f.csv > full.csv
-$ tail -q -n+2 part-*.csv >> full.csv
-```
 
 
 ## Experiments
@@ -100,7 +93,7 @@ keyword arguments that must be specified to do
 plotting for each experiment. Examples are given below.
 
 
-## Covert signaling receptivity
+### Covert signaling receptivity
 
 In this experiment we vary the receptivity of covert signaling. This determines
 what fraction of the population receives covert signals. There is also a
@@ -248,6 +241,33 @@ mkdir -p output_data/tolerance_diversity/0.{1..9}/"K="{10,15,20}/
 mkdir -p output_data/tolerance_diversity/1.0/"K="{10,15,20}/
 ```
 
+### Scripts to submit multiple versions
+
+To spread a simulation across multiple runs, I wrote a number of scripts to 
+submit a number of jobs to the cluster that will run all parameter values and
+the right number of trials per parameter value. For example, here are the
+main contents of `sub_minority_K=9;M=4.sh`:
+
+```sh
+for i in {1..10}; do
+    fname=output_data/minority_K9M4/part-`uuidgen`
+    subexp disliking 0.0:0.51:0.05 0.0:0.51:0.05 500 10 $fname.csv -R0.5  \
+        --n_minmaj_traits=4 -K9 -m0.10 \
+        -qfast.q -j$fname -n24 -t"04:00:00"
+        # -qstd.q -j$fname -n20 -t"04:00:00" --n_minmaj_traits=4 -K10
+done
+```
+
+This writes all data to randomly-named files to the directory
+`output_data/minority_K9M4`. To create a single CSV, I have been running the
+following commands, using an example randomly-generated file name. The first
+line grabs the header and the second line takes all lines but the header from
+each file and puts the data in full.csv.
+
+```
+$ head -n1 part-a917cc22-14e9-4716-8b66-8a610028ed3f.csv > full.csv
+$ tail -q -n+2 part-*.csv >> full.csv
+```
 
 ### Fixing failures of experiment parts
 
