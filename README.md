@@ -2,7 +2,7 @@
 
 This is the agent-based implementation of the model described in Smaldino & Turner (2020) "Covert signaling is an adaptive communication strategy in diverse populations".
 
-The code is in several parts: the model, experiments using the model, analyses of experimental output, a command-line interface (CLI) for running experiments and analyses, and unit tests. Furthermore, in the root directory of the repo there is the `cl_scripts` directory that contains bash scripts that automate the submission of several jobs (experiments) at once.
+The code is in several parts: the model, experiments using the model, analyses of experimental output, a command-line interface (CLI) for running experiments and analyses, and unit tests. Furthermore, in the root directory of the repo there is the `cl_scripts` directory that contains bash scripts that automate the submission of several jobs (experiments) at once. If your HPC cluster uses Slurm for scheduling these scripts may run as long as the necessary directories exist and have been modified as needed for your file system (please see the scripts in `cl_scripts` for more information on that).
 
 Below are some notes on how to set up the code locally. For more information, please see function signatures, unit tests, and inline documentation, or [open an issue to ask a question](https://github.com/mt-digital/identity-signaling/issues). Thanks!
 
