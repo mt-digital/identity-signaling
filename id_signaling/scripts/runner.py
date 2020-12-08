@@ -136,7 +136,7 @@ runexp {experiment} {param_vals} {homophily_vals} {n_iter} {n_trials} \\
     --initial_prop_covert={initial_prop_covert} \\
     --initial_prop_churlish={initial_prop_churlish} \\
     --learning_beta={learning_beta} \\
-    --n_rounds={n_rounds} --similarity_benefit={similarity_benefit}\\ '''
+    --n_rounds={n_rounds} --similarity_benefit={similarity_benefit} '''
     subscript_end = ''
     # Build end of submission script either with or without the two
     # disliking penalty.
@@ -151,8 +151,7 @@ printf "******************\\nFinished at `uptime`"
     else:
 
         subscript_end = \
-f'''
-    --two_dislike_penalty={two_dislike_penalty}
+f''' --two_dislike_penalty={two_dislike_penalty}
 
 
 printf "******************\\nFinished at `uptime`"
@@ -164,6 +163,7 @@ printf "******************\\nFinished at `uptime`"
         print(subscript)
 
     else:
+        print(subscript)
         subprocess.run(['sbatch'], stdout=PIPE,
                        input=bytearray(subscript, 'utf-8'))
 
